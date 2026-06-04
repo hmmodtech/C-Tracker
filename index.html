@@ -1384,13 +1384,272 @@
     background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:600;
     transition:opacity 0.15s;
   }
-  .so-save-btn:hover{opacity:0.85}
+  /* ── LOCAL RECORD YES/NO BUTTONS ─────────────────────────────── */
+  .lr-yesno-btn{
+    font-family:var(--font-mono);font-size:11px;font-weight:700;
+    padding:7px 22px;border-radius:8px;cursor:pointer;
+    border:1px solid var(--border2);background:var(--surface2);
+    color:var(--muted);transition:all 0.15s;letter-spacing:0.05em;
+  }
+  .lr-yesno-btn:hover{background:var(--surface3);color:var(--text)}
+  .lr-yesno-btn.active-yes{
+    background:rgba(45,209,122,0.15);color:var(--green);
+    border-color:rgba(45,209,122,0.4);
+    box-shadow:0 0 10px rgba(45,209,122,0.2);
+  }
+  .lr-yesno-btn.active-no{
+    background:rgba(232,57,74,0.15);color:var(--red);
+    border-color:rgba(232,57,74,0.4);
+    box-shadow:0 0 10px rgba(232,57,74,0.2);
+  }
+  body.light-mode .lr-yesno-btn{background:#eaecf4;border-color:#dde0ec;color:#505878}
+  body.light-mode .lr-yesno-btn.active-yes{background:#edfaf4;color:#1a8f52;border-color:#a8e6c5}
+  body.light-mode .lr-yesno-btn.active-no{background:#fdf0f1;color:#c42030;border-color:#f5b8be}
 
+  /* ── PHARMACY DISPOSAL BUTTON ─────────────────────────────────── */
+  .lr-disposal-btn{
+    width:100%;padding:13px 18px;border-radius:10px;cursor:pointer;
+    font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:0.07em;
+    border:2px dashed var(--red-dim);background:var(--red-bg);color:var(--red);
+    transition:all 0.2s;margin-top:4px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .lr-disposal-btn:hover{background:rgba(232,57,74,0.18);border-color:var(--red);box-shadow:0 0 18px rgba(232,57,74,0.2)}
+  .lr-disposal-btn.lr-disposal-confirmed{
+    border-style:solid;border-color:var(--green-dim);background:var(--green-bg);color:var(--green);
+    cursor:default;
+  }
+  .lr-disposal-btn.lr-disposal-confirmed:hover{box-shadow:0 0 14px rgba(45,209,122,0.2)}
+  body.light-mode .lr-disposal-btn{background:#fdf0f1;border-color:#f5b8be;color:#c42030}
+  body.light-mode .lr-disposal-btn.lr-disposal-confirmed{background:#edfaf4;border-color:#a8e6c5;color:#1a8f52}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   RESPONSIVE — TABLET & MOBILE
+   Breakpoints: tablet ≤ 900px  |  mobile ≤ 600px
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── Hamburger button (hidden on desktop) ──────────────────────── */
+.mob-menu-btn{
+  display:none;
+  align-items:center;justify-content:center;
+  width:38px;height:38px;border-radius:8px;
+  background:var(--surface2);border:1px solid var(--border2);
+  cursor:pointer;font-size:18px;flex-shrink:0;
+  transition:background 0.15s;
+}
+.mob-menu-btn:hover{background:var(--surface3)}
+
+/* ── Sidebar overlay backdrop (mobile) ─────────────────────────── */
+.mob-sidebar-backdrop{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.55);z-index:49;
+  opacity:0;transition:opacity 0.25s;
+}
+.mob-sidebar-backdrop.open{opacity:1}
+
+/* ── Card hover actions: also always-visible on touch devices ───── */
+@media (hover:none){
+  .card-hover-actions{
+    opacity:1!important;transform:translateY(0)!important;
+    position:relative!important;border-top:1px solid var(--border)!important;
+  }
+  .tracker-card:hover .card-hover-actions{opacity:1;transform:none}
+}
+
+/* ══ TABLET  (≤ 900px) ════════════════════════════════════════════ */
+@media (max-width:900px){
+
+  /* Sidebar: slide-in drawer */
+  .sidebar{
+    transform:translateX(-100%);
+    transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
+    z-index:50;
+  }
+  .sidebar.mob-open{transform:translateX(0)}
+
+  /* Main content fills full width */
+  .main-wrap{margin-left:0}
+
+  /* Show hamburger */
+  .mob-menu-btn{display:flex}
+
+  /* Topbar: condense pill buttons */
+  .topbar{padding:0 14px;gap:6px}
+  .topbar-right{gap:4px;flex-wrap:nowrap;overflow-x:auto}
+  .pill-btn{font-size:9px;padding:4px 8px;white-space:nowrap}
+  .topbar-clock{font-size:17px;min-width:60px}
+  .topbar-title{font-size:13px}
+  .topbar-sub{display:none}
+
+  /* Summary: 2×2 grid */
+  .summary{grid-template-columns:repeat(2,1fr)}
+
+  /* Tracker cards: 2-col */
+  .trackers{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+
+  /* Management report tracker grid */
+  .fin-tracker-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+
+  /* Analytics charts: stack */
+  .vis-grid{grid-template-columns:1fr}
+
+  /* Modal: full-screen feel */
+  .modal{width:96vw!important;max-height:92vh}
+  .modal-body{padding:14px 16px}
+
+  /* Report tables: allow horizontal scroll */
+  .sr-table, .insp-table, .action-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  /* KPI grid: 2-col */
+  .sr-kpi-grid{grid-template-columns:repeat(2,1fr)}
+
+  /* Banner inner: stack on small tablet */
+  .sr-banner-inner{flex-wrap:wrap;gap:12px}
+  .sr-banner-score{display:none}
+
+  /* Local tracker meta grid: stack */
+  .lr-meta-grid, .fa-meta-grid{grid-template-columns:1fr}
+  .lr-meta-card[style*="grid-column"]{grid-column:auto}
+
+  /* Screen options panel */
+  .so-panel{width:min(340px,92vw)}
+
+  /* Submission nav: wrap */
+  .sr-sub-nav{flex-wrap:wrap;gap:5px}
+  .sr-sub-sel{min-width:140px;flex:1}
+
+  /* Card hover actions always visible on tablet */
+  .card-hover-actions{
+    opacity:1!important;transform:translateY(0)!important;
+    position:relative!important;
+  }
+  .tracker-card{overflow:visible}
+}
+
+/* ══ MOBILE  (≤ 600px) ════════════════════════════════════════════ */
+@media (max-width:600px){
+
+  /* App padding shrink */
+  .app{padding:12px 10px 32px;gap:14px}
+
+  /* Topbar */
+  .topbar{padding:0 10px;height:auto;min-height:var(--topbar-h)}
+  .topbar-right{gap:3px}
+
+  /* Hide non-essential pill buttons on mobile */
+  .pill-live, #cloudPill, .topbar-clock, .topbar-date{display:none}
+
+  /* Summary: single column */
+  .summary{grid-template-columns:1fr 1fr}
+  .sum-card{padding:12px 14px}
+  .sum-value{font-size:24px}
+
+  /* Trackers: single column */
+  .trackers{grid-template-columns:1fr;gap:12px}
+
+  /* Card illustration shorter on mobile */
+  .card-ill{height:130px}
+
+  /* Modal: full screen */
+  .modal{width:100vw!important;max-width:100vw!important;max-height:95vh;border-radius:16px 16px 0 0!important}
+  .overlay{align-items:flex-end}
+  .modal-body{padding:12px 14px}
+  .modal-head{padding:12px 16px}
+  .modal-foot{padding:10px 14px;flex-wrap:wrap;gap:6px}
+  .modal-foot .btn{flex:1;text-align:center;justify-content:center}
+
+  /* Report modal wider handling */
+  #reportOverlay .modal{width:100vw!important}
+
+  /* KPI: 2-col */
+  .sr-kpi-grid{grid-template-columns:repeat(2,1fr);gap:7px}
+
+  /* Section label */
+  .section-label{font-size:9px}
+
+  /* Final/management report tracker grid: 1-col */
+  .fin-tracker-grid{grid-template-columns:1fr}
+
+  /* Topbar right: only essentials */
+  .topbar-right .pill-btn:not(#themeToggle):not([onclick*="Settings"]):not([onclick*="Trackers"]){
+    display:none
+  }
+  /* Always show theme + settings + trackers on mobile */
+  #themeToggle,
+  .pill-btn[onclick*="openSettings"],
+  .pill-btn[onclick*="openManageTrackers"]{display:flex!important}
+
+  /* Screen options: full width */
+  .so-panel{width:100vw;right:0;border-radius:16px 16px 0 0;bottom:0;top:auto;height:80vh;transform:translateY(100%)}
+  .so-panel.open{transform:translateY(0)}
+  .so-backdrop{display:none}
+
+  /* Cha-grid: 2×2 stays but tighten */
+  .cha-grid{gap:5px}
+  .cha-btn{padding:8px 4px}
+  .cha-icon{font-size:15px}
+  .cha-label{font-size:7px}
+
+  /* Sub nav: stack */
+  .sr-sub-nav{padding:8px 10px}
+  .sr-sub-sel{width:100%;flex-basis:100%}
+
+  /* Frequency bars */
+  .sr-freq-label{max-width:100px}
+
+  /* Lightbox */
+  #glbLightbox img{max-width:96vw;max-height:72vh}
+
+  /* Cloud bar: shorter */
+  .cloud-bar{font-size:9px;padding:5px 12px}
+}
+
+  /* ══ DATE INPUT — MOBILE CALENDAR PICKER ══════════════════════ */
+  .lr-date-input{
+    -webkit-appearance:none;
+    appearance:none;
+    color-scheme:dark;
+    font-family:var(--font-mono);
+    font-size:13px;
+    letter-spacing:0.04em;
+    cursor:pointer;
+  }
+  body.light-mode .lr-date-input{
+    color-scheme:light;
+  }
+  .lr-date-input::-webkit-calendar-picker-indicator{
+    opacity:0;
+    position:absolute;
+    right:0;
+    top:0;
+    width:100%;
+    height:100%;
+    cursor:pointer;
+  }
+  /* On mobile, make date inputs larger touch targets */
+  @media (max-width:600px){
+    .lr-date-input{
+      font-size:16px!important; /* prevents iOS zoom */
+      padding:12px 40px 12px 12px!important;
+      min-height:48px;
+    }
+    .form-input[type="date"]{
+      font-size:16px!important;
+      min-height:48px;
+    }
+    .form-input[type="number"],
+    .form-input[type="text"]{
+      font-size:16px!important;
+      min-height:48px;
+    }
+  }
 </style>
 </head>
 <body>
 
 <div class="save-toast green" id="saveToast">💾 Config saved</div>
+<div class="mob-sidebar-backdrop" id="mobBackdrop" onclick="closeMobileSidebar()"></div>
 
 <!-- SIDEBAR -->
 <div class="sidebar">
@@ -1427,6 +1686,7 @@
       <div class="topbar-title">Central Tracker Dashboard</div>
       <div class="topbar-sub" id="topbarSub">SYSTEM STATUS: ACTIVE // CENTRAL TRACKING HUB</div>
     </div>
+    <button class="mob-menu-btn" onclick="toggleMobileSidebar()" title="Menu" aria-label="Open navigation">☰</button>
     <div class="topbar-right">
       <div class="pill-btn pill-live"><span class="pill-dot"></span> LIVE</div>
       <button class="pill-btn" id="themeToggle" onclick="toggleTheme()" style="font-size:13px;padding:4px 10px" title="Toggle light/dark mode">🌙</button>
@@ -1500,7 +1760,7 @@
   <div class="modal wide"><div class="modal-head"><div class="modal-head-left"><span id="reportIcon"></span><span class="modal-title" id="reportTitle">Report</span></div><button class="modal-close" onclick="closeModal('reportOverlay')">✕</button></div><div class="modal-body" id="reportBody"></div><div class="modal-foot"><button class="btn" onclick="closeModal('reportOverlay')">Close</button></div></div>
 </div>
 <div class="overlay" id="finalOverlay">
-  <div class="modal wide"><div class="modal-head"><div class="modal-head-left"><span>📋</span><span class="modal-title">Management Report — Central Tracker</span></div><button class="modal-close" onclick="closeModal('finalOverlay')">✕</button></div><div class="modal-body" id="finalBody"></div><div class="modal-foot"><button class="btn" onclick="closeModal('finalOverlay')">Close</button></div></div>
+  <div class="modal wide"><div class="modal-head"><div class="modal-head-left"><span>📋</span><span class="modal-title">Management Report — Central Tracker</span></div><button class="modal-close" onclick="closeModal('finalOverlay')">✕</button></div><div class="modal-body" id="finalBody"></div><div class="modal-foot"><button class="btn" onclick="closeModal('finalOverlay')">Close</button><button class="btn" style="border-color:var(--blue);color:var(--blue);background:var(--blue-bg);display:flex;align-items:center;gap:6px" onclick="exportAllReportsPDF()"><span>⬇</span> Export All Reports — PDF</button></div></div>
 </div>
 <div class="overlay" id="drillOverlay">
   <div class="modal wide"><div class="modal-head"><div class="modal-head-left"><span id="drillIcon"></span><span class="modal-title" id="drillTitle">Tracker Detail</span></div><button class="modal-close" onclick="closeModal('drillOverlay')">✕</button></div><div class="modal-body" id="drillBody"></div><div class="modal-foot"><button class="btn" onclick="closeModal('drillOverlay');openFinalReport()">← Back</button><button class="btn" onclick="closeModal('drillOverlay')">Close</button></div></div>
@@ -1583,7 +1843,11 @@
       <div class="form-group"><label class="form-label">Response Sheet ID</label><input type="text" id="edit-sheetId" class="form-input" placeholder="Sheet ID from the URL"><div class="form-hint">/spreadsheets/d/<strong>[PASTE THIS PART]</strong>/edit</div></div>
       <div id="editErr" style="color:var(--red);font-size:11px;font-family:var(--font-mono);display:none;margin-top:6px"></div>
     </div>
-    <div class="modal-foot"><button class="btn" onclick="closeModal('editOverlay')">Cancel</button><button class="btn primary" id="editSaveBtn" onclick="saveTracker()">Save Tracker</button></div>
+    <div class="modal-foot">
+      <button class="btn danger" id="editDeleteBtn" style="display:none;margin-right:auto" onclick="editModalDelete()">🗑 Remove Tracker</button>
+      <button class="btn" onclick="closeModal('editOverlay')">Cancel</button>
+      <button class="btn primary" id="editSaveBtn" onclick="saveTracker()">Save Tracker</button>
+    </div>
   </div>
 </div>
 
@@ -1880,9 +2144,10 @@ async function loadState(){
 
 function defaultTrackers(){
   return[
-    {id:'fa',  name:'First Aid Tracker', icon:'🩺', desc:'Inspects first aid kits — checks equipment presence, quantities, expiry dates and missing items.', formUrl:'', sheetId:''},
-    {id:'uxo', name:'UXO Tracker',        icon:'⚠️', desc:'Inspects UXO handling equipment — verifies protective gear, tools and safety protocols.',          formUrl:'', sheetId:''},
-    {id:'cf',  name:'Crossfire Tracker',  icon:'🎯', desc:'Inspects crossfire response equipment — checks readiness, protective items and communication tools.',formUrl:'', sheetId:''}
+    {id:'fa',    name:'First Aid Tracker',   icon:'🩺', desc:'Inspects first aid kits — checks equipment presence, quantities, expiry dates and missing items.', formUrl:'', sheetId:''},
+    {id:'pharm', name:'Pharmacy Tracker',    icon:'💊', desc:'Physical inventory check for the pharmacy — tracks inspection status, expired items and disposal confirmation.', formUrl:'', sheetId:''},
+    {id:'hr',    name:'HR Contact Tracker',  icon:'👤', desc:'Confirms HR Focal Point updated the HR sheet and tracks total staff count.', formUrl:'', sheetId:''},
+    {id:'cf',    name:'Crossfire Tracker',   icon:'🎯', desc:'Inspects crossfire response equipment — checks readiness, protective items and communication tools.',formUrl:'', sheetId:''}
   ];
 }
 
@@ -1929,7 +2194,21 @@ function getTrackerSVG(name){
 function renderTrackers(){
   const grid=document.getElementById('trackersGrid');
   grid.innerHTML='';
-  trackers.forEach(t=>{
+  // Sort: sheet-linked trackers first (First Aid, Fire, Smoke, Office Security), then local records
+  const sheetOrder = ['first aid','fire','smoke','office security','office sec'];
+  const sortedTrackers = [...trackers].sort((a,b)=>{
+    const aIsLocal = isLocalTracker(a.name);
+    const bIsLocal = isLocalTracker(b.name);
+    if(aIsLocal && !bIsLocal) return 1;
+    if(!aIsLocal && bIsLocal) return -1;
+    // Both sheet-based: sort by known order
+    const aIdx = sheetOrder.findIndex(k=>a.name.toLowerCase().includes(k));
+    const bIdx = sheetOrder.findIndex(k=>b.name.toLowerCase().includes(k));
+    const ai = aIdx===-1?999:aIdx;
+    const bi = bIdx===-1?999:bIdx;
+    return ai - bi;
+  });
+  sortedTrackers.forEach(t=>{
     const rows=sheetData[t.id];
     const hasData=rows&&rows.length>0;
     const comp=hasData?calcCompliance(rows):null;
@@ -1943,7 +2222,9 @@ function renderTrackers(){
       <div class="card-ill" style="position:relative">
         ${getTrackerSVG(t.name)}
         <span class="card-badge-status ${hasData?'badge-ok':'badge-pending'}">${hasData?'ACTIVE':'NO DATA'}</span>
-        <span class="card-badge-link ${isLinked?'badge-linked':'badge-unlinked'}">${isLinked?'● LINKED':'○ NOT LINKED'}</span>
+        ${isLocalTracker(t.name)
+          ? `<span class="card-badge-link badge-linked">● LOCAL</span>`
+          : `<span class="card-badge-link ${isLinked?'badge-linked':'badge-unlinked'}">${isLinked?'● LINKED':'○ NOT LINKED'}</span>`}
       </div>
       <div class="card-glass-divider"></div>
       <div class="card-info">
@@ -1960,16 +2241,22 @@ function renderTrackers(){
       </div>
       <div class="card-hover-actions">
         <div class="cha-grid">
-          ${t.formUrl
-            ? `<a class="cha-btn cha-start" href="${esc(t.formUrl)}" target="_blank">
-                 <span class="cha-icon">▶</span>
-                 <span class="cha-label">Start Check</span>
-                 <div class="cha-ripple"></div>
-               </a>`
-            : `<button class="cha-btn cha-addform" onclick="openEditTracker('${t.id}')">
+          ${isLocalTracker(t.name)
+            ? `<button class="cha-btn cha-start" onclick="openAddLocalRecord('${t.id}')">
                  <span class="cha-icon">＋</span>
-                 <span class="cha-label">Add Form</span>
-               </button>`}
+                 <span class="cha-label">Add Record</span>
+                 <div class="cha-ripple"></div>
+               </button>`
+            : t.formUrl
+              ? `<a class="cha-btn cha-start" href="${esc(t.formUrl)}" target="_blank">
+                   <span class="cha-icon">▶</span>
+                   <span class="cha-label">Start Check</span>
+                   <div class="cha-ripple"></div>
+                 </a>`
+              : `<button class="cha-btn cha-addform" onclick="openEditTracker('${t.id}')">
+                   <span class="cha-icon">＋</span>
+                   <span class="cha-label">Add Form</span>
+                 </button>`}
           <button class="cha-btn cha-status" onclick="openStatus('${t.id}')">
             <span class="cha-icon">◎</span>
             <span class="cha-label">Status</span>
@@ -1981,6 +2268,10 @@ function renderTrackers(){
           <button class="cha-btn cha-edit" onclick="openEditTracker('${t.id}')">
             <span class="cha-icon">✏</span>
             <span class="cha-label">Edit</span>
+          </button>
+          <button class="cha-btn" style="background:rgba(232,57,74,0.12)!important;border-color:rgba(232,57,74,0.28)!important;grid-column:1/-1" onclick="confirmDelete('${t.id}')">
+            <span class="cha-icon" style="color:var(--red)">🗑</span>
+            <span class="cha-label" style="color:var(--red)">Remove Tracker</span>
           </button>
         </div>
       </div>`;
@@ -2024,7 +2315,8 @@ function renderTrackers(){
 
 function updateSummary(){
   const n=trackers.length;
-  const conn=trackers.filter(t=>sheetData[t.id]!==null&&t.sheetId).length;
+  // "connected" = has a sheet linked OR is a local tracker that has records
+  const conn=trackers.filter(t=>(sheetData[t.id]!==null&&t.sheetId)||(isLocalTracker(t.name)&&sheetData[t.id]&&sheetData[t.id].length>0)).length;
   const totalR=trackers.reduce((s,t)=>s+(sheetData[t.id]?sheetData[t.id].length:0),0);
   document.getElementById('sumTrackers').textContent=n;
   document.getElementById('sumTrackersSub').textContent='of '+n+' configured';
@@ -2113,6 +2405,9 @@ function openEditTracker(editId){
   document.getElementById('editIcon').textContent=t?t.icon:'➕';
   document.getElementById('editErr').style.display='none';
   document.getElementById('editSaveBtn').textContent=t?'Save Changes':'Add Tracker';
+  // Show Remove button only when editing an existing tracker
+  const delBtn = document.getElementById('editDeleteBtn');
+  if(delBtn) delBtn.style.display = editId ? 'inline-flex' : 'none';
   const grid=document.getElementById('emojiGrid'); grid.innerHTML='';
   EMOJIS.forEach(em=>{
     const el=document.createElement('div');
@@ -2160,6 +2455,13 @@ async function saveTracker(){
   renderTrackers();
   await saveAll();   // cloud save with toast feedback
   if(obj.sheetId&&apiKey) fetchAllSheets();
+}
+
+function editModalDelete(){
+  const editId = document.getElementById('edit-id').value;
+  if(!editId) return;
+  closeModal('editOverlay');
+  confirmDelete(editId);
 }
 
 function openManageTrackers(){
@@ -2242,11 +2544,32 @@ function parseRows(rows){
 // STATUS MODAL
 // ══════════════════════════════════════════════════════════════════
 function openStatus(id){
-  const t=trackers.find(x=>x.id===id),rows=sheetData[id];
+  const t=trackers.find(x=>x.id===id);
+  // For local trackers, always use localRecords
+  const rows = isLocalTracker(t.name) ? getLocalRows(id) : sheetData[id];
   document.getElementById('statusIcon').textContent=t.icon;
   document.getElementById('statusTitle').textContent=t.name+' — Status';
   let h='';
   if(!rows||!rows.length){ h=noDataHtml(t); }
+  else if(isLocalTracker(t.name)){
+    const comp = calcCompliance(rows);
+    const compCls = comp>=80?'ok':comp>=50?'warn':'bad';
+    h=`<div class="report-header">
+      <div class="report-stat"><div class="report-stat-label">Total Records</div><div class="report-stat-val ok">${rows.length}</div></div>
+      <div class="report-stat"><div class="report-stat-label">Compliance</div><div class="report-stat-val ${compCls}">${comp}%</div></div>
+      <div class="report-stat"><div class="report-stat-label">Latest Entry</div><div class="report-stat-val" style="font-size:13px;padding-top:5px">${getLastDate(rows)}</div></div>
+      <div class="report-stat"><div class="report-stat-label">Done By</div><div class="report-stat-val" style="font-size:13px;padding-top:5px">${getLastPerson(rows)}</div></div>
+    </div>
+    <div class="report-section"><div class="report-section-title">Recent Records</div>`;
+    rows.slice(-8).reverse().forEach((r,i)=>{
+      const ri = rows.length-1-i;
+      h+=`<div class="report-row" style="cursor:pointer" onclick="closeModal('statusOverlay');openReport('${id}');setTimeout(()=>srGoTo(${ri}),200)">
+        <span class="report-key">${r.date||'—'}</span>
+        <span class="report-val ok">${r.doneBy||'Unknown'}</span>
+      </div>`;
+    });
+    h+=`</div><div style="padding:0 2px 2px"><button class="btn primary" onclick="closeModal('statusOverlay');openAddLocalRecord('${t.id}')">＋ Add New Record</button></div>`;
+  }
   else{
     h=`<div class="report-header">
       <div class="report-stat"><div class="report-stat-label">Total Checks</div><div class="report-stat-val ok">${rows.length}</div></div>
@@ -2274,7 +2597,10 @@ let _rpt = { tracker:null, allRows:null, idx:0, histOpen:false };
 function openReport(id){
   destroyCharts();
   const t = trackers.find(x=>x.id===id);
-  const rows = sheetData[id];
+
+  // For local trackers, always pull from localRecords
+  let rows = isLocalTracker(t.name) ? getLocalRows(id) : sheetData[id];
+
   document.getElementById('reportIcon').textContent = t.icon;
   document.getElementById('reportTitle').textContent = t.name + ' — Inspection Report';
 
@@ -2755,6 +3081,10 @@ function buildStructuredReport(t, rows, idx){
   const tName = t.name.toLowerCase();
   if(tName.includes('first aid') || tName.includes('firstaid') || tName.includes('fa kit') || tName.includes('first-aid')){
     return buildFirstAidReport(t, rows, idx);
+  }
+  // ── Route local-record trackers to their custom report ───────
+  if(isLocalTracker(t.name)){
+    return buildLocalTrackerReport(t, rows, idx);
   }
 
   const row    = rows[idx];
@@ -3484,8 +3814,12 @@ function destroyCharts(){Object.keys(charts).forEach(k=>{if(charts[k]){charts[k]
 // ══════════════════════════════════════════════════════════════════
 function openFinalReport(){
   destroyCharts();
+  // Ensure local tracker data is in sheetData
+  trackers.forEach(t=>{ if(isLocalTracker(t.name)){ const r=getLocalRows(t.id); if(r.length) sheetData[t.id]=r; } });
+
   const totalR=trackers.reduce((s,t)=>s+(sheetData[t.id]?sheetData[t.id].length:0),0);
-  const linked=trackers.filter(t=>t.sheetId&&sheetData[t.id]!==null).length;
+  // "linked" = has sheet OR has local records
+  const linked=trackers.filter(t=>(t.sheetId&&sheetData[t.id]!==null)||isLocalTracker(t.name)&&(sheetData[t.id]&&sheetData[t.id].length>0)).length;
   const withData=trackers.filter(t=>sheetData[t.id]&&sheetData[t.id].length>0);
   const oc=calcOverallCompliance();
   const ocCls=oc>=80?'ok':oc>=50?'warn':'bad';
@@ -3496,6 +3830,14 @@ function openFinalReport(){
   // total issues across all trackers
   const totalIssues=trackers.reduce((s,t)=>{
     const rows=sheetData[t.id];if(!rows)return s;
+    if(rows[0]&&rows[0]._type){
+      // local tracker: count 'no' yesno fields
+      let c=0;
+      rows.forEach(r=>Object.entries(r).forEach(([k,v])=>{
+        if(!k.startsWith('_')&&k!=='date'&&k!=='doneBy'&&k!=='lastUpdate'&&(v||'').toLowerCase()==='no') c++;
+      }));
+      return s+c;
+    }
     return s+rows.reduce((ss,r)=>ss+Object.values(r).filter(v=>isBad(v)).length,0);
   },0);
   const trackersBelowTarget=withData.filter(t=>calcCompliance(sheetData[t.id])<80).length;
@@ -3579,7 +3921,7 @@ function openFinalReport(){
       trendStr=diff>0?`<span style="color:var(--green)">▲${diff}%</span>`:diff<0?`<span style="color:var(--red)">▼${Math.abs(diff)}%</span>`:'→';
     }
     h+=`<div class="fin-card ${hasData?'has-data':'no-data'}" onclick="openDrill('${t.id}')">
-      <span class="fin-card-badge ${hasData?'fin-badge-ok':'fin-badge-na'}">${hasData?'● LIVE':'○ NO DATA'}</span>
+      <span class="fin-card-badge ${hasData?'fin-badge-ok':'fin-badge-na'}">${hasData?(isLocalTracker(t.name)?'● LOCAL':'● LIVE'):(isLocalTracker(t.name)?'○ NO RECORDS':'○ NO DATA')}</span>
       <div class="fin-card-top">
         <div class="fin-card-icon">${t.icon}</div>
         <div class="fin-card-name">${esc(t.name)}</div>
@@ -3608,8 +3950,8 @@ function openFinalReport(){
         <div class="fin-card-prog-fill fcr-${cc}" style="width:${comp}%;background:${ccColor};box-shadow:${cc==='ok'?'0 0 8px rgba(45,209,122,0.4)':cc==='bad'?'0 0 8px rgba(232,57,74,0.4)':'none'}"></div>
       </div>
       <div class="fin-card-hint">Click to drill into full visual report →</div>`
-      :`<div style="font-size:11px;color:var(--muted);margin:10px 0;line-height:1.6">No inspection data yet.<br>Link a response sheet in ⚙ Settings to see live data.</div>
-      ${t.formUrl?`<a href="${esc(t.formUrl)}" target="_blank" onclick="event.stopPropagation()" style="font-family:var(--font-mono);font-size:10px;color:var(--green);text-decoration:none;background:var(--green-bg);border:1px solid var(--green-dim);padding:5px 10px;border-radius:6px;display:inline-block">▶ Start Inspection</a>`:''}
+      :`<div style="font-size:11px;color:var(--muted);margin:10px 0;line-height:1.6">${isLocalTracker(t.name)?'No records yet. Use the card hover actions to add the first record.':'No inspection data yet.<br>Link a response sheet in ⚙ Settings to see live data.'}</div>
+      ${isLocalTracker(t.name)?`<button onclick="event.stopPropagation();openAddLocalRecord('${t.id}')" style="font-family:var(--font-mono);font-size:10px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-dim);padding:5px 10px;border-radius:6px;cursor:pointer">＋ Add Record</button>`:t.formUrl?`<a href="${esc(t.formUrl)}" target="_blank" onclick="event.stopPropagation()" style="font-family:var(--font-mono);font-size:10px;color:var(--green);text-decoration:none;background:var(--green-bg);border:1px solid var(--green-dim);padding:5px 10px;border-radius:6px;display:inline-block">▶ Start Inspection</a>`:''}
       `}
     </div>`;
   });
@@ -3648,7 +3990,17 @@ function openFinalReport(){
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:16px">`;
   trackers.forEach(t=>{
-    if(t.formUrl){
+    if(isLocalTracker(t.name)){
+      h+=`<div onclick="closeModal('finalOverlay');openAddLocalRecord('${t.id}')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;cursor:pointer;color:var(--text);transition:all 0.15s;font-size:12px;"
+         onmouseover="this.style.borderColor='var(--green)';this.style.background='var(--green-bg)'"
+         onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'">
+         <span style="font-size:18px">${t.icon}</span>
+         <div>
+           <div style="font-weight:600;font-size:11px">${esc(t.name)}</div>
+           <div style="font-family:var(--font-mono);font-size:9px;color:var(--green);margin-top:2px">＋ Add Record</div>
+         </div>
+       </div>`;
+    } else if(t.formUrl){
       h+=`<a href="${esc(t.formUrl)}" target="_blank" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);transition:all 0.15s;font-size:12px;"
          onmouseover="this.style.borderColor='var(--green)';this.style.background='var(--green-bg)'"
          onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'">
@@ -3744,8 +4096,16 @@ function buildMgmtFindings(){
   // trackers with no data
   const noData=trackers.filter(t=>!sheetData[t.id]||!sheetData[t.id].length);
   if(noData.length){
-    findings.push({type:'ff-warn',icon:'🔗',title:`${noData.length} Tracker${noData.length!==1?'s':''} Awaiting Data`,
-      text:`The following tracker${noData.length!==1?'s have':' has'} no inspection data yet: ${noData.map(t=>t.icon+' <strong>'+esc(t.name)+'</strong>').join(', ')}. Connect Google Sheets in ⚙ Settings to start receiving live data.`});
+    const sheetTrackers = noData.filter(t=>!isLocalTracker(t.name));
+    const localTrackers = noData.filter(t=>isLocalTracker(t.name));
+    if(sheetTrackers.length){
+      findings.push({type:'ff-warn',icon:'🔗',title:`${sheetTrackers.length} Tracker${sheetTrackers.length!==1?'s':''} Awaiting Data`,
+        text:`The following tracker${sheetTrackers.length!==1?'s have':' has'} no inspection data yet: ${sheetTrackers.map(t=>t.icon+' <strong>'+esc(t.name)+'</strong>').join(', ')}. Connect Google Sheets in ⚙ Settings to start receiving live data.`});
+    }
+    if(localTrackers.length){
+      findings.push({type:'ff-warn',icon:'📝',title:`${localTrackers.length} Local Tracker${localTrackers.length!==1?'s':''} Have No Records`,
+        text:`The following tracker${localTrackers.length!==1?'s have':' has'} no records yet: ${localTrackers.map(t=>t.icon+' <strong>'+esc(t.name)+'</strong>').join(', ')}. Use the <strong>Add Record</strong> button on the tracker card to log the first entry.`});
+    }
   }
 
   if(!findings.length){
@@ -3768,9 +4128,254 @@ function buildMgmtFindings(){
     </div>`).join('');
 }
 
+
+// ══════════════════════════════════════════════════════════════════
+// EXPORT ALL REPORTS TO PDF
+// ══════════════════════════════════════════════════════════════════
+function exportAllReportsPDF(){
+  // Make sure local tracker data is loaded
+  trackers.forEach(t=>{ if(isLocalTracker(t.name)){ const r=getLocalRows(t.id); if(r.length) sheetData[t.id]=r; } });
+
+  const oc = calcOverallCompliance();
+  const ocColor = oc>=80?'#16a34a':oc>=50?'#d97706':'#dc2626';
+  const ocLabel = oc>=80?'Good Standing':oc>=50?'Needs Attention':'Action Required';
+  const ocEmoji = oc>=80?'✅':oc>=50?'⚠️':'🚨';
+  const totalR  = trackers.reduce((s,t)=>s+(sheetData[t.id]?sheetData[t.id].length:0),0);
+  const generatedAt = new Date().toLocaleString();
+  const escH = s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const cc = v => v>=80?'#16a34a':v>=50?'#d97706':'#dc2626';
+
+  const typeConfig = {
+    sms:{icon:'📱',label:'Bulk SMS Tracker'}, map:{icon:'🗺️',label:'Map Tracker'},
+    master:{icon:'🛡️',label:'Master Tracker'}, assessment:{icon:'📋',label:'Assessment Tracker'},
+    garmin:{icon:'📡',label:'Garmin Tracker'}, pharmacy:{icon:'💊',label:'Pharmacy Tracker'},
+    hrcontact:{icon:'👤',label:'HR Contact Tracker'}, log:{icon:'🚗',label:'LOG Tracker'}, commtree:{icon:'📡',label:'Communication Tree Tracker'},
+  };
+
+  // Summary table rows
+  const summaryRows = trackers.map(t=>{
+    const rows=sheetData[t.id];
+    const comp=rows&&rows.length?calcCompliance(rows):null;
+    const cColor=comp===null?'#9ca3af':cc(comp);
+    const status=comp===null?'No Data':comp>=80?'✅ On Target':comp>=50?'⚠ Needs Attention':'🚨 Critical';
+    return `<tr>
+      <td style="padding:9px 14px;border-bottom:1px solid #e5e7eb;font-size:13px">${t.icon} ${escH(t.name)}</td>
+      <td style="padding:9px 14px;border-bottom:1px solid #e5e7eb;font-size:13px;font-family:'JetBrains Mono',monospace;font-weight:700;color:${cColor}">${comp!==null?comp+'%':'—'}</td>
+      <td style="padding:9px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${rows&&rows.length?rows.length:0}</td>
+      <td style="padding:9px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280">${rows&&rows.length?getLastDate(rows):'—'}</td>
+      <td style="padding:9px 14px;border-bottom:1px solid #e5e7eb;font-size:12px">${status}</td>
+    </tr>`;
+  }).join('');
+
+  // Key findings
+  const findingsHtml = (()=>{
+    const findings=[];
+    trackers.forEach(t=>{
+      const rows=sheetData[t.id]; if(!rows||!rows.length) return;
+      const comp=calcCompliance(rows);
+      if(comp<50) findings.push({bg:'#fef2f2',border:'#fca5a5',left:'#dc2626',icon:'🚨',title:'Critical Non-Compliance',text:`${t.icon} <strong>${escH(t.name)}</strong> is at <strong>${comp}%</strong> — below 80% target. Immediate action required.`});
+      else if(comp<80) findings.push({bg:'#fffbeb',border:'#fcd34d',left:'#d97706',icon:'⚠',title:'Below Target',text:`${t.icon} <strong>${escH(t.name)}</strong> is at <strong>${comp}%</strong>. Review and address missing items.`});
+      else findings.push({bg:'#f0fdf4',border:'#86efac',left:'#16a34a',icon:'✅',title:'On Target',text:`${t.icon} <strong>${escH(t.name)}</strong> performing at <strong>${comp}%</strong> across ${rows.length} records.`});
+    });
+    const noData=trackers.filter(t=>!sheetData[t.id]||!sheetData[t.id].length);
+    if(noData.length) findings.push({bg:'#fffbeb',border:'#fcd34d',left:'#d97706',icon:'📝',title:'Trackers With No Data',text:noData.map(t=>`${t.icon} <strong>${escH(t.name)}</strong>`).join(', ')+' — No records yet.'});
+    if(!findings.length) return `<div style="padding:20px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;color:#16a34a;font-size:13px">🏆 All trackers meeting or exceeding 80% target.</div>`;
+    return findings.map(f=>`<div style="display:flex;gap:14px;padding:14px 16px;margin-bottom:10px;background:${f.bg};border:1px solid ${f.border};border-left:4px solid ${f.left};border-radius:0 8px 8px 0;page-break-inside:avoid">
+      <div style="font-size:18px;flex-shrink:0">${f.icon}</div>
+      <div><div style="font-size:12px;font-weight:700;color:#111827;margin-bottom:4px">${f.title}</div><div style="font-size:12px;color:#374151;line-height:1.6">${f.text}</div></div>
+    </div>`).join('');
+  })();
+
+  // Per-tracker detail sections
+  let trackerSections = '';
+  trackers.forEach(t=>{
+    const rows=sheetData[t.id];
+    const type=getLocalTrackerType(t.name);
+    const fields=type?getLocalTrackerFields(type):null;
+    const tc=typeConfig[type]||{icon:t.icon,label:t.name};
+    const comp=rows&&rows.length?calcCompliance(rows):null;
+    const cColor=comp===null?'#9ca3af':cc(comp);
+
+    trackerSections+=`<div style="page-break-before:always;padding-top:8px">
+      <div style="display:flex;align-items:center;gap:14px;padding:18px 22px;background:#f3f4f6;border-radius:12px 12px 0 0;border:1px solid #e5e7eb;border-bottom:none">
+        <div style="font-size:32px">${tc.icon}</div>
+        <div style="flex:1">
+          <div style="font-size:9px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.15em;color:#9ca3af;margin-bottom:3px">C-TRACKER · ${escH(tc.label)}</div>
+          <div style="font-size:20px;font-weight:800;color:#111827">${escH(t.name)}</div>
+          <div style="font-size:11px;color:#6b7280;margin-top:3px;font-family:'JetBrains Mono',monospace">${rows&&rows.length?rows.length+' record'+(rows.length!==1?'s':''):'No records'} · Last: ${rows&&rows.length?getLastDate(rows):'—'}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:30px;font-weight:800;color:${cColor}">${comp!==null?comp+'%':'—'}</div>
+          <div style="font-size:9px;color:#9ca3af;font-family:'JetBrains Mono',monospace;text-transform:uppercase;margin-top:2px">Compliance</div>
+        </div>
+      </div>`;
+
+    if(!rows||!rows.length){
+      trackerSections+=`<div style="border:1px solid #e5e7eb;border-radius:0 0 12px 12px;padding:28px;text-align:center;color:#9ca3af;font-size:13px">No records available.</div></div>`;
+      return;
+    }
+
+    if(fields){
+      // Local tracker — one mini-table per record
+      const checkFields=fields.filter(f=>f.type==='yesno');
+      rows.forEach((r,i)=>{
+        const passN=checkFields.filter(f=>(r[f.key]||'').toLowerCase()==='yes').length;
+        const rComp=checkFields.length===0?100:Math.round((passN/checkFields.length)*100);
+        const rColor=cc(rComp);
+        const detailRows=fields.filter(f=>f.key!=='date'&&f.key!=='doneBy').map(f=>{
+          const v=r[f.key]||'—';
+          let display=v, color='#374151';
+          if(f.type==='yesno'){
+            color=v.toLowerCase()==='yes'?'#16a34a':v.toLowerCase()==='no'?'#dc2626':'#9ca3af';
+            display=v.toLowerCase()==='yes'?'✓ Yes':v.toLowerCase()==='no'?'✗ No':'—';
+          }
+          return `<tr>
+            <td style="padding:7px 12px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#374151;width:68%">${escH(f.label)}</td>
+            <td style="padding:7px 12px;border-bottom:1px solid #f3f4f6;font-size:12px;font-weight:600;color:${color}">${escH(display)}</td>
+          </tr>`;
+        }).join('');
+
+        const isFirst=i===0;
+        const isLast=i===rows.length-1;
+        trackerSections+=`<div style="border:1px solid #e5e7eb;border-top:${isFirst?'1px solid #e5e7eb':'none'};${isLast?'border-radius:0 0 12px 12px':''};overflow:hidden;page-break-inside:avoid">
+          <div style="background:#fafafa;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb">
+            <div>
+              <span style="font-size:12px;font-weight:700;color:#111827">Record #${i+1}</span>
+              <span style="font-size:11px;color:#6b7280;margin-left:10px">${escH(r.date||'—')}</span>
+              <span style="font-size:11px;color:#6b7280;margin-left:10px">👤 ${escH(r.doneBy||'—')}</span>
+            </div>
+            <span style="font-size:14px;font-weight:800;color:${rColor}">${rComp}%</span>
+          </div>
+          <table style="width:100%;border-collapse:collapse"><tbody>${detailRows}</tbody></table>
+        </div>`;
+      });
+    } else {
+      // Sheet tracker — summary table
+      const keys=Object.keys(rows[0]);
+      const dateKey=keys.find(k=>k.toLowerCase().includes('timestamp')||k.toLowerCase().includes('date'));
+      const personKey=keys.find(k=>k.toLowerCase().includes('done')||k.toLowerCase().includes('by')||k.toLowerCase().includes('name'));
+      const bodyRows=rows.map((r,i)=>{
+        const rComp=_compRow(r); const rColor=cc(rComp);
+        return `<tr>
+          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#9ca3af">${i+1}</td>
+          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${escH((r[dateKey]||'—').split(' ')[0])}</td>
+          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${escH(r[personKey]||'—')}</td>
+          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;font-weight:700;color:${rColor}">${rComp}%</td>
+        </tr>`;
+      }).join('');
+      trackerSections+=`<div style="border:1px solid #e5e7eb;border-radius:0 0 12px 12px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr>
+            <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">#</th>
+            <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Date</th>
+            <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Inspector</th>
+            <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Score</th>
+          </tr></thead>
+          <tbody>${bodyRows}</tbody>
+        </table>
+      </div>`;
+    }
+    trackerSections+=`</div>`;
+  });
+
+  const html=`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>C-TRACKER — Full Management Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;color:#111827;background:#fff;padding:32px}
+h2{font-size:14px;font-weight:700;color:#374151;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #e5e7eb;letter-spacing:-0.01em}
+@media print{body{padding:16px}.no-print{display:none!important}@page{margin:18mm 16mm}}
+</style>
+</head>
+<body>
+<div class="no-print" style="margin-bottom:24px;padding:12px 18px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+  <span style="font-size:13px;color:#1d4ed8">📄 Ready to export — press <strong>Ctrl+P</strong> (Cmd+P on Mac) → <strong>Save as PDF</strong></span>
+  <button onclick="window.print()" style="flex-shrink:0;padding:8px 18px;background:#1d4ed8;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">🖨 Print / Save as PDF</button>
+</div>
+
+<div style="border:2px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:32px">
+  <div style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:28px 32px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.22em;text-transform:uppercase;margin-bottom:6px">Central Tracker Dashboard</div>
+      <div style="font-size:26px;font-weight:800;color:#fff;letter-spacing:-0.03em">Management Report</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px;font-family:'JetBrains Mono',monospace">Generated: ${generatedAt}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:38px;font-weight:800;color:${ocColor}">${oc}%</div>
+      <div style="font-size:12px;font-weight:700;color:${ocColor};margin-top:2px">${ocEmoji} ${ocLabel}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:4px;font-family:'JetBrains Mono',monospace">Overall Compliance</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #e5e7eb">
+    <div style="padding:18px 22px;border-right:1px solid #e5e7eb;text-align:center">
+      <div style="font-size:28px;font-weight:800;color:#2563eb">${trackers.length}</div>
+      <div style="font-size:10px;color:#9ca3af;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">Trackers</div>
+    </div>
+    <div style="padding:18px 22px;border-right:1px solid #e5e7eb;text-align:center">
+      <div style="font-size:28px;font-weight:800;color:#16a34a">${totalR}</div>
+      <div style="font-size:10px;color:#9ca3af;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">Total Records</div>
+    </div>
+    <div style="padding:18px 22px;text-align:center">
+      <div style="font-size:28px;font-weight:800;color:${ocColor}">${oc}%</div>
+      <div style="font-size:10px;color:#9ca3af;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">Avg Compliance</div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-bottom:32px">
+  <h2>📊 Tracker Status Overview</h2>
+  <table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
+    <thead>
+      <tr>
+        <th style="padding:10px 14px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;background:#f9fafb">Tracker</th>
+        <th style="padding:10px 14px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;background:#f9fafb">Compliance</th>
+        <th style="padding:10px 14px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;background:#f9fafb">Records</th>
+        <th style="padding:10px 14px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;background:#f9fafb">Last Check</th>
+        <th style="padding:10px 14px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;background:#f9fafb">Status</th>
+      </tr>
+    </thead>
+    <tbody>${summaryRows}</tbody>
+  </table>
+</div>
+
+<div style="margin-bottom:32px">
+  <h2>🔍 Key Findings &amp; Recommendations</h2>
+  ${findingsHtml}
+</div>
+
+<div>
+  <h2>📋 Detailed Records — All Trackers</h2>
+  ${trackerSections}
+</div>
+
+<div style="margin-top:40px;padding-top:16px;border-top:2px solid #e5e7eb;display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;font-family:'JetBrains Mono',monospace">
+  <span>C-TRACKER · Central Tracker Dashboard · Management Report</span>
+  <span>Generated: ${generatedAt}</span>
+</div>
+
+
+</body></html>`;
+
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const win=window.open(url,'_blank');
+  if(!win) showToast('Please allow popups to export PDF','amber');
+  else     showToast('✓ Full report opened — use Ctrl+P to save as PDF','green');
+}
+
 function openDrill(id){
   closeModal('finalOverlay');destroyCharts();
-  const t=trackers.find(x=>x.id===id),rows=sheetData[id];
+  const t=trackers.find(x=>x.id===id);
+  // For local trackers, use openReport which routes correctly
+  if(isLocalTracker(t.name)){
+    openReport(id);
+    return;
+  }
+  const rows=sheetData[id];
   document.getElementById('drillIcon').textContent=t.icon;
   document.getElementById('drillTitle').textContent=t.name+' — Visual Report';
   if(!rows||!rows.length){document.getElementById('drillBody').innerHTML=noDataHtml(t);openModal('drillOverlay');return;}
@@ -3786,15 +4391,815 @@ function openDrill(id){
 }
 
 // ══════════════════════════════════════════════════════════════════
+// LOCAL TRACKER ENGINE
+// For Bulk SMS, Map, Master, Assessment, Garmin — no Google Form needed
+// Records stored in localStorage keyed by tracker id
+// ══════════════════════════════════════════════════════════════════
+
+// Which trackers use local records (no Google Form)
+function isLocalTracker(name){
+  const n = name.toLowerCase();
+  return n.includes('sms') || n.includes('bulk') ||
+         n.includes('map') ||
+         n.includes('master') ||
+         n.includes('assess') ||
+         n.includes('garmin') || n.includes('gps') ||
+         n.includes('pharm') ||
+         n.includes('log') ||
+         n.includes('comm') ||
+         (n.includes('hr') && (n.includes('contact') || n.includes('focal')));
+}
+
+// Local records store: { [trackerId]: [ {...record}, ... ] }
+let localRecords = {};
+
+function saveLocalRecords(){
+  try{ localStorage.setItem('ct_local_records', JSON.stringify(localRecords)); }catch(e){}
+}
+function loadLocalRecords(){
+  try{
+    const r = localStorage.getItem('ct_local_records');
+    if(r) localRecords = JSON.parse(r);
+  }catch(e){ localRecords = {}; }
+}
+
+// Get records for a tracker (merges into sheetData-compatible rows format)
+function getLocalRows(trackerId){
+  return localRecords[trackerId] || [];
+}
+
+// Add a record
+function addLocalRecord(trackerId, record){
+  if(!localRecords[trackerId]) localRecords[trackerId] = [];
+  localRecords[trackerId].push(record);
+  saveLocalRecords();
+  // Also push into sheetData so the rest of the UI picks it up
+  sheetData[trackerId] = localRecords[trackerId];
+}
+
+// Delete a local record by index
+function deleteLocalRecord(trackerId, idx){
+  if(!localRecords[trackerId]) return;
+  localRecords[trackerId].splice(idx,1);
+  saveLocalRecords();
+  sheetData[trackerId] = localRecords[trackerId].length ? localRecords[trackerId] : null;
+}
+
+// ── FIELD DEFINITIONS per tracker type ────────────────────────
+function getLocalTrackerType(name){
+  const n = name.toLowerCase();
+  if(n.includes('sms') || n.includes('bulk')) return 'sms';
+  if(n.includes('map')) return 'map';
+  if(n.includes('master')) return 'master';
+  if(n.includes('assess')) return 'assessment';
+  if(n.includes('garmin') || n.includes('gps')) return 'garmin';
+  if(n.includes('pharm')) return 'pharmacy';
+  if(n.includes('hr') && (n.includes('contact') || n.includes('focal'))) return 'hrcontact';
+  if(n.includes('log')) return 'log';
+  if(n.includes('comm')) return 'commtree';
+  return null;
+}
+
+function getLocalTrackerFields(type){
+  const yesno = [{value:'Yes',label:'Yes'},{value:'No',label:'No'}];
+  switch(type){
+    case 'sms': return [
+      {key:'date',label:'Date of Record',type:'date',required:true},
+      {key:'doneBy',label:'Done By',type:'text',required:true},
+      {key:'smsUpdated',label:'Is the SMS Bulk Updated?',type:'yesno'},
+      {key:'smsAvailable',label:'Number of Available SMS',type:'number'},
+      {key:'numStaff',label:'Number of Staff',type:'number'},
+      {key:'numDailyWorkers',label:'Number of Daily Workers',type:'number'},
+      {key:'numDrivers',label:'Number of Drivers',type:'number'},
+      {key:'lastUpdate',label:'Last Update',type:'date'},
+    ];
+    case 'map': return [
+      {key:'date',label:'Date of Record',type:'date',required:true},
+      {key:'doneBy',label:'Done By',type:'text',required:true},
+      {key:'secTrackMapUpdated',label:'Is the Security Tracking Map Updated?',type:'yesno'},
+      {key:'secMapUpdated',label:'Is the Security Map Updated?',type:'yesno'},
+      {key:'mapsMe',label:'Maps.ME — Offline Navigation Updated?',type:'yesno'},
+      {key:'locusMap',label:'Locus Map — Offline Navigation Updated?',type:'yesno'},
+      {key:'googleEarth',label:'Google Earth Pro — Offline Navigation Updated?',type:'yesno'},
+      {key:'flashBackup',label:'Did you Backup the Maps on Flash Disk?',type:'yesno'},
+      {key:'lastUpdate',label:'Last Update',type:'date'},
+    ];
+    case 'master': return [
+      {key:'date',label:'Date of Record',type:'date',required:true},
+      {key:'doneBy',label:'Done By',type:'text',required:true},
+      {key:'hrStaffGps',label:'Is HR Staff Sheet Updated with GPS?',type:'yesno'},
+      {key:'hrDailyGps',label:'Is HR Daily Worker Sheet Updated with GPS?',type:'yesno'},
+      {key:'driversGps',label:'Is Drivers Sheet Updated with GPS?',type:'yesno'},
+      {key:'smartsheetGps',label:'Is Smart Sheet Updated with GPS?',type:'yesno'},
+      {key:'premisesGps',label:'Is Premises with Block Updated with GPS?',type:'yesno'},
+      {key:'lastUpdate',label:'Last Update',type:'date'},
+    ];
+    case 'assessment': return [
+      {key:'date',label:'Date of Record',type:'date',required:true},
+      {key:'doneBy',label:'Done By',type:'text',required:true},
+      {key:'assessUpdated',label:'Is Assessment Tracker Updated?',type:'yesno'},
+      {key:'lastUpdate',label:'Last Update',type:'date'},
+    ];
+    case 'garmin': return [
+      {key:'date',label:'Date of Record',type:'date',required:true},
+      {key:'doneBy',label:'Done By',type:'text',required:true},
+      {key:'garminUpdated',label:'Is Garmin Tracker Updated?',type:'yesno'},
+      {key:'lastUpdate',label:'Last Update',type:'date'},
+    ];
+    case 'pharmacy': return [
+      {key:'date',        label:'Date of Record',                                                                  type:'date',  required:true},
+      {key:'doneBy',      label:'Done By',                                                                         type:'text',  required:true},
+      {key:'inventoryCheck', label:'Is the Pharmacy Focal Point did a physical inventory check for the Pharmacy?', type:'yesno', required:false},
+      {key:'hasExpired',  label:'Is there any expired items?',                                                     type:'yesno', required:false},
+      {key:'expiredItems',label:'List of Expired Items',                                                           type:'textarea', conditional:{key:'hasExpired',value:'Yes'}},
+      {key:'disposalConfirmed', label:'Disposal Confirmed',                                                        type:'disposal', conditional:{key:'hasExpired',value:'Yes'}},
+    ];
+    case 'hrcontact': return [
+      {key:'date',                   label:'Date of the Record',                                type:'date',   required:true},
+      {key:'doneBy',                 label:'Done By',                                           type:'text',   required:true},
+      {key:'staffSheetConfirmed',    label:'Did the HR Confirmed Staff sheet updated?',          type:'yesno',  required:false},
+      {key:'numStaff',               label:'How many staff are in?',                             type:'number', conditional:{key:'staffSheetConfirmed',value:'Yes'}},
+      {key:'dwSheetConfirmed',       label:'Did the HR Confirmed Daily Workers sheet updated?',  type:'yesno',  required:false},
+      {key:'numDailyWorkers',        label:'How many DW are in?',                               type:'number', conditional:{key:'dwSheetConfirmed',value:'Yes'}},
+    ];
+    case 'log': return [
+      {key:'date',             label:'Date of the Record',                                                                          type:'date',   required:true},
+      {key:'doneBy',           label:'Done By',                                                                                     type:'text',   required:true},
+      {key:'carsVisibility',   label:'Did the LOG Focal Point for cars confirmed that all cars are checked and have Visibility?',    type:'yesno',  required:false},
+    ];
+    case 'commtree': return [
+      {key:'date',                   label:'Date of the Record',                                                       type:'date',   required:true},
+      {key:'doneBy',                 label:'Done By',                                                                  type:'text',   required:true},
+      {key:'emergencyContactUpdated',label:'Did the HR focal point confirmed that staff emergency contact sheet updated?', type:'yesno',  required:false},
+      {key:'numStaff',               label:'How many staff are in?',                                                    type:'number', conditional:{key:'emergencyContactUpdated',value:'Yes'}},
+    ];
+    default: return [];
+  }
+}
+
+// ── OPEN ADD RECORD MODAL ─────────────────────────────────────
+let _localRecordTrackerId = null;
+let _localEditRecordIdx = null;
+
+function openAddLocalRecord(trackerId, editIdx){
+  const t = trackers.find(x=>x.id===trackerId);
+  if(!t) return;
+  const type = getLocalTrackerType(t.name);
+  const fields = getLocalTrackerFields(type);
+  _localRecordTrackerId = trackerId;
+  _localEditRecordIdx = (editIdx !== undefined) ? editIdx : null;
+
+  const existing = (editIdx !== undefined && localRecords[trackerId]) ? localRecords[trackerId][editIdx] : null;
+
+  document.getElementById('localRecordTitle').textContent = (editIdx !== undefined ? 'Edit Record — ' : 'Add Record — ') + t.name;
+  document.getElementById('localRecordIcon').textContent = t.icon;
+
+  let html = '';
+  fields.forEach(f => {
+    const val = existing ? (existing[f.key]||'') : '';
+
+    // Conditional wrapper — hide if condition not met (JS will show/hide dynamically)
+    const isConditional = !!f.conditional;
+    const condStyle = isConditional ? 'display:none' : '';
+    const condAttr  = isConditional ? `data-cond-key="${f.conditional.key}" data-cond-val="${f.conditional.value}"` : '';
+    const wrapId    = `lr-wrap-${f.key}`;
+
+    if(f.type === 'yesno'){
+      html += `<div class="form-group" id="${wrapId}" style="${condStyle}" ${condAttr}>
+        <label class="form-label">${f.label}</label>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button type="button" class="lr-yesno-btn ${val==='Yes'?'active-yes':''}" id="lr-${f.key}-yes" onclick="lrToggleYesNo('${f.key}','Yes')" data-key="${f.key}" data-val="Yes">Yes</button>
+          <button type="button" class="lr-yesno-btn ${val==='No'?'active-no':''}" id="lr-${f.key}-no" onclick="lrToggleYesNo('${f.key}','No')" data-key="${f.key}" data-val="No">No</button>
+        </div>
+        <input type="hidden" id="lr-field-${f.key}" value="${esc(val)}">
+      </div>`;
+    } else if(f.type === 'date'){
+      const todayVal = new Date().toISOString().split('T')[0];
+      const dateVal = val || (f.required ? todayVal : '');
+      html += `<div class="form-group" id="${wrapId}" style="${condStyle}" ${condAttr}>
+        <label class="form-label">${f.label}${f.required?' *':''}</label>
+        <div style="position:relative">
+          <input type="date" id="lr-field-${f.key}" class="form-input lr-date-input"
+            value="${esc(dateVal)}"
+            max="${todayVal}"
+            onclick="this.showPicker&&this.showPicker()"
+            style="cursor:pointer;padding-right:36px">
+          <span onclick="document.getElementById('lr-field-${f.key}').showPicker&&document.getElementById('lr-field-${f.key}').showPicker()"
+            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:16px;cursor:pointer;pointer-events:all;user-select:none">📅</span>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:4px">Tap to open calendar</div>
+      </div>`;
+    } else if(f.type === 'number'){
+      html += `<div class="form-group" id="${wrapId}" style="${condStyle}" ${condAttr}>
+        <label class="form-label">${f.label}</label>
+        <input type="number" id="lr-field-${f.key}" class="form-input" min="0" value="${esc(val)}" placeholder="Enter number">
+      </div>`;
+    } else if(f.type === 'textarea'){
+      html += `<div class="form-group" id="${wrapId}" style="${condStyle}" ${condAttr}>
+        <label class="form-label">${f.label}${f.required?' *':''}</label>
+        <textarea id="lr-field-${f.key}" class="form-input" rows="4" placeholder="List each expired item on a separate line…" style="resize:vertical;line-height:1.6">${esc(val)}</textarea>
+      </div>`;
+    } else if(f.type === 'disposal'){
+      const confirmed = val === 'Confirmed';
+      html += `<div class="form-group" id="${wrapId}" style="${condStyle}" ${condAttr}>
+        <input type="hidden" id="lr-field-${f.key}" value="${esc(val)}">
+        <button type="button" id="lr-disposal-btn"
+          onclick="lrConfirmDisposal()"
+          class="lr-disposal-btn ${confirmed?'lr-disposal-confirmed':''}"
+        >${confirmed?'✓ Disposal Confirmed':'🗑 CONFIRM DISPOSAL'}</button>
+        ${confirmed?`<div style="font-family:var(--font-mono);font-size:10px;color:var(--green);margin-top:6px">✓ Disposal was confirmed for this record.</div>`:'<div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:6px">Click to confirm that expired items have been properly disposed of.</div>'}
+      </div>`;
+    } else {
+      html += `<div class="form-group" id="${wrapId}" style="${condStyle}" ${condAttr}>
+        <label class="form-label">${f.label}${f.required?' *':''}</label>
+        <input type="text" id="lr-field-${f.key}" class="form-input" value="${esc(val)}" placeholder="${f.label}">
+      </div>`;
+    }
+  });
+
+  document.getElementById('localRecordFormBody').innerHTML = html;
+  document.getElementById('localRecordErr').style.display = 'none';
+
+  // Apply initial conditional visibility based on current values
+  _lrUpdateConditionals();
+  openModal('localRecordOverlay');
+}
+
+// Show/hide conditional fields based on their trigger key's current value
+function _lrUpdateConditionals(){
+  document.querySelectorAll('#localRecordFormBody [data-cond-key]').forEach(wrap=>{
+    const key = wrap.dataset.condKey;
+    const val = wrap.dataset.condVal;
+    const trigger = document.getElementById('lr-field-'+key);
+    const triggerVal = trigger ? trigger.value : '';
+    wrap.style.display = (triggerVal === val) ? '' : 'none';
+  });
+}
+
+function lrToggleYesNo(key, val){
+  document.getElementById('lr-field-'+key).value = val;
+  const yesBtn = document.getElementById('lr-'+key+'-yes');
+  const noBtn  = document.getElementById('lr-'+key+'-no');
+  if(yesBtn) yesBtn.className = 'lr-yesno-btn' + (val==='Yes'?' active-yes':'');
+  if(noBtn)  noBtn.className  = 'lr-yesno-btn' + (val==='No'?' active-no':'');
+  // Update any conditional fields triggered by this key
+  _lrUpdateConditionals();
+}
+
+function lrConfirmDisposal(){
+  const field = document.getElementById('lr-field-disposalConfirmed');
+  const btn   = document.getElementById('lr-disposal-btn');
+  if(!field || !btn) return;
+  field.value = 'Confirmed';
+  btn.textContent = '✓ Disposal Confirmed';
+  btn.classList.add('lr-disposal-confirmed');
+  // Show confirmation note
+  const note = btn.nextElementSibling;
+  if(note){ note.style.color = 'var(--green)'; note.textContent = '✓ Disposal confirmed for this record.'; }
+}
+
+function saveLocalRecord(){
+  const trackerId = _localRecordTrackerId;
+  const t = trackers.find(x=>x.id===trackerId);
+  if(!t) return;
+  const type = getLocalTrackerType(t.name);
+  const fields = getLocalTrackerFields(type);
+
+  // Validate required
+  for(const f of fields){
+    if(f.required){
+      const el = document.getElementById('lr-field-'+f.key);
+      if(!el || !el.value.trim()){
+        const err = document.getElementById('localRecordErr');
+        err.textContent = f.label + ' is required.';
+        err.style.display = 'block';
+        return;
+      }
+    }
+  }
+
+  const record = { _type: type, _savedAt: new Date().toISOString() };
+  fields.forEach(f => {
+    // For conditional fields, only save if the condition is currently met
+    if(f.conditional){
+      const triggerEl = document.getElementById('lr-field-'+f.conditional.key);
+      if(!triggerEl || triggerEl.value !== f.conditional.value){
+        record[f.key] = ''; // not applicable — condition not met
+        return;
+      }
+    }
+    const el = document.getElementById('lr-field-'+f.key);
+    record[f.key] = el ? el.value.trim() : '';
+  });
+
+  if(_localEditRecordIdx !== null){
+    localRecords[trackerId][_localEditRecordIdx] = record;
+    saveLocalRecords();
+    sheetData[trackerId] = localRecords[trackerId];
+  } else {
+    addLocalRecord(trackerId, record);
+  }
+
+  closeModal('localRecordOverlay');
+  renderTrackers();
+  showToast('✓ Record saved', 'green');
+}
+
+// ── LOCAL TRACKER REPORT ─────────────────────────────────────
+function buildLocalTrackerReport(t, rows, idx){
+  const type = getLocalTrackerType(t.name);
+  const fields = getLocalTrackerFields(type);
+  const row = rows[idx];
+
+  // Compute compliance: count yes/no fields where yes=pass, no=fail
+  const checkFields = fields.filter(f => f.type === 'yesno');
+  const passN = checkFields.filter(f => (row[f.key]||'').toLowerCase() === 'yes').length;
+  const failN  = checkFields.filter(f => (row[f.key]||'').toLowerCase() === 'no').length;
+  const totalCheck = checkFields.length;
+  const compPct = totalCheck === 0 ? 100 : Math.round((passN/totalCheck)*100);
+  const compCls = compPct>=80?'ok':compPct>=50?'warn':'bad';
+  const compColor = compCls==='ok'?'#2dd17a':compCls==='warn'?'#f0a030':'#e8394a';
+
+  const fmtDate = row.date || '—';
+  const doneBy  = row.doneBy || '—';
+  const lastUpd = row.lastUpdate || '—';
+
+  // SVG ring
+  const R=40, CIRC=2*Math.PI*R;
+  const ringFill=(compPct/100)*CIRC;
+
+  // Submission nav options
+  const subOptions = rows.map((r,i)=>
+    `<option value="${i}" ${i===idx?'selected':''}>#${i+1} · ${r.date||'—'} · ${esc(r.doneBy||'Unknown')}</option>`
+  ).join('');
+
+  // History drawer
+  const histRows = rows.slice().reverse().map((r,ri)=>{
+    const realIdx = rows.length-1-ri;
+    const cf2 = fields.filter(f=>f.type==='yesno');
+    const p2 = cf2.filter(f=>(r[f.key]||'').toLowerCase()==='yes').length;
+    const cp = cf2.length===0?100:Math.round((p2/cf2.length)*100);
+    const hColor = cp>=80?'var(--green)':cp>=50?'var(--amber)':'var(--red)';
+    const issues = cf2.filter(f=>(r[f.key]||'').toLowerCase()==='no').length;
+    return `<div class="sr-hist-row ${realIdx===idx?'active':''}" onclick="srPickHist(${realIdx})">
+      <div class="sr-hist-dot" style="background:${hColor}"></div>
+      <div style="flex:1">
+        <div class="sr-hist-date">${esc(r.date||'—')}</div>
+        <div class="sr-hist-by">👤 ${esc(r.doneBy||'Unknown')}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="sr-hist-comp" style="color:${hColor}">${cp}%</div>
+        <div class="sr-hist-issues">${issues===0?'✓ all yes':issues+' no'+(issues!==1?'s':'')}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Determine icon/color per type
+  const typeConfig = {
+    sms:        {icon:'📱',color:'#2dd17a', label:'Bulk SMS Tracker'},
+    map:        {icon:'🗺️',color:'#4a9eff', label:'Map Tracker'},
+    master:     {icon:'🛡️',color:'#9d6fff', label:'Master Tracker'},
+    assessment: {icon:'📋',color:'#f0a030', label:'Assessment Tracker'},
+    garmin:     {icon:'📡',color:'#00c8d4', label:'Garmin Tracker'},
+    pharmacy:   {icon:'💊',color:'#4a9eff', label:'Pharmacy Tracker'},
+    hrcontact:  {icon:'👤',color:'#00c8d4', label:'HR Contact Tracker'},
+    log:        {icon:'🚗',color:'#f0a030', label:'LOG Tracker'},
+    commtree:   {icon:'📡',color:'#9d6fff', label:'Communication Tree Tracker'},
+  };
+  const tc = typeConfig[type] || {icon:t.icon,color:'#4a9eff',label:t.name};
+
+  // Build items rows — separate yes/no fields, number fields, date fields, textarea, disposal
+  const allFieldsHtml = fields.filter(f=>f.key!=='date'&&f.key!=='doneBy'&&f.key!=='lastUpdate').map((f,i)=>{
+    const v = row[f.key]||'';
+
+    // Skip conditional fields that weren't applicable (empty value means condition wasn't met)
+    if(f.conditional && !v) return '';
+
+    let statusHtml = '';
+    if(f.type==='yesno'){
+      const isYes = v.toLowerCase()==='yes';
+      const isNo  = v.toLowerCase()==='no';
+      statusHtml = isYes
+        ? `<span class="sr-status ss-pass">Yes</span>`
+        : isNo
+        ? `<span class="sr-status ss-fail">No</span>`
+        : `<span class="sr-status ss-pending">—</span>`;
+    } else if(f.type==='textarea'){
+      statusHtml = `<div style="font-size:11px;color:var(--text-dim);line-height:1.7;white-space:pre-wrap;font-family:var(--font-mono)">${esc(v||'—')}</div>`;
+    } else if(f.type==='disposal'){
+      const confirmed = v === 'Confirmed';
+      statusHtml = confirmed
+        ? `<span style="font-family:var(--font-mono);font-size:10px;font-weight:700;background:var(--green-bg);color:var(--green);border:1px solid var(--green-dim);padding:3px 10px;border-radius:8px">✓ DISPOSAL CONFIRMED</span>`
+        : `<span style="font-family:var(--font-mono);font-size:10px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-dim);padding:3px 10px;border-radius:8px">⚠ PENDING</span>`;
+    } else {
+      statusHtml = `<span style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text)">${esc(v||'—')}</span>`;
+    }
+    const rowBg = f.type==='yesno'
+      ? (v.toLowerCase()==='yes' ? 'sr-row-ok' : v.toLowerCase()==='no' ? 'sr-row-bad' : '')
+      : f.type==='disposal'
+      ? (v==='Confirmed' ? 'sr-row-ok' : '')
+      : '';
+    // textarea and disposal span full width
+    const isWide = f.type==='textarea'||f.type==='disposal';
+    return `<tr class="${rowBg}" style="animation:srPanelIn 0.2s ease ${i*0.03}s both">
+      <td class="sr-num">${i+1}</td>
+      <td class="sr-control" ${isWide?'colspan="2"':''}>${esc(f.label)}<br>${isWide?statusHtml:''}</td>
+      ${!isWide?`<td>${statusHtml}</td>`:''}
+    </tr>`;
+  }).join('');
+
+  // Recurring issues (fields that were 'No' across all records)
+  const noCount = {};
+  checkFields.forEach(f=>{
+    rows.forEach(r=>{ if((r[f.key]||'').toLowerCase()==='no') noCount[f.key]=(noCount[f.key]||0)+1; });
+  });
+  const sortedIssues = Object.entries(noCount).sort((a,b)=>b[1]-a[1]);
+
+  // Verdict
+  const verdictText = compPct>=80
+    ? `This record shows <strong style="color:var(--green)">Good Standing</strong>. ${failN===0?'All checks passed.':failN+' item(s) recorded as No — follow up required.'}`
+    : compPct>=50
+    ? `This record is <strong style="color:var(--amber)">Satisfactory but needs attention</strong>. ${failN} item(s) recorded as No — review before next cycle.`
+    : `This record shows <strong style="color:var(--red)">Critical Non-Compliance</strong>. ${failN} item(s) recorded as No — immediate action required.`;
+  const verdictClass = compPct>=80?'sv-ok':compPct>=50?'sv-warn':'sv-bad';
+  const verdictEmoji = compPct>=80?'✅':compPct>=50?'⚠️':'🚨';
+
+  return `
+  <style>
+    .lr-report-hero{
+      position:relative;border-radius:20px;overflow:hidden;margin-bottom:20px;
+      min-height:130px;background:linear-gradient(135deg,#070a10,#0d1020);
+      border:1px solid rgba(74,158,255,0.2);
+    }
+    .lr-hero-grid{
+      position:absolute;inset:0;
+      background-image:linear-gradient(rgba(74,158,255,0.04) 1px,transparent 1px),
+                       linear-gradient(90deg,rgba(74,158,255,0.04) 1px,transparent 1px);
+      background-size:26px 26px;
+    }
+    .lr-hero-inner{position:relative;z-index:2;padding:22px 26px;display:flex;align-items:center;gap:20px}
+    .lr-hero-icon{
+      width:64px;height:64px;flex-shrink:0;border-radius:16px;
+      display:flex;align-items:center;justify-content:center;font-size:28px;
+      border:1px solid rgba(255,255,255,0.1);
+      box-shadow:0 0 30px rgba(0,0,0,0.4);
+    }
+    .lr-hero-text{flex:1}
+    .lr-hero-tag{font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:4px}
+    .lr-hero-title{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.03em;margin-bottom:4px;line-height:1.1}
+    .lr-hero-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35)}
+    .lr-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+    .lr-meta-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:13px 16px;position:relative;overflow:hidden}
+    .lr-meta-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px}
+    .lr-mc-blue::before{background:var(--blue)}
+    .lr-mc-green::before{background:var(--green)}
+    .lr-mc-amber::before{background:var(--amber)}
+    .lr-mc-purple::before{background:var(--purple)}
+    .lr-meta-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:5px}
+    .lr-meta-value{font-size:14px;font-weight:700;color:var(--text)}
+    .lr-comp-strip{display:flex;align-items:center;gap:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-top:14px}
+    .lr-comp-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);white-space:nowrap}
+    .lr-comp-track{flex:1;height:10px;background:var(--surface3);border-radius:5px;overflow:hidden}
+    .lr-comp-fill{height:100%;border-radius:5px;transition:width 1.4s cubic-bezier(0.4,0,0.2,1)}
+    .lr-comp-ok{background:linear-gradient(90deg,#12522a,#2dd17a);box-shadow:0 0 8px rgba(45,209,122,0.4)}
+    .lr-comp-warn{background:linear-gradient(90deg,#5a3200,#f0a030)}
+    .lr-comp-bad{background:linear-gradient(90deg,#5a0a12,#e8394a)}
+    .lr-comp-pct{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:800;white-space:nowrap}
+    body.light-mode .lr-meta-card{background:#f9fafd;border-color:#e2e5f0}
+    body.light-mode .lr-comp-strip{background:#f9fafd;border-color:#e2e5f0}
+    body.light-mode .lr-report-hero{background:linear-gradient(135deg,#e8eaf4,#dde0ef);border-color:#c8cce0}
+    body.light-mode .lr-hero-title{color:#1c2033}
+    body.light-mode .lr-hero-tag,.lr-hero-sub{color:#8890aa}
+  </style>
+
+  <!-- HERO BANNER -->
+  <div class="lr-report-hero">
+    <div class="lr-hero-grid"></div>
+    <div class="lr-hero-inner">
+      <div class="lr-hero-icon" style="background:${tc.color}18;border-color:${tc.color}40;box-shadow:0 0 24px ${tc.color}22">${tc.icon}</div>
+      <div class="lr-hero-text">
+        <div class="lr-hero-tag">C-TRACKER · ${tc.label}</div>
+        <div class="lr-hero-title">${esc(t.name)}</div>
+        <div class="lr-hero-sub">Record ${idx+1} of ${rows.length} &nbsp;·&nbsp; ${esc(fmtDate)} &nbsp;·&nbsp; 👤 ${esc(doneBy)}</div>
+      </div>
+      <!-- ring -->
+      <svg width="90" height="90" viewBox="0 0 90 90" style="flex-shrink:0">
+        <circle cx="45" cy="45" r="${R}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/>
+        <circle cx="45" cy="45" r="${R}" fill="none" stroke="${compColor}" stroke-width="7"
+          stroke-dasharray="${ringFill.toFixed(1)} ${CIRC.toFixed(1)}"
+          stroke-dashoffset="${(CIRC*0.25).toFixed(1)}"
+          stroke-linecap="round"
+          transform="rotate(-90 45 45)"
+          style="filter:drop-shadow(0 0 8px ${compColor}88)"/>
+        <text x="45" y="43" text-anchor="middle" dominant-baseline="middle"
+          font-family="JetBrains Mono" font-size="16" fill="${compColor}" font-weight="800">${compPct}%</text>
+        <text x="45" y="58" text-anchor="middle" dominant-baseline="middle"
+          font-family="JetBrains Mono" font-size="7" fill="rgba(255,255,255,0.3)" letter-spacing="1">SCORE</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- SUBMISSION NAVIGATOR -->
+  <div class="sr-section" style="margin-bottom:14px">
+    <div class="sr-sub-nav">
+      <span class="sr-sub-label">Viewing</span>
+      <select class="sr-sub-sel" id="srSubSel" onchange="srGoTo(parseInt(this.value))">${subOptions}</select>
+      <button class="sr-sub-btn" onclick="srPrev()">‹</button>
+      <button class="sr-sub-btn" onclick="srNext()">›</button>
+      <button class="sr-hist-btn" onclick="srToggleHist()">🕐 All Records (${rows.length})</button>
+      <button class="btn" style="margin-left:6px;font-size:10px;padding:5px 10px;border-color:var(--accent);color:var(--accent)" onclick="openAddLocalRecord('${t.id}')">＋ Add New</button>
+      <button class="btn danger" style="font-size:10px;padding:5px 10px" onclick="confirmDeleteLocalRecord('${t.id}',${idx})">🗑 Delete</button>
+      <button class="btn" style="font-size:10px;padding:5px 10px;border-color:var(--blue);color:var(--blue);background:var(--blue-bg)" onclick="exportLocalTrackerPDF('${t.id}')">⬇ Export PDF</button>
+    </div>
+    <div class="sr-hist-drawer" id="srHistDrawer">${histRows}</div>
+  </div>
+
+  <!-- META CARDS -->
+  <div class="lr-meta-grid">
+    <div class="lr-meta-card lr-mc-blue">
+      <div class="lr-meta-label">📅 Date of Record</div>
+      <div class="lr-meta-value" style="font-family:'JetBrains Mono',monospace">${esc(fmtDate)}</div>
+    </div>
+    <div class="lr-meta-card lr-mc-green">
+      <div class="lr-meta-label">👤 Done By</div>
+      <div class="lr-meta-value">${esc(doneBy)}</div>
+    </div>
+    ${lastUpd && lastUpd!=='—' ? `
+    <div class="lr-meta-card lr-mc-amber" style="grid-column:1/-1">
+      <div class="lr-meta-label">🔄 Last Update</div>
+      <div class="lr-meta-value" style="font-family:'JetBrains Mono',monospace">${esc(lastUpd)}</div>
+    </div>` : ''}
+  </div>
+
+  <!-- CHECKS TABLE -->
+  <div class="sr-section" style="margin-bottom:14px">
+    <div class="sr-section-head">
+      <div class="sr-section-num sn-blue">✓</div>
+      <div class="sr-section-title-text">
+        <div class="sr-section-title-main">Checklist Results</div>
+        <div class="sr-section-title-sub">${esc(fmtDate)} · ${esc(doneBy)}</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <span style="font-family:var(--font-mono);font-size:9px;background:rgba(45,209,122,0.1);color:var(--green);border:1px solid rgba(45,209,122,0.25);padding:3px 9px;border-radius:12px;font-weight:700">✅ ${passN} Yes</span>
+        ${failN>0?`<span style="font-family:var(--font-mono);font-size:9px;background:rgba(232,57,74,0.1);color:var(--red);border:1px solid rgba(232,57,74,0.25);padding:3px 9px;border-radius:12px;font-weight:700">✗ ${failN} No</span>`:''}
+      </div>
+    </div>
+    <div class="sr-section-body" style="padding-top:10px">
+      <table class="sr-table">
+        <thead><tr><th>#</th><th>Check Item</th><th>Status</th></tr></thead>
+        <tbody>${allFieldsHtml}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- COMPLIANCE + VERDICT -->
+  <div class="sr-section" style="margin-bottom:14px">
+    <div class="sr-section-head">
+      <div class="sr-section-num sn-red">4</div>
+      <div class="sr-section-title-text">
+        <div class="sr-section-title-main">Assessment</div>
+        <div class="sr-section-title-sub">Automated result based on this record</div>
+      </div>
+    </div>
+    <div class="sr-section-body">
+      <div class="sr-conclusion">${verdictText}</div>
+      <div class="lr-comp-strip" style="margin-top:12px">
+        <span class="lr-comp-label">Compliance</span>
+        <div class="lr-comp-track">
+          <div class="lr-comp-fill lr-comp-${compCls}" id="srCompFill" data-pct="${compPct}" style="width:0%"></div>
+        </div>
+        <span class="lr-comp-pct" style="color:${compColor}">${compPct}%</span>
+      </div>
+      <div style="margin-top:10px">
+        <span class="sr-verdict ${verdictClass}">${verdictEmoji} ${compPct>=80?'Good Standing':compPct>=50?'Action Required':'Critical'}</span>
+      </div>
+    </div>
+  </div>
+
+  ${sortedIssues.length>0?`
+  <!-- RECURRING ISSUES -->
+  <div class="sr-section" style="margin-bottom:14px">
+    <div class="sr-section-head">
+      <div class="sr-section-num sn-red" style="font-size:12px">📉</div>
+      <div class="sr-section-title-text">
+        <div class="sr-section-title-main">Recurring Issues — All Records</div>
+        <div class="sr-section-title-sub">Items recorded as No across all ${rows.length} record${rows.length!==1?'s':''}</div>
+      </div>
+    </div>
+    <div class="sr-section-body">
+      ${sortedIssues.map(([key,count],i)=>{
+        const field = fields.find(f=>f.key===key);
+        const label = field ? field.label : key;
+        const pct = Math.round((count/rows.length)*100);
+        const barW = Math.round((count/rows.length)*100);
+        const barCol = pct>=70?'var(--red)':pct>=40?'var(--amber)':'var(--blue)';
+        return `<div class="sr-freq-row" style="animation-delay:${i*0.05}s">
+          <div class="sr-freq-rank">${i+1}</div>
+          <div class="sr-freq-label" title="${esc(label)}">${esc(label.length>30?label.slice(0,28)+'…':label)}</div>
+          <div class="sr-freq-bar-wrap"><div class="sr-freq-bar" style="width:${barW}%;background:${barCol}"></div></div>
+          <div class="sr-freq-count">${count}× <span style="color:var(--muted);font-size:9px">(${pct}%)</span></div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`:''}
+
+  <!-- FOOTER -->
+  <div class="sr-footer">
+    <span>C-TRACKER · ${esc(t.name)}</span>
+    <span>Generated: ${new Date().toLocaleString()}</span>
+  </div>`;
+}
+
+function confirmDeleteLocalRecord(trackerId, idx){
+  if(!confirm('Delete this record? This cannot be undone.')) return;
+  deleteLocalRecord(trackerId, idx);
+  // Close report modal and re-open with remaining records
+  closeModal('reportOverlay');
+  const rows = getLocalRows(trackerId);
+  sheetData[trackerId] = rows.length ? rows : null;
+  renderTrackers();
+  if(rows.length){
+    // re-open on the last record
+    _rpt.allRows = rows;
+    _rpt.idx = Math.min(idx, rows.length-1);
+    openReport(trackerId);
+  }
+  showToast('Record deleted', 'amber');
+}
+
+function exportLocalTrackerPDF(trackerId){
+  const t = trackers.find(x=>x.id===trackerId);
+  if(!t) return;
+  const rows = getLocalRows(trackerId);
+  if(!rows||!rows.length){ showToast('No records to export', 'amber'); return; }
+  const type = getLocalTrackerType(t.name);
+  const fields = getLocalTrackerFields(type);
+  const typeConfig = {
+    sms:        {icon:'📱',color:'#2dd17a',label:'Bulk SMS Tracker'},
+    map:        {icon:'🗺️',color:'#4a9eff',label:'Map Tracker'},
+    master:     {icon:'🛡️',color:'#9d6fff',label:'Master Tracker'},
+    assessment: {icon:'📋',color:'#f0a030',label:'Assessment Tracker'},
+    garmin:     {icon:'📡',color:'#00c8d4',label:'Garmin Tracker'},
+    pharmacy:   {icon:'💊',color:'#4a9eff',label:'Pharmacy Tracker'},
+    hrcontact:  {icon:'👤',color:'#00c8d4',label:'HR Contact Tracker'},
+    log:        {icon:'🚗',color:'#f0a030',label:'LOG Tracker'},
+    commtree:   {icon:'📡',color:'#9d6fff',label:'Communication Tree Tracker'},
+  };
+  const tc = typeConfig[type] || {icon:t.icon,color:'#4a9eff',label:t.name};
+
+  // Build an HTML document for printing
+  const fieldLabels = {};
+  fields.forEach(f => fieldLabels[f.key] = f.label);
+
+  const rowsHtml = rows.map((r, i) => {
+    const checkFields = fields.filter(f=>f.type==='yesno');
+    const passN = checkFields.filter(f=>(r[f.key]||'').toLowerCase()==='yes').length;
+    const failN = checkFields.filter(f=>(r[f.key]||'').toLowerCase()==='no').length;
+    const comp = checkFields.length===0?100:Math.round((passN/checkFields.length)*100);
+    const compColor = comp>=80?'#16a34a':comp>=50?'#d97706':'#dc2626';
+
+    const detailRows = fields.filter(f=>f.key!=='date'&&f.key!=='doneBy').map(f=>{
+      const v = r[f.key]||'—';
+      let display = v;
+      let color = '#374151';
+      if(f.type==='yesno'){
+        color = v.toLowerCase()==='yes'?'#16a34a':v.toLowerCase()==='no'?'#dc2626':'#9ca3af';
+        display = v.toLowerCase()==='yes'?'✓ Yes':v.toLowerCase()==='no'?'✗ No':'—';
+      }
+      return `<tr>
+        <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${esc(f.label)}</td>
+        <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;font-weight:600;color:${color}">${esc(display)}</td>
+      </tr>`;
+    }).join('');
+
+    return `
+      <div style="margin-bottom:24px;page-break-inside:avoid;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
+        <div style="background:#f3f4f6;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#111827">Record #${i+1} — ${esc(r.date||'—')}</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px">Done by: ${esc(r.doneBy||'—')}</div>
+          </div>
+          <div style="font-size:18px;font-weight:800;color:${compColor}">${comp}%</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr>
+              <th style="padding:7px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;background:#fafafa">Check Item</th>
+              <th style="padding:7px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;background:#fafafa">Result</th>
+            </tr>
+          </thead>
+          <tbody>${detailRows}</tbody>
+        </table>
+      </div>`;
+  }).join('');
+
+  const totalComp = rows.reduce((s,r)=>{
+    const cf=fields.filter(f=>f.type==='yesno');
+    if(!cf.length) return s+100;
+    const p=cf.filter(f=>(r[f.key]||'').toLowerCase()==='yes').length;
+    return s+Math.round((p/cf.length)*100);
+  },0);
+  const avgComp = rows.length ? Math.round(totalComp/rows.length) : 100;
+  const avgColor = avgComp>=80?'#16a34a':avgComp>=50?'#d97706':'#dc2626';
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>${esc(t.name)} — Export Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+  body{font-family:'Inter',sans-serif;margin:0;padding:32px;color:#111827;background:#fff}
+  @media print{body{padding:16px} .no-print{display:none}}
+</style>
+</head>
+<body>
+  <div class="no-print" style="margin-bottom:24px;padding:12px 18px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;display:flex;align-items:center;justify-content:space-between">
+    <span style="font-size:13px;color:#1d4ed8">📄 PDF Export Ready — use <strong>Ctrl+P</strong> (or Cmd+P) → Save as PDF</span>
+    <button onclick="window.print()" style="padding:7px 16px;background:#1d4ed8;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🖨 Print / Save PDF</button>
+  </div>
+  <div style="border-bottom:2px solid #e5e7eb;padding-bottom:20px;margin-bottom:28px">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="font-size:36px">${tc.icon}</div>
+      <div>
+        <div style="font-size:9px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.15em;color:#9ca3af;margin-bottom:3px">C-TRACKER · ${esc(tc.label)}</div>
+        <div style="font-size:24px;font-weight:800;color:#111827;letter-spacing:-0.02em">${esc(t.name)}</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:4px;font-family:'JetBrains Mono',monospace">Generated: ${new Date().toLocaleString()} · ${rows.length} record${rows.length!==1?'s':''}</div>
+      </div>
+      <div style="margin-left:auto;text-align:center">
+        <div style="font-size:32px;font-weight:800;color:${avgColor}">${avgComp}%</div>
+        <div style="font-size:9px;color:#9ca3af;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.08em">Avg Compliance</div>
+      </div>
+    </div>
+  </div>
+  ${rowsHtml}
+  <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;font-family:'JetBrains Mono',monospace">
+    <span>C-TRACKER · ${esc(t.name)}</span>
+    <span>Generated: ${new Date().toLocaleString()}</span>
+  </div>
+
+
+</body></html>`;
+
+  const blob = new Blob([html], {type:'text/html'});
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url,'_blank');
+  if(!win) showToast('Please allow popups to export PDF', 'amber');
+  else showToast('✓ PDF preview opened — use Ctrl+P to save', 'green');
+}
+
+// ══════════════════════════════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════════════════════════════
-function isOk(v){if(!v)return false;const l=v.toLowerCase();return l.includes('yes')||l.includes('ok')||l.includes('complete')||l.includes('full')||l.includes('available')||l.includes('good');}
-function isBad(v){if(!v)return false;const l=v.toLowerCase();return l.includes('missing')||l==='no'||l.includes('empty')||l.includes('none')||l.includes('not available')||l.includes('expired');}
-function calcCompliance(rows){if(!rows||!rows.length)return 0;let ok=0,tot=0;rows.forEach(r=>Object.values(r).forEach(v=>{if(isOk(v))ok++;if(isOk(v)||isBad(v))tot++;}));return tot===0?100:Math.round((ok/tot)*100);}
+function isOk(v){if(!v)return false;const l=v.toLowerCase();return l==='yes'||l.includes('ok')||l.includes('complete')||l.includes('full')||l.includes('available')||l.includes('good');}
+function isBad(v){if(!v)return false;const l=v.toLowerCase();return l==='no'||l.includes('missing')||l.includes('empty')||l.includes('none')||l.includes('not available')||l.includes('expired');}
+function calcCompliance(rows){
+  if(!rows||!rows.length)return 0;
+  // Detect local tracker records (they have a _type field)
+  if(rows[0]&&rows[0]._type){
+    // For local trackers, compliance = yes fields / (yes+no fields)
+    let ok=0,tot=0;
+    rows.forEach(r=>{
+      Object.entries(r).forEach(([k,v])=>{
+        if(k.startsWith('_')||k==='date'||k==='doneBy'||k==='lastUpdate') return;
+        const lo=(v||'').toLowerCase();
+        if(lo==='yes'){ok++;tot++;}
+        else if(lo==='no'){tot++;}
+      });
+    });
+    return tot===0?100:Math.round((ok/tot)*100);
+  }
+  let ok=0,tot=0;
+  rows.forEach(r=>Object.values(r).forEach(v=>{if(isOk(v))ok++;if(isOk(v)||isBad(v))tot++;}));
+  return tot===0?100:Math.round((ok/tot)*100);
+}
 function calcOverallCompliance(){const wd=trackers.filter(t=>sheetData[t.id]&&sheetData[t.id].length>0);if(!wd.length)return 0;return Math.round(wd.reduce((s,t)=>s+calcCompliance(sheetData[t.id]),0)/wd.length);}
-function getLastDate(rows){if(!rows||!rows.length)return'—';const l=rows[rows.length-1];const k=Object.keys(l).find(k=>k.toLowerCase().includes('timestamp')||k.toLowerCase().includes('date'));return k?(l[k]||'—').split(' ')[0]:'—';}
-function getLastPerson(rows){if(!rows||!rows.length)return'—';const l=rows[rows.length-1];const k=Object.keys(l).find(k=>k.toLowerCase().includes('name')||k.toLowerCase().includes('by')||k.toLowerCase().includes('done'));return k?(l[k]||'—'):'—';}
-function noDataHtml(t){return`<div class="notice"><span class="notice-icon">⚠</span><div>No sheet data for this tracker yet.<br><br><strong>Steps to enable:</strong><br>1. Open your Google Form → Responses → click the Sheets icon<br>2. Copy the Sheet ID from the URL<br>3. Open ⚙ Settings → paste it under this tracker${t.formUrl?`<br><br><a href="${esc(t.formUrl)}" target="_blank" class="connect-btn">▶ Open Form</a>`:''}</div></div>`;}
+function getLastDate(rows){
+  if(!rows||!rows.length)return'—';
+  const l=rows[rows.length-1];
+  // local tracker records use 'date' key directly
+  if(l.date) return l.date;
+  const k=Object.keys(l).find(k=>k.toLowerCase().includes('timestamp')||k.toLowerCase().includes('date'));
+  return k?(l[k]||'—').split(' ')[0]:'—';
+}
+function getLastPerson(rows){
+  if(!rows||!rows.length)return'—';
+  const l=rows[rows.length-1];
+  // local tracker records use 'doneBy' key directly
+  if(l.doneBy) return l.doneBy;
+  const k=Object.keys(l).find(k=>k.toLowerCase().includes('name')||k.toLowerCase().includes('by')||k.toLowerCase().includes('done'));
+  return k?(l[k]||'—'):'—';
+}
+function noDataHtml(t){
+  if(isLocalTracker(t.name)){
+    return `<div class="notice"><span class="notice-icon">ℹ</span><div>No records yet for this tracker.<br><br>
+      Click <strong>Add Record</strong> on the tracker card to log the first entry.
+      <br><br>
+      <button class="btn primary" onclick="closeModal('reportOverlay');closeModal('statusOverlay');openAddLocalRecord('${t.id}')">＋ Add First Record</button>
+    </div></div>`;
+  }
+  return`<div class="notice"><span class="notice-icon">⚠</span><div>No sheet data for this tracker yet.<br><br><strong>Steps to enable:</strong><br>1. Open your Google Form → Responses → click the Sheets icon<br>2. Copy the Sheet ID from the URL<br>3. Open ⚙ Settings → paste it under this tracker${t.formUrl?`<br><br><a href="${esc(t.formUrl)}" target="_blank" class="connect-btn">▶ Open Form</a>`:''}</div></div>`;
+}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 // ══════════════════════════════════════════════════════════════════
@@ -3917,6 +5322,7 @@ function setAccentCustom(inp){
   clearActive('soAccentSwatches');
   document.getElementById('soAccentHex').textContent = hex;
 }
+function setAccentFromHex(hex){ soState.accent=hex; applyAccent(hex); clearActive('soAccentSwatches'); syncSwatchActive('soAccentSwatches',hex); }
 function resetAccent(){ setAccentFromHex(SO_DEFAULTS.accent); document.getElementById('soAccentCustom').value=SO_DEFAULTS.accent; document.getElementById('soAccentHex').textContent=SO_DEFAULTS.accent; }
 
 function setBg(el){
@@ -4040,14 +5446,43 @@ const _origRenderTrackers = typeof renderTrackers==='function'?renderTrackers:nu
 loadTheme();
 loadSOState();
 applySOState();
+loadLocalRecords();
 
 tick();setInterval(tick,1000);
 
 // ══════════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════════
-loadState();
+loadState().then(()=>{
+  // After trackers are loaded, seed sheetData for local trackers
+  trackers.forEach(t=>{
+    if(isLocalTracker(t.name)){
+      const rows = getLocalRows(t.id);
+      if(rows.length) sheetData[t.id] = rows;
+    }
+  });
+  renderTrackers();
+});
 </script>
+
+<!-- LOCAL RECORD MODAL -->
+<div class="overlay" id="localRecordOverlay">
+  <div class="modal narrow">
+    <div class="modal-head">
+      <div class="modal-head-left">
+        <span id="localRecordIcon">📋</span>
+        <span class="modal-title" id="localRecordTitle">Add Record</span>
+      </div>
+      <button class="modal-close" onclick="closeModal('localRecordOverlay')">✕</button>
+    </div>
+    <div class="modal-body" id="localRecordFormBody"></div>
+    <div id="localRecordErr" style="color:var(--red);font-size:11px;font-family:var(--font-mono);display:none;padding:0 22px 10px"></div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('localRecordOverlay')">Cancel</button>
+      <button class="btn primary" onclick="saveLocalRecord()">Save Record</button>
+    </div>
+  </div>
+</div>
 
 <!-- LIGHTBOX -->
 <div id="glbLightbox" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(8px)">
@@ -4204,5 +5639,50 @@ loadState();
     <button class="so-save-btn" onclick="saveScreenOptions()">Save Preferences</button>
   </div>
 </div>
+
+
+<script>
+// ══ MOBILE SIDEBAR TOGGLE ════════════════════════════════════════
+function toggleMobileSidebar(){
+  const sb = document.querySelector('.sidebar');
+  const bd = document.getElementById('mobBackdrop');
+  const isOpen = sb.classList.contains('mob-open');
+  if(isOpen){ closeMobileSidebar(); }
+  else {
+    sb.classList.add('mob-open');
+    bd.style.display = 'block';
+    setTimeout(()=>bd.classList.add('open'), 10);
+    document.body.style.overflow = 'hidden';
+  }
+}
+function closeMobileSidebar(){
+  const sb = document.querySelector('.sidebar');
+  const bd = document.getElementById('mobBackdrop');
+  sb.classList.remove('mob-open');
+  bd.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(()=>{ if(!bd.classList.contains('open')) bd.style.display='none'; }, 280);
+}
+// Close sidebar when a nav item is clicked on mobile
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    if(window.innerWidth <= 900) closeMobileSidebar();
+  });
+});
+// Close sidebar on resize to desktop
+window.addEventListener('resize', ()=>{
+  if(window.innerWidth > 900) closeMobileSidebar();
+});
+// Touch swipe to close sidebar
+(()=>{
+  let startX = 0;
+  document.addEventListener('touchstart', e=>{ startX = e.touches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', e=>{
+    const dx = e.changedTouches[0].clientX - startX;
+    const sb = document.querySelector('.sidebar');
+    if(dx < -60 && sb.classList.contains('mob-open')) closeMobileSidebar();
+  }, {passive:true});
+})();
+</script>
 
 </body></html>
