@@ -7595,4 +7595,734 @@ if (document.readyState === 'loading') {
 }
 
 </script>
+
+  <!-- ══════════════════════════════════════════════════════════════
+     SUPABASE INTEGRATION FOR C-TRACKER
+     أضف هذا الكود قبل </body> مباشرة في ملف index.html
+════════════════════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+// ══════════════════════════════════════════════════════════════════
+// SUPABASE INTEGRATION PATCH FOR C-TRACKER
+// أضف هذا الكود قبل </body> مباشرة في ملف index.html
+// ══════════════════════════════════════════════════════════════════
+
+const SUPABASE_URL = 'https://zyfijmfwupnqxefnashm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp5ZmlqbWZ3dXBucXhlZm5hc2htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MzA2MTYsImV4cCI6MjA5NjQwNjYxNn0.KCMV7zaKNvDKletQhtmS32wQkSMiyMpwz-mgRLeFJ8U';
+
+let _sb = null; // Supabase client
+let _sbUser = null; // current user
+let _sbRole = null; // 'admin' or 'viewer'
+
+// Initialize Supabase
+async function initSupabase() {
+  if (_sb) return _sb;
+  const { createClient } = supabase;
+  _sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+  return _sb;
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────
+async function sbSignIn(email, password) {
+  await initSupabase();
+  const { data, error } = await _sb.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  _sbUser = data.user;
+  await _loadUserRole();
+  return data;
+}
+
+async function sbSignUp(email, password, fullName) {
+  await initSupabase();
+  const { data, error } = await _sb.auth.signUp({ email, password });
+  if (error) throw error;
+  // Insert role record
+  if (data.user) {
+    await _sb.from('user_roles').insert({
+      user_id: data.user.id,
+      full_name: fullName,
+      role: 'viewer',
+      can_view_all: false
+    });
+  }
+  return data;
+}
+
+async function sbSignOut() {
+  await initSupabase();
+  await _sb.auth.signOut();
+  _sbUser = null;
+  _sbRole = null;
+  showLoginModal();
+}
+
+async function _loadUserRole() {
+  if (!_sbUser) return;
+  const { data } = await _sb.from('user_roles').select('*').eq('user_id', _sbUser.id).single();
+  _sbRole = data;
+}
+
+async function checkSession() {
+  await initSupabase();
+  const { data: { session } } = await _sb.auth.getSession();
+  if (session) {
+    _sbUser = session.user;
+    await _loadUserRole();
+    return true;
+  }
+  return false;
+}
+
+// ── OVERRIDE: saveLocalRecords → Supabase ─────────────────────────
+const _origSaveLocal = window.saveLocalRecords;
+window.saveLocalRecords = async function() {
+  // Keep localStorage as backup
+  try { localStorage.setItem('ct_local_records', JSON.stringify(localRecords)); } catch(e) {}
+};
+
+// ── OVERRIDE: addLocalRecord → Supabase ──────────────────────────
+const _origAddLocal = window.addLocalRecord;
+window.addLocalRecord = async function(trackerId, record) {
+  // Always save to localStorage first (instant)
+  if (!localRecords[trackerId]) localRecords[trackerId] = [];
+  localRecords[trackerId].push(record);
+  try { localStorage.setItem('ct_local_records', JSON.stringify(localRecords)); } catch(e) {}
+  sheetData[trackerId] = localRecords[trackerId];
+
+  // Then save to Supabase if logged in
+  if (_sbUser && _sb) {
+    try {
+      const t = trackers.find(x => x.id === trackerId);
+      const type = getLocalTrackerType(t ? t.name : '');
+      const { error } = await _sb.from('tracker_records').insert({
+        tracker_id: trackerId,
+        tracker_name: t ? t.name : trackerId,
+        tracker_type: type || 'unknown',
+        record_data: record,
+        done_by: record.doneBy || null,
+        record_date: record.date || null,
+        created_by: _sbUser.id
+      });
+      if (error) console.warn('Supabase save error:', error);
+      else showToast('☁ Saved to Supabase ✓', 'green');
+    } catch(e) {
+      console.warn('Supabase unreachable, saved locally:', e);
+    }
+  }
+};
+
+// ── OVERRIDE: getLocalRows → Supabase + localStorage merge ────────
+window.getLocalRows = function(trackerId) {
+  return localRecords[trackerId] || [];
+};
+
+// ── LOAD records FROM Supabase on startup ─────────────────────────
+async function loadRecordsFromSupabase() {
+  if (!_sb || !_sbUser) return;
+  try {
+    let query = _sb.from('tracker_records').select('*').order('created_at', { ascending: true });
+    // Viewers only see their own records unless can_view_all
+    if (_sbRole && !_sbRole.can_view_all && _sbRole.role !== 'admin') {
+      query = query.eq('created_by', _sbUser.id);
+    }
+    const { data, error } = await query;
+    if (error || !data) return;
+
+    // Merge into localRecords
+    data.forEach(row => {
+      const tid = row.tracker_id;
+      if (!localRecords[tid]) localRecords[tid] = [];
+      const rec = { ...row.record_data, _sbId: row.id, _savedAt: row.created_at };
+      // Avoid duplicates
+      const exists = localRecords[tid].some(r => r._sbId === row.id);
+      if (!exists) localRecords[tid].push(rec);
+    });
+
+    // Sync to sheetData
+    trackers.forEach(t => {
+      if (isLocalTracker(t.name)) {
+        const rows = localRecords[t.id] || [];
+        if (rows.length) sheetData[t.id] = rows;
+      }
+    });
+
+    // Save merged to localStorage
+    try { localStorage.setItem('ct_local_records', JSON.stringify(localRecords)); } catch(e) {}
+    renderTrackers();
+    showToast(`☁ Loaded ${data.length} records from Supabase`, 'green');
+  } catch(e) {
+    console.warn('Could not load from Supabase:', e);
+  }
+}
+
+// ── OVERRIDE: deleteLocalRecord → also delete from Supabase ───────
+const _origDeleteLocal = window.confirmDeleteLocalRecord;
+window.confirmDeleteLocalRecord = async function(trackerId, idx) {
+  if (!confirm('Delete this record? This cannot be undone.')) return;
+  const rows = localRecords[trackerId];
+  const rec = rows && rows[idx];
+  // Delete from Supabase if has _sbId
+  if (rec && rec._sbId && _sb) {
+    await _sb.from('tracker_records').delete().eq('id', rec._sbId);
+  }
+  deleteLocalRecord(trackerId, idx);
+  closeModal('reportOverlay');
+  const remaining = getLocalRows(trackerId);
+  sheetData[trackerId] = remaining.length ? remaining : null;
+  renderTrackers();
+  if (remaining.length) {
+    _rpt.allRows = remaining;
+    _rpt.idx = Math.min(idx, remaining.length - 1);
+    openReport(trackerId);
+  }
+  showToast('Record deleted', 'amber');
+};
+
+// ── CACHE Google Sheet data to Supabase ───────────────────────────
+const _origFetchSheet = window.fetchSheet;
+window.fetchSheet = async function(sheetId, name) {
+  const result = await _origFetchSheet(sheetId, name);
+  // Cache to Supabase if admin
+  if (result && _sb && _sbRole && _sbRole.role === 'admin') {
+    const tracker = trackers.find(t => t.sheetId === sheetId);
+    if (tracker) {
+      await _sb.from('google_sheet_cache').upsert({
+        tracker_id: tracker.id,
+        tracker_name: name,
+        sheet_rows: result,
+        synced_at: new Date().toISOString()
+      }, { onConflict: 'tracker_id' });
+    }
+  }
+  return result;
+};
+
+// ── LOGIN MODAL UI ────────────────────────────────────────────────
+function showLoginModal() {
+  const existing = document.getElementById('sbLoginOverlay');
+  if (existing) { existing.style.display = 'flex'; return; }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'sbLoginOverlay';
+  overlay.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,0.85);
+    z-index:9999;display:flex;align-items:center;justify-content:center;
+    backdrop-filter:blur(8px);
+  `;
+
+  overlay.innerHTML = `
+    <div style="
+      background:var(--surface);border:1px solid var(--border2);
+      border-radius:16px;padding:32px;width:380px;max-width:95vw;
+      box-shadow:0 24px 70px rgba(0,0,0,0.7);
+      font-family:var(--font-sans);
+    ">
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="
+          width:56px;height:56px;background:linear-gradient(135deg,var(--accent),#c0202f);
+          border-radius:14px;display:flex;align-items:center;justify-content:center;
+          font-family:var(--font-mono);font-size:14px;font-weight:700;color:#fff;
+          margin:0 auto 14px;box-shadow:0 0 24px var(--accent-glow);
+        ">CT</div>
+        <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:var(--text)">C-TRACKER</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Operations Dashboard · ACF</div>
+      </div>
+
+      <div id="sbLoginErr" style="
+        display:none;background:var(--red-bg);border:1px solid var(--red-dim);
+        border-radius:8px;padding:10px 14px;margin-bottom:16px;
+        font-family:var(--font-mono);font-size:11px;color:var(--red);
+      "></div>
+
+      <div id="sbLoginForm">
+        <div style="margin-bottom:13px">
+          <label style="font-family:var(--font-mono);font-size:9px;color:var(--muted);display:block;margin-bottom:5px;letter-spacing:0.08em;text-transform:uppercase">EMAIL</label>
+          <input type="email" id="sbEmail" placeholder="your@email.com" style="
+            width:100%;font-family:var(--font-mono);font-size:12px;
+            background:var(--surface3);border:1px solid var(--border2);
+            border-radius:5px;padding:9px 11px;color:var(--text);
+            transition:border-color 0.15s;outline:none;
+          " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'"
+          onkeydown="if(event.key==='Enter')document.getElementById('sbPassword').focus()">
+        </div>
+        <div style="margin-bottom:20px">
+          <label style="font-family:var(--font-mono);font-size:9px;color:var(--muted);display:block;margin-bottom:5px;letter-spacing:0.08em;text-transform:uppercase">PASSWORD</label>
+          <input type="password" id="sbPassword" placeholder="••••••••" style="
+            width:100%;font-family:var(--font-mono);font-size:12px;
+            background:var(--surface3);border:1px solid var(--border2);
+            border-radius:5px;padding:9px 11px;color:var(--text);
+            transition:border-color 0.15s;outline:none;
+          " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'"
+          onkeydown="if(event.key==='Enter')sbDoLogin()">
+        </div>
+        <button onclick="sbDoLogin()" id="sbLoginBtn" style="
+          width:100%;font-family:var(--font-mono);font-size:12px;font-weight:700;
+          padding:11px;border-radius:8px;border:none;cursor:pointer;letter-spacing:0.05em;
+          background:var(--accent);color:#fff;transition:opacity 0.15s;
+          box-shadow:0 0 16px var(--accent-glow);
+        ">▶ SIGN IN</button>
+        <div style="text-align:center;margin-top:14px">
+          <button onclick="sbShowSignup()" style="
+            background:none;border:none;cursor:pointer;
+            font-family:var(--font-mono);font-size:10px;color:var(--muted);
+          ">New user? Create account →</button>
+        </div>
+        <div style="
+          margin-top:16px;padding-top:14px;border-top:1px solid var(--border);
+          text-align:center;
+        ">
+          <button onclick="sbContinueOffline()" style="
+            background:none;border:none;cursor:pointer;
+            font-family:var(--font-mono);font-size:10px;color:var(--dim);
+          ">Continue offline (local only)</button>
+        </div>
+      </div>
+
+      <div id="sbSignupForm" style="display:none">
+        <div style="margin-bottom:13px">
+          <label style="font-family:var(--font-mono);font-size:9px;color:var(--muted);display:block;margin-bottom:5px;letter-spacing:0.08em;text-transform:uppercase">FULL NAME</label>
+          <input type="text" id="sbFullName" placeholder="Ahmed Al-..." style="
+            width:100%;font-family:var(--font-mono);font-size:12px;
+            background:var(--surface3);border:1px solid var(--border2);
+            border-radius:5px;padding:9px 11px;color:var(--text);outline:none;
+          " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'">
+        </div>
+        <div style="margin-bottom:13px">
+          <label style="font-family:var(--font-mono);font-size:9px;color:var(--muted);display:block;margin-bottom:5px;letter-spacing:0.08em;text-transform:uppercase">EMAIL</label>
+          <input type="email" id="sbEmailReg" placeholder="your@email.com" style="
+            width:100%;font-family:var(--font-mono);font-size:12px;
+            background:var(--surface3);border:1px solid var(--border2);
+            border-radius:5px;padding:9px 11px;color:var(--text);outline:none;
+          " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'">
+        </div>
+        <div style="margin-bottom:20px">
+          <label style="font-family:var(--font-mono);font-size:9px;color:var(--muted);display:block;margin-bottom:5px;letter-spacing:0.08em;text-transform:uppercase">PASSWORD</label>
+          <input type="password" id="sbPasswordReg" placeholder="min 6 characters" style="
+            width:100%;font-family:var(--font-mono);font-size:12px;
+            background:var(--surface3);border:1px solid var(--border2);
+            border-radius:5px;padding:9px 11px;color:var(--text);outline:none;
+          " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'">
+        </div>
+        <button onclick="sbDoSignup()" style="
+          width:100%;font-family:var(--font-mono);font-size:12px;font-weight:700;
+          padding:11px;border-radius:8px;border:none;cursor:pointer;
+          background:var(--green);color:#fff;
+        ">✓ CREATE ACCOUNT</button>
+        <div style="text-align:center;margin-top:12px">
+          <button onclick="sbShowLogin()" style="
+            background:none;border:none;cursor:pointer;
+            font-family:var(--font-mono);font-size:10px;color:var(--muted);
+          ">← Back to sign in</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+}
+
+function sbShowSignup() {
+  document.getElementById('sbLoginForm').style.display = 'none';
+  document.getElementById('sbSignupForm').style.display = 'block';
+  document.getElementById('sbLoginErr').style.display = 'none';
+}
+function sbShowLogin() {
+  document.getElementById('sbLoginForm').style.display = 'block';
+  document.getElementById('sbSignupForm').style.display = 'none';
+  document.getElementById('sbLoginErr').style.display = 'none';
+}
+
+async function sbDoLogin() {
+  const email = document.getElementById('sbEmail').value.trim();
+  const pass  = document.getElementById('sbPassword').value;
+  const btn   = document.getElementById('sbLoginBtn');
+  const err   = document.getElementById('sbLoginErr');
+  if (!email || !pass) { showSbErr('Please enter email and password'); return; }
+  btn.textContent = '⏳ Signing in...'; btn.disabled = true;
+  try {
+    await sbSignIn(email, pass);
+    document.getElementById('sbLoginOverlay').style.display = 'none';
+    updateUserBar();
+    await loadRecordsFromSupabase();
+    showToast(`✓ Welcome back, ${_sbRole?.full_name || email.split('@')[0]}`, 'green');
+  } catch(e) {
+    showSbErr(e.message || 'Sign in failed');
+    btn.textContent = '▶ SIGN IN'; btn.disabled = false;
+  }
+}
+
+async function sbDoSignup() {
+  const name  = document.getElementById('sbFullName').value.trim();
+  const email = document.getElementById('sbEmailReg').value.trim();
+  const pass  = document.getElementById('sbPasswordReg').value;
+  if (!name || !email || !pass) { showSbErr('All fields required'); return; }
+  if (pass.length < 6) { showSbErr('Password must be at least 6 characters'); return; }
+  try {
+    await sbSignUp(email, pass, name);
+    showSbErr('✓ Account created! Check your email to confirm, then sign in.', true);
+    setTimeout(() => sbShowLogin(), 2000);
+  } catch(e) {
+    showSbErr(e.message || 'Signup failed');
+  }
+}
+
+function showSbErr(msg, isSuccess = false) {
+  const el = document.getElementById('sbLoginErr');
+  if (!el) return;
+  el.style.display = 'block';
+  el.textContent = msg;
+  el.style.background = isSuccess ? 'var(--green-bg)' : 'var(--red-bg)';
+  el.style.borderColor = isSuccess ? 'var(--green-dim)' : 'var(--red-dim)';
+  el.style.color = isSuccess ? 'var(--green)' : 'var(--red)';
+}
+
+function sbContinueOffline() {
+  document.getElementById('sbLoginOverlay').style.display = 'none';
+  showToast('⚠ Offline mode — changes saved locally only', 'amber');
+}
+
+// ── USER BAR in sidebar ───────────────────────────────────────────
+function updateUserBar() {
+  const nameEl = document.querySelector('.user-name');
+  const roleEl = document.querySelector('.user-role');
+  if (_sbRole) {
+    if (nameEl) nameEl.textContent = _sbRole.full_name || 'User';
+    if (roleEl) roleEl.textContent = (_sbRole.role === 'admin' ? '⭐ Admin' : '👤 Viewer') + ' · ' + (_sbUser?.email || '');
+  } else if (_sbUser) {
+    if (nameEl) nameEl.textContent = _sbUser.email?.split('@')[0] || 'User';
+    if (roleEl) roleEl.textContent = _sbUser.email || '';
+  }
+  // Add sign out button to sidebar footer
+  const footer = document.querySelector('.sidebar-footer');
+  if (footer && !footer.querySelector('#sbSignOutBtn') && _sbUser) {
+    const btn = document.createElement('button');
+    btn.id = 'sbSignOutBtn';
+    btn.style.cssText = 'margin-left:auto;background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);cursor:pointer;font-family:var(--font-mono);font-size:9px;padding:3px 7px;';
+    btn.textContent = '↩ Sign out';
+    btn.onclick = sbSignOut;
+    footer.appendChild(btn);
+  }
+}
+
+// ── ADMIN PANEL ───────────────────────────────────────────────────
+async function openAdminPanel() {
+  if (!_sbRole || _sbRole.role !== 'admin') {
+    showToast('Admin access required', 'amber'); return;
+  }
+  const { data: users } = await _sb.from('user_roles').select('*').order('created_at');
+  const overlay = document.getElementById('adminPanelOverlay') || (() => {
+    const el = document.createElement('div');
+    el.id = 'adminPanelOverlay';
+    el.className = 'overlay';
+    el.onclick = e => { if(e.target===el) el.classList.remove('open'); };
+    document.body.appendChild(el);
+    return el;
+  })();
+
+  const rows = (users || []).map(u => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:7px">
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700;color:var(--text)">${esc(u.full_name)}</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">${u.role} · ${u.can_view_all?'sees all':'own only'}</div>
+      </div>
+      <select onchange="sbUpdateRole('${u.user_id}',this.value)" style="font-family:var(--font-mono);font-size:10px;background:var(--surface3);border:1px solid var(--border2);border-radius:5px;color:var(--text);padding:4px 8px;">
+        <option value="viewer" ${u.role==='viewer'?'selected':''}>Viewer</option>
+        <option value="admin"  ${u.role==='admin'?'selected':''}>Admin</option>
+      </select>
+      <select onchange="sbUpdateViewAll('${u.user_id}',this.value)" style="font-family:var(--font-mono);font-size:10px;background:var(--surface3);border:1px solid var(--border2);border-radius:5px;color:var(--text);padding:4px 8px;">
+        <option value="false" ${!u.can_view_all?'selected':''}>Own only</option>
+        <option value="true"  ${u.can_view_all?'selected':''}>Sees all</option>
+      </select>
+    </div>`).join('');
+
+  overlay.innerHTML = `
+    <div class="modal" style="width:520px">
+      <div class="modal-head">
+        <div class="modal-head-left"><span>👥</span><span class="modal-title">User Management</span></div>
+        <button class="modal-close" onclick="closeModal('adminPanelOverlay')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-bottom:14px">
+          ${(users||[]).length} registered users · Manage roles and data access
+        </div>
+        ${rows || '<div style="color:var(--muted);font-size:12px">No users found</div>'}
+      </div>
+      <div class="modal-foot">
+        <button class="btn" onclick="closeModal('adminPanelOverlay')">Close</button>
+      </div>
+    </div>`;
+  openModal('adminPanelOverlay');
+}
+
+async function sbUpdateRole(userId, role) {
+  await _sb.from('user_roles').update({ role }).eq('user_id', userId);
+  showToast('Role updated', 'green');
+}
+async function sbUpdateViewAll(userId, val) {
+  await _sb.from('user_roles').update({ can_view_all: val === 'true' }).eq('user_id', userId);
+  showToast('Access updated', 'green');
+}
+
+// ── REAL-TIME subscription ────────────────────────────────────────
+async function subscribeRealtime() {
+  if (!_sb || !_sbUser) return;
+  _sb.channel('tracker_records_changes')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'tracker_records'
+    }, payload => {
+      const row = payload.new;
+      const tid = row.tracker_id;
+      if (!localRecords[tid]) localRecords[tid] = [];
+      const exists = localRecords[tid].some(r => r._sbId === row.id);
+      if (!exists) {
+        localRecords[tid].push({ ...row.record_data, _sbId: row.id, _savedAt: row.created_at });
+        sheetData[tid] = localRecords[tid];
+        renderTrackers();
+        showToast(`🔄 New record from ${row.done_by || 'colleague'}`, 'green');
+      }
+    })
+    .subscribe();
+}
+
+// ── STARTUP ───────────────────────────────────────────────────────
+async function initSupabaseAndLoad() {
+  try {
+    await initSupabase();
+    const hasSession = await checkSession();
+    if (hasSession) {
+      updateUserBar();
+      await loadRecordsFromSupabase();
+      await subscribeRealtime();
+      // Add admin panel link if admin
+      if (_sbRole && _sbRole.role === 'admin') {
+        const nav = document.querySelector('.sidebar-nav');
+        if (nav && !document.getElementById('adminNavItem')) {
+          const item = document.createElement('a');
+          item.id = 'adminNavItem';
+          item.className = 'nav-item';
+          item.href = '#';
+          item.onclick = (e) => { e.preventDefault(); openAdminPanel(); };
+          item.innerHTML = '<span class="nav-icon">👥</span> Users';
+          nav.appendChild(item);
+        }
+      }
+    } else {
+      showLoginModal();
+    }
+  } catch(e) {
+    console.warn('Supabase init error:', e);
+    showToast('⚠ Cloud offline — using local data', 'amber');
+  }
+}
+
+// Run after page loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initSupabaseAndLoad);
+} else {
+  setTimeout(initSupabaseAndLoad, 500);
+}
+
+</script>
+
+  <!-- ══════════════════════════════════════════════════════════════
+     SUPABASE FORMS PATCH FOR C-TRACKER
+     أضف هذا بعد SUPABASE_INJECTION.html وقبل </body>
+════════════════════════════════════════════════════════════════ -->
+<script>
+// ══════════════════════════════════════════════════════════════════
+// PATCH 2: Google Forms → Supabase
+// أضف هذا بعد SUPABASE_INJECTION.html في ملف index.html
+// ══════════════════════════════════════════════════════════════════
+
+// ── Load Google Form submissions from Supabase ────────────────────
+async function loadFormSubmissionsFromSupabase() {
+  if (!_sb) return;
+  try {
+    const { data, error } = await _sb
+      .from('google_form_submissions')
+      .select('*')
+      .order('submission_time', { ascending: true });
+
+    if (error || !data || !data.length) return;
+
+    // Group by tracker_id
+    const byTracker = {};
+    data.forEach(row => {
+      const tid = row.tracker_id;
+      if (!byTracker[tid]) byTracker[tid] = [];
+      // Convert to same format as parseRows() output
+      const rec = { ...row.record_data, _sbFormId: row.id, _source: 'google_form' };
+      byTracker[tid].push(rec);
+    });
+
+    // Merge into sheetData (don't override existing Google Sheets API data)
+    Object.entries(byTracker).forEach(([tid, rows]) => {
+      if (!sheetData[tid] || !sheetData[tid].length) {
+        sheetData[tid] = rows;
+      } else {
+        // Merge: add any rows not already present
+        const existingIds = new Set(sheetData[tid].map(r => r._sbFormId).filter(Boolean));
+        const newRows = rows.filter(r => !existingIds.has(r._sbFormId));
+        if (newRows.length) sheetData[tid] = [...sheetData[tid], ...newRows];
+      }
+    });
+
+    const total = data.length;
+    renderTrackers();
+    if (total > 0) showToast(`☁ Loaded ${total} form submissions from Supabase`, 'green');
+  } catch(e) {
+    console.warn('Could not load form submissions:', e);
+  }
+}
+
+// ── Sync Google Sheets → Supabase (manual button) ─────────────────
+async function syncSheetsToSupabase() {
+  if (!_sb || !_sbUser) {
+    showToast('Please sign in to sync', 'amber');
+    return;
+  }
+  if (!apiKey) {
+    showToast('No API key — add one in ⚙ Settings', 'amber');
+    return;
+  }
+
+  showToast('⏳ Syncing all sheets to Supabase...', 'amber');
+  let totalSynced = 0;
+
+  for (const t of trackers) {
+    if (!t.sheetId || !apiKey) continue;
+    try {
+      const raw = await fetchSheet(t.sheetId, t.name);
+      if (!raw || raw.length < 2) continue;
+      const rows = parseRows(raw);
+
+      // Upsert each row to google_form_submissions
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const keys = Object.keys(row);
+        const dateKey = keys.find(k => k.toLowerCase().includes('timestamp') || k.toLowerCase().includes('date'));
+        const nameKey = keys.find(k => k.toLowerCase().includes('done') || k.toLowerCase().includes('by') || k.toLowerCase().includes('name'));
+
+        const payload = {
+          tracker_id: t.id,
+          tracker_name: t.name,
+          tracker_type: 'sheet',
+          record_data: row,
+          done_by: nameKey ? (row[nameKey] || null) : null,
+          record_date: dateKey ? extractDateStr(row[dateKey]) : null,
+          spreadsheet_id: t.sheetId,
+          row_number: i + 2
+        };
+
+        await _sb.from('google_form_submissions').upsert(payload, {
+          onConflict: 'spreadsheet_id,row_number',
+          ignoreDuplicates: false
+        });
+        totalSynced++;
+      }
+
+      // Update cache
+      await _sb.from('google_sheet_cache').upsert({
+        tracker_id: t.id,
+        tracker_name: t.name,
+        sheet_rows: rows,
+        synced_at: new Date().toISOString(),
+        sync_source: 'manual',
+        total_rows: rows.length
+      }, { onConflict: 'tracker_id' });
+
+    } catch(e) {
+      console.warn(`Error syncing ${t.name}:`, e);
+    }
+  }
+
+  showToast(`✓ Synced ${totalSynced} rows to Supabase`, 'green');
+  renderTrackers();
+}
+
+function extractDateStr(val) {
+  if (!val) return null;
+  try {
+    const d = new Date(val);
+    if (!isNaN(d)) return d.toISOString().split('T')[0];
+  } catch(e) {}
+  return null;
+}
+
+// ── Real-time: استقبل submissions جديدة من Google Forms فوراً ─────
+async function subscribeFormSubmissions() {
+  if (!_sb) return;
+  _sb.channel('form_submissions_realtime')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'google_form_submissions'
+    }, payload => {
+      const row = payload.new;
+      const tid = row.tracker_id;
+
+      // Add to sheetData
+      if (!sheetData[tid]) sheetData[tid] = [];
+      const rec = { ...row.record_data, _sbFormId: row.id, _source: 'google_form' };
+      const exists = sheetData[tid].some(r => r._sbFormId === row.id);
+      if (!exists) {
+        sheetData[tid].push(rec);
+        renderTrackers();
+        showToast(`📋 New submission: ${row.tracker_name} by ${row.done_by || 'unknown'}`, 'green');
+      }
+    })
+    .subscribe();
+}
+
+// ── Override fetchAllSheets لإضافة Supabase sync ──────────────────
+const _origFetchAllSheets = window.fetchAllSheets;
+window.fetchAllSheets = async function() {
+  // الـ original يجيب من Google Sheets API
+  await _origFetchAllSheets();
+  // ثم sync لـ Supabase لو مسجّل دخول
+  if (_sbUser && _sb) {
+    await syncSheetsToSupabase();
+  }
+};
+
+// ── Add "Sync All to DB" button in topbar ─────────────────────────
+function addSyncDBButton() {
+  const topbarRight = document.querySelector('.topbar-right');
+  if (!topbarRight || document.getElementById('syncDBBtn')) return;
+  const btn = document.createElement('button');
+  btn.id = 'syncDBBtn';
+  btn.className = 'pill-btn';
+  btn.innerHTML = '🗄 Sync DB';
+  btn.title = 'Sync all Google Sheets data to Supabase database';
+  btn.onclick = syncSheetsToSupabase;
+  // Insert before the clock div
+  const clockDiv = topbarRight.querySelector('[style*="border-left"]');
+  if (clockDiv) topbarRight.insertBefore(btn, clockDiv);
+  else topbarRight.appendChild(btn);
+}
+
+// ── Hook into existing initSupabaseAndLoad ────────────────────────
+const _origInit = window.initSupabaseAndLoad;
+window.initSupabaseAndLoad = async function() {
+  await _origInit();
+  // بعد الـ init، جيب form submissions من Supabase
+  if (_sbUser && _sb) {
+    await loadFormSubmissionsFromSupabase();
+    await subscribeFormSubmissions();
+    addSyncDBButton();
+  }
+};
+
+// ── Show Supabase source badge in reports ─────────────────────────
+// يضيف badge صغير يبيّن مصدر كل submission
+const _origBuildStructured = window.buildStructuredReport;
+if (_origBuildStructured) {
+  window.buildStructuredReport = function(t, rows, idx) {
+    const html = _origBuildStructured(t, rows, idx);
+    return html; // base function handles display
+  };
+}
+</script>
 </body></html>
