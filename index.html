@@ -6044,35 +6044,41 @@ function saveLocalRecord(){
     // Persist locally
     try { localStorage.setItem('ct_local_records', JSON.stringify(localRecords)); } catch(e) {}
     sheetData[trackerId] = localRecords[trackerId];
-    // Sync edit to Supabase if logged in
+    // Sync edit to Supabase (session-safe)
     (async () => {
-      if (window._sbUser && window._sb) {
+      try {
+        if (!_sb) await initSupabase();
+        if (!_sbUser) {
+          const { data: { session } } = await _sb.auth.getSession();
+          if (session) { _sbUser = session.user; if (!_sbRole) await _loadUserRole(); }
+        }
+      } catch(e) {}
+      if (_sbUser && _sb) {
         try {
           const t2 = trackers.find(x => x.id === trackerId);
           const type2 = getLocalTrackerType(t2 ? t2.name : '');
-          // Find the Supabase row id stored on the record (set on load)
           const sbId = record._sbId;
           if (sbId) {
-            const { error } = await window._sb.from('tracker_records').update({
+            const { error } = await _sb.from('tracker_records').update({
               record_data: record,
               done_by: record.doneBy || null,
               record_date: record.date || null
             }).eq('id', sbId);
             if (error) console.warn('Supabase update error:', error);
-            else showToast('☁ Record updated in Supabase ✓', 'green');
+            else showToast('☁ Record updated in cloud ✓', 'green');
           } else {
-            // No _sbId means the record predates cloud sync — insert it now
-            const { error } = await window._sb.from('tracker_records').insert({
+            // No _sbId — record predates cloud sync, insert it now
+            const { data: inserted, error } = await _sb.from('tracker_records').insert({
               tracker_id: trackerId,
               tracker_name: t2 ? t2.name : trackerId,
               tracker_type: type2 || 'unknown',
               record_data: record,
               done_by: record.doneBy || null,
               record_date: record.date || null,
-              created_by: window._sbUser.id
-            });
+              created_by: _sbUser.id
+            }).select().single();
             if (error) console.warn('Supabase insert (edit fallback) error:', error);
-            else showToast('☁ Record synced to Supabase ✓', 'green');
+            else { record._sbId = inserted.id; showToast('☁ Record synced to cloud ✓', 'green'); }
           }
         } catch(e) { console.warn('Supabase unreachable on edit:', e); }
       }
@@ -7192,20 +7198,32 @@ window.saveLocalRecords = async function() {
 };
 
 // ── OVERRIDE: addLocalRecord → Supabase ──────────────────────────
-const _origAddLocal = window.addLocalRecord;
 window.addLocalRecord = async function(trackerId, record) {
-  // Always save to localStorage first (instant)
+  // 1. Always save to localStorage first (instant, offline-safe)
   if (!localRecords[trackerId]) localRecords[trackerId] = [];
   localRecords[trackerId].push(record);
   try { localStorage.setItem('ct_local_records', JSON.stringify(localRecords)); } catch(e) {}
   sheetData[trackerId] = localRecords[trackerId];
 
-  // Then save to Supabase if logged in
+  // 2. Ensure Supabase client is ready (handles async session restore)
+  try {
+    if (!_sb) await initSupabase();
+    // Re-check session in case it was restored async after page load
+    if (!_sbUser) {
+      const { data: { session } } = await _sb.auth.getSession();
+      if (session) {
+        _sbUser = session.user;
+        if (!_sbRole) await _loadUserRole();
+      }
+    }
+  } catch(e) { /* Supabase offline — local save already done */ }
+
+  // 3. Save to Supabase if we have a user
   if (_sbUser && _sb) {
     try {
       const t = trackers.find(x => x.id === trackerId);
       const type = getLocalTrackerType(t ? t.name : '');
-      const { error } = await _sb.from('tracker_records').insert({
+      const { data: inserted, error } = await _sb.from('tracker_records').insert({
         tracker_id: trackerId,
         tracker_name: t ? t.name : trackerId,
         tracker_type: type || 'unknown',
@@ -7213,12 +7231,23 @@ window.addLocalRecord = async function(trackerId, record) {
         done_by: record.doneBy || null,
         record_date: record.date || null,
         created_by: _sbUser.id
-      });
-      if (error) console.warn('Supabase save error:', error);
-      else showToast('☁ Saved to Supabase ✓', 'green');
+      }).select().single();
+      if (error) {
+        console.warn('Supabase save error:', error);
+        showToast('⚠ Cloud save failed — stored locally', 'amber');
+      } else {
+        // Stamp _sbId onto the in-memory record so edits/deletes can reference it
+        const arr = localRecords[trackerId];
+        const idx = arr.lastIndexOf(record);
+        if (idx !== -1) arr[idx]._sbId = inserted.id;
+        showToast('☁ Saved to cloud ✓', 'green');
+      }
     } catch(e) {
       console.warn('Supabase unreachable, saved locally:', e);
+      showToast('⚠ Offline — saved locally only', 'amber');
     }
+  } else {
+    showToast('⚠ Not signed in — saved locally only', 'amber');
   }
 };
 
