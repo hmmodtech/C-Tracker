@@ -7613,6 +7613,35 @@ async function openAdminPanel() {
   openModal('adminPanelOverlay');
 }
 
+  async function sbInviteUser() {
+  const email = document.getElementById('sbInviteEmail').value.trim();
+  const fullName = document.getElementById('sbInviteName').value.trim();
+  const resultEl = document.getElementById('sbInviteResult');
+
+  if (!email || !fullName) {
+    resultEl.textContent = 'Full Name and Email are required.';
+    resultEl.style.color = 'var(--red)';
+    return;
+  }
+
+  resultEl.textContent = 'Sending invitation...';
+  resultEl.style.color = 'var(--amber)';
+
+  const { data, error } = await _sb.auth.admin.inviteUserByEmail(email, {
+    data: { full_name: fullName } // Pass the full name in the metadata
+  });
+
+  if (error) {
+    resultEl.textContent = `Error: ${error.message}`;
+    resultEl.style.color = 'var(--red)';
+  } else {
+    resultEl.textContent = '✓ Invitation sent successfully!';
+    resultEl.style.color = 'var(--green)';
+    document.getElementById('sbInviteEmail').value = '';
+    document.getElementById('sbInviteName').value = '';
+  }
+}
+
 async function sbUpdateRole(userId, role) {
   await _sb.from('user_roles').update({ role }).eq('user_id', userId);
   showToast('Role updated', 'green');
