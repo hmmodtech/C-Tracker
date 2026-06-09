@@ -6637,15 +6637,11 @@ function getLocalTrackerFields(type){
       {key:'lastUpdate',label:'Last Update',type:'date'},
     ];
     case 'garmin': return [
-  {key:'date',              label:'Date of Record',                                              type:'date',  required:true},
-  {key:'doneBy',            label:'Done By',                                                     type:'text',  required:true},
-  {key:'garminCharged',     label:'Are the Garmin devices charged?',                             type:'yesno'},
-  {key:'phonesCharged',     label:'Are the connected mobile phones charged?',                    type:'yesno'},
-  {key:'internalTestDone',  label:'Has a successful test been conducted from each device?',      type:'yesno'},
-  {key:'externalTestDone',  label:'Has an external test been performed on the devices?',         type:'yesno'},
-  {key:'externalTestNumber',label:'What is the number used for the external test?',              type:'text',  conditional:{key:'externalTestDone', value:'Yes'}},
-  {key:'lastUpdate',        label:'Last Update',                                                 type:'date'},
-];
+      {key:'date',label:'Date of Record',type:'date',required:true},
+      {key:'doneBy',label:'Done By',type:'text',required:true},
+      {key:'garminUpdated',label:'Is Garmin Tracker Updated?',type:'yesno'},
+      {key:'lastUpdate',label:'Last Update',type:'date'},
+    ];
     case 'pharmacy': return [
       {key:'date',        label:'Date of Record',                                                                  type:'date',  required:true},
       {key:'doneBy',      label:'Done By',                                                                         type:'text',  required:true},
