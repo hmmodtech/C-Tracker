@@ -4420,7 +4420,10 @@ function buildFirstAidReport(t, rows, idx){
 function buildStructuredReport(t, rows, idx){
   // ── Route First Aid trackers to their custom report ──────────
   const tName = t.name.toLowerCase();
-  if(tName.includes('first aid') || tName.includes('firstaid') || tName.includes('fa kit') || tName.includes('first-aid')){
+  if(tName.includes('first aid') || tName.includes('firstaid') || tName.includes('fa kit') || tName.includes('first-aid')
+   || tName.includes('fire') || tName.includes('smoke')
+   || tName.includes('office security') || tName.includes('security check')
+   || tName.includes('warehouse')){
     return buildFirstAidReport(t, rows, idx);
   }
   // ── Route local-record trackers to their custom report ───────
