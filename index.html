@@ -5878,12 +5878,18 @@ function getLocalTrackerFields(type){
       {key:'doneBy',           label:'Done By',                                                                                     type:'text',   required:true},
       {key:'carsVisibility',   label:'Did the LOG Focal Point for cars confirmed that all cars are checked and have Visibility?',    type:'yesno',  required:false},
     ];
-    case 'commtree': return [
-      {key:'date',                   label:'Date of the Record',                                                       type:'date',   required:true},
-      {key:'doneBy',                 label:'Done By',                                                                  type:'text',   required:true},
-      {key:'emergencyContactUpdated',label:'Did the HR focal point confirmed that staff emergency contact sheet updated?', type:'yesno',  required:false},
-      {key:'numStaff',               label:'How many staff are in?',                                                    type:'number', conditional:{key:'emergencyContactUpdated',value:'Yes'}},
-    ];
+  case 'commtree': return [
+  {key:'date',             label:'Date of Record',                                     type:'date',     required:true},
+  {key:'doneBy',           label:'Done By',                                            type:'text',     required:true},
+  {key:'commTreeUpdated',  label:'Is the communication tree updated?',                 type:'yesno'},
+  {key:'sharedWithStaff',  label:'Has it been shared with the staff after the update?',type:'yesno',    conditional:{key:'commTreeUpdated', value:'Yes'}},
+  {key:'sharingDetails',   label:'State the method and date of sharing',               type:'text',     conditional:{key:'sharedWithStaff', value:'Yes'}},
+  {key:'testConducted',    label:'Has a test been conducted?',                         type:'yesno'},
+  {key:'staffReached',     label:'Number of staff reached',                            type:'number',   conditional:{key:'testConducted', value:'Yes'}},
+  {key:'staffNotReached',  label:'Number of individuals not reached',                  type:'number',   conditional:{key:'testConducted', value:'Yes'}},
+  {key:'executionTime',    label:'Training execution time (in minutes)',               type:'number',   conditional:{key:'testConducted', value:'Yes'}},
+  {key:'lessonsLearned',   label:'Lessons learned',                                    type:'textarea', conditional:{key:'testConducted', value:'Yes'}},
+];
     default: return [];
   }
 }
