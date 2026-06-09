@@ -4321,10 +4321,10 @@ function buildFirstAidReport(t, rows, idx){
         <button class="sr-sub-btn" onclick="srPrev()">‹</button>
         <button class="sr-sub-btn" onclick="srNext()">›</button>
         <button class="sr-hist-btn" onclick="srToggleHist()">🕐 History (${rows.length})</button>
-      </div>
-      <div class="sr-hist-drawer" id="srHistDrawer">${histRows}</div>
+      <button class="btn" style="margin-left:6px;font-size:10px;padding:5px 11px;border-color:var(--blue);color:var(--blue);background:var(--blue-bg);flex-shrink:0" onclick="exportFirstAidStylePDF('${t.id}',${idx})">⬇ PDF</button>
     </div>
-
+    <div class="sr-hist-drawer" id="srHistDrawer">${histRows}</div>
+  </div>
     <!-- ── META GRID ── -->
     <div class="fa-meta-grid">
       <div class="fa-meta-card fa-meta-red">
@@ -4416,7 +4416,309 @@ function buildFirstAidReport(t, rows, idx){
   </div>`;
 }
 // ── EXPORT FIRST AID STYLE REPORT TO PDF ─────────────────────────
-function exportFirstAidStylePDF(trackerId, idx){
+// ── EXPORT STRUCTURED REPORT (tabs-based) TO PDF ──────────────────
+function exportStructuredReportPDF(trackerId, idx){
+  const t = trackers.find(x=>x.id===trackerId);
+  if(!t) return;
+  const rows = sheetData[trackerId];
+  if(!rows||!rows.length){ showToast('No data to export','amber'); return; }
+
+  const row    = rows[idx];
+  const keys   = Object.keys(row);
+  const META_KW = ['timestamp','email','email address'];
+  const inspKeys = keys.filter(k=>!META_KW.some(m=>k.toLowerCase().includes(m)));
+
+  const dateKey = keys.find(k=>k.toLowerCase().includes('timestamp')||k.toLowerCase().includes('date'));
+  const nameKey = keys.find(k=>k.toLowerCase().includes('done')||k.toLowerCase().includes('by')||k.toLowerCase().includes('name'));
+  const locKey  = keys.find(k=>k.toLowerCase().includes('location')||k.toLowerCase().includes('site'));
+
+  const inspDate   = row[dateKey]||'—';
+  const inspPerson = row[nameKey]||'Unknown';
+  const inspLoc    = locKey ? (row[locKey]||'') : '';
+
+  let passN=0, failN=0, obsN=0, pendN=0;
+  inspKeys.forEach(k=>{
+    const sc=_statusClass(row[k]||'');
+    if(sc==='ss-pass') passN++;
+    else if(sc==='ss-fail') failN++;
+    else if(sc==='ss-obs') obsN++;
+    else pendN++;
+  });
+  const totalItems = inspKeys.length;
+  const compPct = totalItems===0?100:Math.round((passN/totalItems)*100);
+  const compColor = compPct>=80?'#16a34a':compPct>=50?'#d97706':'#dc2626';
+  const compBg    = compPct>=80?'#f0fdf4':compPct>=50?'#fffbeb':'#fef2f2';
+  const compBdr   = compPct>=80?'#86efac':compPct>=50?'#fcd34d':'#fca5a5';
+
+  const avgComp = rows.length>1
+    ? Math.round(rows.reduce((s,r)=>s+_compRow(r),0)/rows.length) : compPct;
+  const trendDiff = compPct - avgComp;
+  const trendTxt = trendDiff>0?`▲ ${trendDiff}% above avg`:trendDiff<0?`▼ ${Math.abs(trendDiff)}% below avg`:'at avg';
+  const trendColor = trendDiff>0?'#16a34a':trendDiff<0?'#dc2626':'#6b7280';
+
+  const verdictText = compPct>=80
+    ? `This inspection is in <strong>Good Standing</strong> at ${compPct}% compliance. ${failN===0?'No failures recorded.':failN+' item(s) require follow-up.'} ${obsN>0?obsN+' observation(s) noted for monitoring.':''}`
+    : compPct>=50
+    ? `This inspection is <strong>Satisfactory but requires attention</strong> at ${compPct}%. ${failN} failure(s) and ${obsN} observation(s) identified. Corrective action required before next cycle.`
+    : `This inspection shows <strong>Critical Non-Compliance</strong> at ${compPct}%. ${failN} failure(s) identified — immediate action required. Escalate to supervisor.`;
+  const verdictEmoji = compPct>=80?'✅':compPct>=50?'⚠️':'🚨';
+  const verdictLabel = compPct>=80?'Good Standing':compPct>=50?'Action Required':'Critical — Immediate';
+
+  const esc2 = s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  // Action items
+  const actionItems = inspKeys.filter(k=>{
+    const sc=_statusClass(row[k]||'');
+    return sc==='ss-fail'||sc==='ss-obs';
+  });
+
+  // Recurring issues
+  const mc={};
+  rows.forEach(r=>Object.entries(r).forEach(([k,v])=>{if(v&&isBad(v))mc[k]=(mc[k]||0)+1;}));
+  const freqItems=Object.entries(mc).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  // Inspection table rows
+  const inspTableRows = inspKeys.map((k,i)=>{
+    const v = row[k]||'—';
+    const isImg = _isImg(v);
+    const sc = isImg?'ss-pass':_statusClass(v);
+    const sl = isImg?'Photo':_statusLabel(v);
+    const bg = sc==='ss-pass'?'#f0fdf4':sc==='ss-fail'?'#fef2f2':sc==='ss-obs'?'#fffbeb':'#f9fafb';
+    const tc = sc==='ss-pass'?'#16a34a':sc==='ss-fail'?'#dc2626':sc==='ss-obs'?'#d97706':'#6b7280';
+    const lc = sc==='ss-pass'?'#86efac':sc==='ss-fail'?'#fca5a5':sc==='ss-obs'?'#fcd34d':'#e5e7eb';
+    return `<tr>
+      <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280;text-align:center;width:32px">${i+1}</td>
+      <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;font-weight:600;color:#111827">${esc2(k)}</td>
+      <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;background:${bg};color:${tc};border:1px solid ${lc}">${sl}</span>
+      </td>
+      <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${isImg?'<em style="color:#6b7280">Photo recorded</em>':esc2(v)}</td>
+    </tr>`;
+  }).join('');
+
+  // Action plan rows
+  const actionRows = actionItems.map((k,i)=>{
+    const v = row[k]||'—';
+    const isFail = _statusClass(v)==='ss-fail';
+    const priColor = isFail?'#dc2626':'#d97706';
+    const priBg    = isFail?'#fef2f2':'#fffbeb';
+    const priBdr   = isFail?'#fca5a5':'#fcd34d';
+    const action   = isFail
+      ? 'Investigate and resolve immediately. Document root cause, corrective action, and responsible person.'
+      : 'Review and monitor. Note any changes at next inspection.';
+    const histFails = rows.filter(r=>isBad(r[k]||'')).length;
+    return `<tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280;text-align:center">${i+1}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;font-weight:700;color:${priColor}">${esc2(k)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${esc2(v)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#374151">${action}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;padding:3px 8px;border-radius:10px;background:${priBg};color:${priColor};border:1px solid ${priBdr}">${isFail?'⚡ High':'⚠ Med'}</span>
+        <div style="font-size:10px;color:#9ca3af;margin-top:3px">${histFails>1?histFails+'/'+rows.length+' inspections':'First occurrence'}</div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Recurring issues bars
+  const freqBars = freqItems.map(([k,v],i)=>{
+    const pct = Math.round((v/rows.length)*100);
+    const barW = Math.round((v/freqItems[0][1])*100);
+    const barColor = pct>=70?'#dc2626':pct>=40?'#d97706':'#2563eb';
+    const severity = pct>=70?'Critical':pct>=40?'Frequent':'Occasional';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f3f4f6">
+      <div style="font-size:10px;color:#9ca3af;width:18px;text-align:center">${i+1}</div>
+      <div style="font-size:11px;color:#374151;width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(k.length>28?k.slice(0,26)+'…':k)}</div>
+      <div style="flex:1;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${barW}%;background:${barColor};border-radius:4px"></div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:#111827;white-space:nowrap;min-width:80px;text-align:right">${v}× <span style="font-size:9px;color:${barColor}">${severity} (${pct}%)</span></div>
+    </div>`;
+  }).join('');
+
+  // Recent submissions
+  const recentSubs = rows.slice(-8).reverse().map((r,i)=>{
+    const ri = rows.length-1-i;
+    const d = r[dateKey]||'—';
+    const n = r[nameKey]||'Unknown';
+    const cp = _compRow(r);
+    const cc = cp>=80?'#16a34a':cp>=50?'#d97706':'#dc2626';
+    const issues = Object.keys(r).filter(k=>isBad(r[k]||'')).length;
+    const isActive = ri===idx;
+    return `<tr style="${isActive?'background:#f0fdf4':''}">
+      <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${esc2(d)}</td>
+      <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${esc2(n)}</td>
+      <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${cc}">${cp}%</td>
+      <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:11px;color:${issues===0?'#16a34a':'#d97706'}">${issues===0?'✓ Clean':issues+' issue'+(issues!==1?'s':'')}</td>
+      ${isActive?'<td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:10px;font-weight:700;color:#16a34a">← This report</td>':'<td style="padding:7px 12px;border-bottom:1px solid #e5e7eb"></td>'}
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>${esc2(t.name)} — Inspection Report #${idx+1}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;color:#111827;background:#fff;padding:32px;max-width:960px;margin:0 auto}
+h2{font-size:13px;font-weight:700;color:#374151;margin:24px 0 12px;padding-bottom:8px;border-bottom:2px solid #e5e7eb;text-transform:uppercase;letter-spacing:0.06em}
+@media print{body{padding:16px} .no-print{display:none!important} @page{margin:18mm 16mm} h2{page-break-after:avoid} table{page-break-inside:auto} tr{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<!-- Print bar -->
+<div class="no-print" style="margin-bottom:24px;padding:12px 18px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+  <span style="font-size:13px;color:#1d4ed8">📄 Press <strong>Ctrl+P</strong> (Cmd+P on Mac) → <strong>Save as PDF</strong></span>
+  <button onclick="window.print()" style="padding:8px 18px;background:#1d4ed8;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">🖨 Print / Save as PDF</button>
+</div>
+
+<!-- Header banner -->
+<div style="background:linear-gradient(135deg,#070a10,#0d1520);border-radius:16px;padding:24px 28px;margin-bottom:20px;display:flex;align-items:center;gap:20px;border:1px solid rgba(74,158,255,0.2)">
+  <div style="font-size:40px;flex-shrink:0">${t.icon}</div>
+  <div style="flex:1">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:4px">C-TRACKER · Inspection Report</div>
+    <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.02em;margin-bottom:5px">${esc2(t.name)}</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4);display:flex;gap:16px;flex-wrap:wrap">
+      <span>📅 ${esc2(inspDate)}</span>
+      <span>👤 ${esc2(inspPerson)}</span>
+      ${inspLoc?`<span>📍 ${esc2(inspLoc)}</span>`:''}
+      <span>📋 Submission ${idx+1} of ${rows.length}</span>
+    </div>
+  </div>
+  <div style="text-align:center;flex-shrink:0">
+    <div style="font-size:38px;font-weight:800;color:${compColor};text-shadow:0 0 20px ${compColor}66">${compPct}%</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;margin-top:3px">SCORE</div>
+  </div>
+</div>
+
+<!-- KPI strip -->
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px">
+  <div style="background:#f0f9ff;border:1px solid #7dd3fc;border-radius:10px;padding:14px;text-align:center">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:800;color:#0284c7">${totalItems}</div>
+    <div style="font-size:9px;color:#0284c7;margin-top:3px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Checked</div>
+  </div>
+  <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px;text-align:center">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:800;color:#16a34a">${passN}</div>
+    <div style="font-size:9px;color:#16a34a;margin-top:3px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Passed</div>
+  </div>
+  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:14px;text-align:center">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:800;color:#dc2626">${failN}</div>
+    <div style="font-size:9px;color:#dc2626;margin-top:3px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Failed</div>
+  </div>
+  <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px;text-align:center">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:800;color:#d97706">${obsN}</div>
+    <div style="font-size:9px;color:#d97706;margin-top:3px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Observations</div>
+  </div>
+  <div style="background:${compBg};border:1px solid ${compBdr};border-radius:10px;padding:14px;text-align:center">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:800;color:${compColor}">${compPct}%</div>
+    <div style="font-size:9px;color:${compColor};margin-top:3px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Score</div>
+  </div>
+</div>
+
+<!-- Compliance bar -->
+<div style="display:flex;align-items:center;gap:14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px;margin-bottom:8px">
+  <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#6b7280;white-space:nowrap">Compliance Score</span>
+  <div style="flex:1;height:10px;background:#e5e7eb;border-radius:5px;overflow:hidden">
+    <div style="height:100%;width:${compPct}%;border-radius:5px;background:${compColor}"></div>
+  </div>
+  <span style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:800;color:${compColor};white-space:nowrap">${compPct}%</span>
+</div>
+<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#6b7280;margin-bottom:20px;padding:0 4px">
+  Historical average: <strong style="color:#374151">${avgComp}%</strong>
+  &nbsp;·&nbsp; <span style="color:${trendColor}">${trendTxt}</span>
+  &nbsp;·&nbsp; ${rows.length} total inspection${rows.length!==1?'s':''} on record
+</div>
+
+<!-- Verdict -->
+<div style="background:${compBg};border:1px solid ${compBdr};border-left:4px solid ${compColor};border-radius:0 10px 10px 0;padding:16px 18px;margin-bottom:24px">
+  <div style="font-size:13px;font-weight:700;color:${compColor};margin-bottom:6px">${verdictEmoji} ${verdictLabel}</div>
+  <div style="font-size:13px;color:#374151;line-height:1.7">${verdictText}</div>
+</div>
+
+<!-- Inspection Results -->
+<h2>🔍 Detailed Inspection Results</h2>
+<div style="font-size:11px;color:#6b7280;margin-bottom:10px;display:flex;gap:14px;flex-wrap:wrap">
+  <span style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac;padding:2px 8px;border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700">● Pass</span>
+  <span style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;padding:2px 8px;border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700">● Fail</span>
+  <span style="background:#fffbeb;color:#d97706;border:1px solid #fcd34d;padding:2px 8px;border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700">● Observation</span>
+  <span style="background:#f9fafb;color:#6b7280;border:1px solid #e5e7eb;padding:2px 8px;border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700">● Pending</span>
+</div>
+<table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
+  <thead>
+    <tr>
+      <th style="padding:9px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;background:#f9fafb;width:32px">#</th>
+      <th style="padding:9px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;background:#f9fafb">Control Point</th>
+      <th style="padding:9px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;background:#f9fafb">Status</th>
+      <th style="padding:9px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;background:#f9fafb">Response / Finding</th>
+    </tr>
+  </thead>
+  <tbody>${inspTableRows}</tbody>
+</table>
+
+${actionItems.length>0?`
+<!-- Action Plan -->
+<h2>⚠ Action &amp; Rectification Plan</h2>
+<div style="background:#fffbeb;border:1px solid #fcd34d;border-left:3px solid #d97706;border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#374151;line-height:1.6">
+  <strong>${actionItems.length} item${actionItems.length!==1?'s':''} require attention</strong> before the next inspection cycle. Assign a responsible person for each and document corrective actions taken.
+</div>
+<table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
+  <thead>
+    <tr>
+      <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb;width:28px">#</th>
+      <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Issue</th>
+      <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Response</th>
+      <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Required Action</th>
+      <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Priority</th>
+    </tr>
+  </thead>
+  <tbody>${actionRows}</tbody>
+</table>`:
+`<h2>⚠ Action Plan</h2>
+<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px 18px;display:flex;align-items:center;gap:12px">
+  <span style="font-size:22px">🎉</span>
+  <div><div style="font-weight:700;color:#16a34a;margin-bottom:3px">All items passed this inspection</div><div style="font-size:12px;color:#15803d">No corrective actions required.</div></div>
+</div>`}
+
+${freqItems.length>0?`
+<!-- Recurring Issues -->
+<h2>📉 Recurring Issues — All-Time Analysis</h2>
+<div style="font-size:11px;color:#6b7280;margin-bottom:10px">Items that have failed or been flagged across all ${rows.length} submission${rows.length!==1?'s':''}.</div>
+<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px">
+  ${freqBars}
+</div>`:''}
+
+<!-- Recent Submissions -->
+<h2>📅 Recent Submission History</h2>
+<table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
+  <thead>
+    <tr>
+      <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Date</th>
+      <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Inspector</th>
+      <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Score</th>
+      <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Issues</th>
+      <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb"></th>
+    </tr>
+  </thead>
+  <tbody>${recentSubs}</tbody>
+</table>
+
+<!-- Footer -->
+<div style="margin-top:36px;padding-top:14px;border-top:2px solid #e5e7eb;display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;font-family:'JetBrains Mono',monospace">
+  <span>C-TRACKER · ${esc2(t.name)} · ${rows.length} inspection${rows.length!==1?'s':''} on record</span>
+  <span>Generated: ${new Date().toLocaleString()}</span>
+</div>
+
+</body></html>`;
+
+  const blob = new Blob([html],{type:'text/html'});
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url,'_blank');
+  if(!win) showToast('Please allow popups to export PDF','amber');
+  else     showToast('✓ Report opened — use Ctrl+P to save as PDF','green');
+}
+  function exportFirstAidStylePDF(trackerId, idx){
   const t = trackers.find(x=>x.id===trackerId);
   if(!t) return;
   const rows = isLocalTracker(t.name) ? getLocalRows(trackerId) : sheetData[trackerId];
@@ -4669,7 +4971,262 @@ ${otherRows ? `
   else     showToast('✓ Report opened — use Ctrl+P to save as PDF','green');
 }
 // ── MAIN REPORT BUILDER ───────────────────────────────────────────
-function buildStructuredReport(t, rows, idx){
+
+  // ── EXPORT FIRST AID STYLE REPORT TO PDF ─────────────────────────
+function exportFirstAidStylePDF(trackerId, idx){
+  const t = trackers.find(x=>x.id===trackerId);
+  if(!t) return;
+  const rows = isLocalTracker(t.name) ? getLocalRows(trackerId) : sheetData[trackerId];
+  if(!rows||!rows.length){ showToast('No data to export','amber'); return; }
+
+  const row  = rows[idx];
+  const keys = Object.keys(row);
+
+  const META_KW = ['timestamp','email','done by','inspector','name','by','premise','facility','site name','branch','location','area','room','zone','floor','tag'];
+  const checkKeys = keys.filter(k => !META_KW.some(w => k.toLowerCase().includes(w)));
+
+  const findVal = (...kws) => {
+    const k = keys.find(k => kws.some(w => k.toLowerCase().includes(w)));
+    return k ? (row[k]||'') : '';
+  };
+
+  const rawDate  = findVal('timestamp','date');
+  let fmtDate = rawDate;
+  try{ const d=new Date(rawDate); if(!isNaN(d)){ fmtDate=`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; } }catch(e){}
+
+  const doneBy   = findVal('done by','inspector','name','by') || '—';
+  const premise  = findVal('premise','facility','site name','branch') || '—';
+  const location = findVal('location','area','room','zone','floor') || '—';
+  const tagKey   = keys.find(k=>k.toLowerCase().includes('tag'));
+  const tagVal   = tagKey ? (row[tagKey]||'') : '';
+  const tagText  = !_isImg(tagVal) ? tagVal : '';
+
+  const available = [], missing = [], other = [];
+  checkKeys.forEach(k=>{
+    const v = row[k]||'';
+    if(!v||v==='—') return;
+    if(isOk(v))  available.push({k,v});
+    else if(isBad(v)) missing.push({k,v});
+    else other.push({k,v});
+  });
+
+  const compPct = (available.length+missing.length)===0 ? 100
+    : Math.round((available.length/(available.length+missing.length))*100);
+  const compColor = compPct>=80?'#16a34a':compPct>=50?'#d97706':'#dc2626';
+
+  // Historical average
+  const avgComp = rows.length>1
+    ? Math.round(rows.reduce((s,r)=>s+_compRow(r),0)/rows.length) : compPct;
+
+  const esc2 = s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  const availRows = available.map(({k,v})=>`
+    <tr>
+      <td style="padding:8px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#111827;width:65%">${esc2(k)}</td>
+      <td style="padding:8px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;font-weight:700;color:#16a34a">✓ ${esc2(v)}</td>
+    </tr>`).join('');
+
+  const missRows = missing.map(({k,v})=>`
+    <tr>
+      <td style="padding:8px 14px;border-bottom:1px solid #fee2e2;font-size:12px;color:#111827;width:65%">${esc2(k)}</td>
+      <td style="padding:8px 14px;border-bottom:1px solid #fee2e2;font-size:12px;font-weight:700;color:#dc2626">✗ ${esc2(v)}</td>
+    </tr>`).join('');
+
+  const otherRows = other.map(({k,v})=>`
+    <tr>
+      <td style="padding:8px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151;width:65%">${esc2(k)}</td>
+      <td style="padding:8px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${esc2(v)}</td>
+    </tr>`).join('');
+
+  const verdictText = compPct>=80
+    ? `This inspection is in <strong>Good Standing</strong> at ${compPct}% compliance.`
+    : compPct>=50
+    ? `This inspection is <strong>Satisfactory but requires attention</strong> at ${compPct}% compliance. ${missing.length} item(s) missing — address before next cycle.`
+    : `This inspection shows <strong>Critical Non-Compliance</strong> at ${compPct}%. ${missing.length} item(s) missing — immediate action required.`;
+  const verdictColor = compPct>=80?'#16a34a':compPct>=50?'#d97706':'#dc2626';
+  const verdictBg    = compPct>=80?'#f0fdf4':compPct>=50?'#fffbeb':'#fef2f2';
+  const verdictBdr   = compPct>=80?'#86efac':compPct>=50?'#fcd34d':'#fca5a5';
+  const verdictEmoji = compPct>=80?'✅':compPct>=50?'⚠️':'🚨';
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>${esc2(t.name)} — Inspection Report #${idx+1}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;color:#111827;background:#fff;padding:32px;max-width:900px;margin:0 auto}
+@media print{body{padding:16px} .no-print{display:none!important} @page{margin:18mm 16mm}}
+</style>
+</head>
+<body>
+
+<!-- Print bar -->
+<div class="no-print" style="margin-bottom:24px;padding:12px 18px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+  <span style="font-size:13px;color:#1d4ed8">📄 Press <strong>Ctrl+P</strong> (Cmd+P on Mac) → <strong>Save as PDF</strong></span>
+  <button onclick="window.print()" style="padding:8px 18px;background:#1d4ed8;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">🖨 Print / Save as PDF</button>
+</div>
+
+<!-- Header -->
+<div style="background:linear-gradient(135deg,#0a0203,#1a0508);border-radius:16px;overflow:hidden;margin-bottom:24px;padding:24px 28px;display:flex;align-items:center;gap:20px;border:1px solid rgba(220,38,38,0.3)">
+  <div style="width:64px;height:64px;flex-shrink:0;border-radius:14px;background:rgba(220,38,38,0.15);border:2px solid rgba(220,38,38,0.4);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 0 24px rgba(220,38,38,0.2)">${t.icon}</div>
+  <div style="flex:1">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(220,38,38,0.6);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:4px">C-TRACKER · Inspection Report</div>
+    <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.02em;margin-bottom:4px">${esc2(t.name)}</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35)">Submission ${idx+1} of ${rows.length} &nbsp;·&nbsp; ${esc2(fmtDate)} &nbsp;·&nbsp; 👤 ${esc2(doneBy)}</div>
+  </div>
+  <div style="text-align:center;flex-shrink:0">
+    <div style="font-size:36px;font-weight:800;color:${compColor};text-shadow:0 0 20px ${compColor}66">${compPct}%</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;margin-top:3px">SCORE</div>
+  </div>
+</div>
+
+<!-- Meta cards -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;border-left:3px solid #dc2626">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px">📅 Date</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:#111827">${esc2(fmtDate)}</div>
+  </div>
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;border-left:3px solid #2563eb">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px">👤 Done By</div>
+    <div style="font-size:15px;font-weight:700;color:#111827">${esc2(doneBy)}</div>
+  </div>
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;border-left:3px solid #d97706">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px">🏢 Premise</div>
+    <div style="font-size:15px;font-weight:700;color:#111827">${esc2(premise)}</div>
+  </div>
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;border-left:3px solid #16a34a">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px">📍 Location</div>
+    <div style="font-size:15px;font-weight:700;color:#111827">${esc2(location)}</div>
+  </div>
+</div>
+
+${tagText ? `
+<!-- Tag -->
+<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px">
+  <span style="font-size:28px">🏷️</span>
+  <div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px">Tag / Kit ID</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:800;color:#111827">${esc2(tagText)}</div>
+  </div>
+</div>` : ''}
+
+<!-- KPI strip -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">
+  <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px;text-align:center">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:800;color:#16a34a">${available.length}</div>
+    <div style="font-size:10px;color:#16a34a;margin-top:3px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Available</div>
+  </div>
+  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:14px;text-align:center">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:800;color:#dc2626">${missing.length}</div>
+    <div style="font-size:10px;color:#dc2626;margin-top:3px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Missing</div>
+  </div>
+  <div style="background:#f0f9ff;border:1px solid #7dd3fc;border-radius:10px;padding:14px;text-align:center">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:800;color:#0284c7">${available.length+missing.length}</div>
+    <div style="font-size:10px;color:#0284c7;margin-top:3px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Checked</div>
+  </div>
+  <div style="background:${compPct>=80?'#f0fdf4':compPct>=50?'#fffbeb':'#fef2f2'};border:1px solid ${compPct>=80?'#86efac':compPct>=50?'#fcd34d':'#fca5a5'};border-radius:10px;padding:14px;text-align:center">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:800;color:${compColor}">${compPct}%</div>
+    <div style="font-size:10px;color:${compColor};margin-top:3px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Score</div>
+  </div>
+</div>
+
+<!-- Compliance bar -->
+<div style="display:flex;align-items:center;gap:14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px;margin-bottom:24px">
+  <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#6b7280;white-space:nowrap">Compliance Score</span>
+  <div style="flex:1;height:10px;background:#e5e7eb;border-radius:5px;overflow:hidden">
+    <div style="height:100%;width:${compPct}%;border-radius:5px;background:${compColor}"></div>
+  </div>
+  <span style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:800;color:${compColor};white-space:nowrap">${compPct}%</span>
+</div>
+
+${available.length>0 ? `
+<!-- Available Items -->
+<div style="margin-bottom:20px">
+  <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px 12px 0 0;padding:13px 18px;display:flex;align-items:center;gap:10px;border-bottom:none">
+    <span style="font-size:16px">✅</span>
+    <span style="font-size:14px;font-weight:800;color:#16a34a">Available Items</span>
+    <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;background:rgba(22,163,74,0.12);color:#16a34a;border:1px solid #86efac;padding:2px 9px;border-radius:8px">${available.length} item${available.length!==1?'s':''}</span>
+  </div>
+  <div style="border:1px solid #86efac;border-top:none;border-radius:0 0 12px 12px;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr>
+        <th style="padding:8px 14px;border-bottom:1px solid #d1fae5;font-size:10px;text-align:left;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;background:#f0fdf4">Item</th>
+        <th style="padding:8px 14px;border-bottom:1px solid #d1fae5;font-size:10px;text-align:left;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;background:#f0fdf4">Status</th>
+      </tr></thead>
+      <tbody>${availRows}</tbody>
+    </table>
+  </div>
+</div>` : ''}
+
+${missing.length>0 ? `
+<!-- Missing Items -->
+<div style="margin-bottom:20px">
+  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:12px 12px 0 0;padding:13px 18px;display:flex;align-items:center;gap:10px;border-bottom:none">
+    <span style="font-size:16px">❌</span>
+    <span style="font-size:14px;font-weight:800;color:#dc2626">Missing / Non-Compliant Items</span>
+    <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;background:rgba(220,38,38,0.12);color:#dc2626;border:1px solid #fca5a5;padding:2px 9px;border-radius:8px">${missing.length} item${missing.length!==1?'s':''}</span>
+  </div>
+  <div style="border:1px solid #fca5a5;border-top:none;border-radius:0 0 12px 12px;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr>
+        <th style="padding:8px 14px;border-bottom:1px solid #fee2e2;font-size:10px;text-align:left;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;background:#fef2f2">Item</th>
+        <th style="padding:8px 14px;border-bottom:1px solid #fee2e2;font-size:10px;text-align:left;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;background:#fef2f2">Status</th>
+      </tr></thead>
+      <tbody>${missRows}</tbody>
+    </table>
+  </div>
+</div>` : ''}
+
+${missing.length===0 ? `
+<!-- All pass -->
+<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+  <span style="font-size:24px">🎉</span>
+  <div>
+    <div style="font-weight:700;color:#16a34a;margin-bottom:3px">No Missing Items</div>
+    <div style="font-size:12px;color:#15803d">All checked items passed this inspection — full compliance.</div>
+  </div>
+</div>` : ''}
+
+${otherRows ? `
+<!-- Other fields -->
+<div style="margin-bottom:20px">
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px 12px 0 0;padding:12px 18px;border-bottom:none">
+    <span style="font-size:14px;font-weight:700;color:#374151">📋 Additional Fields</span>
+  </div>
+  <div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse"><tbody>${otherRows}</tbody></table>
+  </div>
+</div>` : ''}
+
+<!-- Verdict -->
+<div style="background:${verdictBg};border:1px solid ${verdictBdr};border-left:4px solid ${verdictColor};border-radius:0 10px 10px 0;padding:16px 18px;margin-bottom:24px">
+  <div style="font-size:12px;font-weight:700;color:${verdictColor};margin-bottom:6px">${verdictEmoji} Auditor's Conclusion</div>
+  <div style="font-size:13px;color:#374151;line-height:1.7">${verdictText}</div>
+  <div style="margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#6b7280">
+    Historical average: <strong style="color:#374151">${avgComp}%</strong> &nbsp;·&nbsp;
+    ${rows.length} total inspection${rows.length!==1?'s':''} on record &nbsp;·&nbsp;
+    Submission ${idx+1} of ${rows.length}
+  </div>
+</div>
+
+<!-- Footer -->
+<div style="margin-top:32px;padding-top:14px;border-top:2px solid #e5e7eb;display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;font-family:'JetBrains Mono',monospace">
+  <span>C-TRACKER · ${esc2(t.name)}</span>
+  <span>Generated: ${new Date().toLocaleString()}</span>
+</div>
+
+</body></html>`;
+
+  const blob = new Blob([html],{type:'text/html'});
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url,'_blank');
+  if(!win) showToast('Please allow popups to export PDF','amber');
+  else     showToast('✓ Report opened — use Ctrl+P to save as PDF','green');
+}
+  
+  function buildStructuredReport(t, rows, idx){
   // ── Route First Aid trackers to their custom report ──────────
   const tName = t.name.toLowerCase();
   if(tName.includes('first aid') || tName.includes('firstaid') || tName.includes('fa kit') || tName.includes('first-aid')
@@ -4887,11 +5444,11 @@ function buildStructuredReport(t, rows, idx){
           </select>
           <button class="sr-sub-btn" onclick="srPrev()" title="Previous submission">‹</button>
           <button class="sr-sub-btn" onclick="srNext()" title="Next submission">›</button>
-          <button class="sr-hist-btn" onclick="srToggleHist()">🕐 All Submissions (${rows.length})</button>
+         <button class="sr-hist-btn" onclick="srToggleHist()">🕐 All Submissions (${rows.length})</button>
+          <button class="btn" style="margin-left:6px;font-size:10px;padding:5px 11px;border-color:var(--blue);color:var(--blue);background:var(--blue-bg);flex-shrink:0" onclick="exportStructuredReportPDF('${t.id}',${idx})">⬇ PDF</button>
         </div>
         <div class="sr-hist-drawer" id="srHistDrawer">${histRows}</div>
       </div>
-
       <!-- Section 1: Executive Summary -->
       <div class="sr-section">
         <div class="sr-section-head">
@@ -6662,11 +7219,13 @@ function confirmDeleteLocalRecord(trackerId, idx){
   showToast('Record deleted', 'amber');
 }
 
-function exportLocalTrackerPDF(trackerId){
+function exportLocalTrackerPDF(trackerId, singleIdx){
   const t = trackers.find(x=>x.id===trackerId);
   if(!t) return;
   const rows = getLocalRows(trackerId);
   if(!rows||!rows.length){ showToast('No records to export', 'amber'); return; }
+  // If singleIdx provided, export only that one record
+  if(singleIdx !== undefined){ rows = [rows[singleIdx]]; }
   const type = getLocalTrackerType(t.name);
   const fields = getLocalTrackerFields(type);
   const typeConfig = {
