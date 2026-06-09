@@ -7150,6 +7150,14 @@ async function sbSignIn(email, password) {
   if (error) throw error;
   _sbUser = data.user;
   await _loadUserRole();
+
+  // --- NEW: ENFORCE DEACTIVATION ---
+  if (_sbRole && _sbRole.status === 'inactive') {
+    await sbSignOut(); // Immediately kill the session
+    throw new Error('Your account has been deactivated. Please contact an administrator.');
+  }
+  // --- END NEW CODE ---
+
   return data;
 }
 
@@ -7528,55 +7536,18 @@ function updateUserBar() {
 }
 
 // ── ADMIN PANEL ───────────────────────────────────────────────────
-async function openAdminPanel() {
-  if (!_sbRole || _sbRole.role !== 'admin') {
-    showToast('Admin access required', 'amber'); return;
+async function sbToggleUserStatus(userId, newStatus) {
+  if (!confirm(`Are you sure you want to ${newStatus === 'active' ? 'activate' : 'deactivate'} this user?`)) return;
+  
+  const { error } = await _sb.from('user_roles').update({ status: newStatus }).eq('user_id', userId);
+  
+  if (error) {
+    showToast(`Error: ${error.message}`, 'amber');
+  } else {
+    showToast(`User has been ${newStatus === 'active' ? 'activated' : 'deactivated'}.`, 'green');
+    openAdminPanel(); // Refresh the admin panel to show the change
   }
-  const { data: users } = await _sb.from('user_roles').select('*').order('created_at');
-  const overlay = document.getElementById('adminPanelOverlay') || (() => {
-    const el = document.createElement('div');
-    el.id = 'adminPanelOverlay';
-    el.className = 'overlay';
-    el.onclick = e => { if(e.target===el) el.classList.remove('open'); };
-    document.body.appendChild(el);
-    return el;
-  })();
-
-  const rows = (users || []).map(u => `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:7px">
-      <div style="flex:1">
-        <div style="font-size:12px;font-weight:700;color:var(--text)">${esc(u.full_name)}</div>
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">${u.role} · ${u.can_view_all?'sees all':'own only'}</div>
-      </div>
-      <select onchange="sbUpdateRole('${u.user_id}',this.value)" style="font-family:var(--font-mono);font-size:10px;background:var(--surface3);border:1px solid var(--border2);border-radius:5px;color:var(--text);padding:4px 8px;">
-        <option value="viewer" ${u.role==='viewer'?'selected':''}>Viewer</option>
-        <option value="admin"  ${u.role==='admin'?'selected':''}>Admin</option>
-      </select>
-      <select onchange="sbUpdateViewAll('${u.user_id}',this.value)" style="font-family:var(--font-mono);font-size:10px;background:var(--surface3);border:1px solid var(--border2);border-radius:5px;color:var(--text);padding:4px 8px;">
-        <option value="false" ${!u.can_view_all?'selected':''}>Own only</option>
-        <option value="true"  ${u.can_view_all?'selected':''}>Sees all</option>
-      </select>
-    </div>`).join('');
-
-  overlay.innerHTML = `
-    <div class="modal" style="width:520px">
-      <div class="modal-head">
-        <div class="modal-head-left"><span>👥</span><span class="modal-title">User Management</span></div>
-        <button class="modal-close" onclick="closeModal('adminPanelOverlay')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-bottom:14px">
-          ${(users||[]).length} registered users · Manage roles and data access
-        </div>
-        ${rows || '<div style="color:var(--muted);font-size:12px">No users found</div>'}
-      </div>
-      <div class="modal-foot">
-        <button class="btn" onclick="closeModal('adminPanelOverlay')">Close</button>
-      </div>
-    </div>`;
-  openModal('adminPanelOverlay');
 }
-
 async function sbUpdateRole(userId, role) {
   await _sb.from('user_roles').update({ role }).eq('user_id', userId);
   showToast('Role updated', 'green');
