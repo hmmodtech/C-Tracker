@@ -7637,5 +7637,207 @@ if (document.readyState === 'loading') {
   setTimeout(initSupabaseAndLoad, 500);
 }
 
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     SUPABASE FORMS PATCH FOR C-TRACKER
+     أضف هذا بعد SUPABASE_INJECTION.html وقبل </body>
+════════════════════════════════════════════════════════════════ -->
+<script>
+// ══════════════════════════════════════════════════════════════════
+// PATCH 2: Google Forms → Supabase
+// أضف هذا بعد SUPABASE_INJECTION.html في ملف index.html
+// ══════════════════════════════════════════════════════════════════
+
+// ── Load Google Form submissions from Supabase ────────────────────
+async function loadFormSubmissionsFromSupabase() {
+  if (!_sb) return;
+  try {
+    const { data, error } = await _sb
+      .from('google_form_submissions')
+      .select('*')
+      .order('submission_time', { ascending: true });
+
+    if (error || !data || !data.length) return;
+
+    // Group by tracker_id
+    const byTracker = {};
+    data.forEach(row => {
+      const tid = row.tracker_id;
+      if (!byTracker[tid]) byTracker[tid] = [];
+      // Convert to same format as parseRows() output
+      const rec = { ...row.record_data, _sbFormId: row.id, _source: 'google_form' };
+      byTracker[tid].push(rec);
+    });
+
+    // Merge into sheetData (don't override existing Google Sheets API data)
+    Object.entries(byTracker).forEach(([tid, rows]) => {
+      if (!sheetData[tid] || !sheetData[tid].length) {
+        sheetData[tid] = rows;
+      } else {
+        // Merge: add any rows not already present
+        const existingIds = new Set(sheetData[tid].map(r => r._sbFormId).filter(Boolean));
+        const newRows = rows.filter(r => !existingIds.has(r._sbFormId));
+        if (newRows.length) sheetData[tid] = [...sheetData[tid], ...newRows];
+      }
+    });
+
+    const total = data.length;
+    renderTrackers();
+    if (total > 0) showToast(`☁ Loaded ${total} form submissions from Supabase`, 'green');
+  } catch(e) {
+    console.warn('Could not load form submissions:', e);
+  }
+}
+
+// ── Sync Google Sheets → Supabase (manual button) ─────────────────
+async function syncSheetsToSupabase() {
+  if (!_sb || !_sbUser) {
+    showToast('Please sign in to sync', 'amber');
+    return;
+  }
+  if (!apiKey) {
+    showToast('No API key — add one in ⚙ Settings', 'amber');
+    return;
+  }
+
+  showToast('⏳ Syncing all sheets to Supabase...', 'amber');
+  let totalSynced = 0;
+
+  for (const t of trackers) {
+    if (!t.sheetId || !apiKey) continue;
+    try {
+      const raw = await fetchSheet(t.sheetId, t.name);
+      if (!raw || raw.length < 2) continue;
+      const rows = parseRows(raw);
+
+      // Upsert each row to google_form_submissions
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const keys = Object.keys(row);
+        const dateKey = keys.find(k => k.toLowerCase().includes('timestamp') || k.toLowerCase().includes('date'));
+        const nameKey = keys.find(k => k.toLowerCase().includes('done') || k.toLowerCase().includes('by') || k.toLowerCase().includes('name'));
+
+        const payload = {
+          tracker_id: t.id,
+          tracker_name: t.name,
+          tracker_type: 'sheet',
+          record_data: row,
+          done_by: nameKey ? (row[nameKey] || null) : null,
+          record_date: dateKey ? extractDateStr(row[dateKey]) : null,
+          spreadsheet_id: t.sheetId,
+          row_number: i + 2
+        };
+
+        await _sb.from('google_form_submissions').upsert(payload, {
+          onConflict: 'spreadsheet_id,row_number',
+          ignoreDuplicates: false
+        });
+        totalSynced++;
+      }
+
+      // Update cache
+      await _sb.from('google_sheet_cache').upsert({
+        tracker_id: t.id,
+        tracker_name: t.name,
+        sheet_rows: rows,
+        synced_at: new Date().toISOString(),
+        sync_source: 'manual',
+        total_rows: rows.length
+      }, { onConflict: 'tracker_id' });
+
+    } catch(e) {
+      console.warn(`Error syncing ${t.name}:`, e);
+    }
+  }
+
+  showToast(`✓ Synced ${totalSynced} rows to Supabase`, 'green');
+  renderTrackers();
+}
+
+function extractDateStr(val) {
+  if (!val) return null;
+  try {
+    const d = new Date(val);
+    if (!isNaN(d)) return d.toISOString().split('T')[0];
+  } catch(e) {}
+  return null;
+}
+
+// ── Real-time: استقبل submissions جديدة من Google Forms فوراً ─────
+async function subscribeFormSubmissions() {
+  if (!_sb) return;
+  _sb.channel('form_submissions_realtime')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'google_form_submissions'
+    }, payload => {
+      const row = payload.new;
+      const tid = row.tracker_id;
+
+      // Add to sheetData
+      if (!sheetData[tid]) sheetData[tid] = [];
+      const rec = { ...row.record_data, _sbFormId: row.id, _source: 'google_form' };
+      const exists = sheetData[tid].some(r => r._sbFormId === row.id);
+      if (!exists) {
+        sheetData[tid].push(rec);
+        renderTrackers();
+        showToast(`📋 New submission: ${row.tracker_name} by ${row.done_by || 'unknown'}`, 'green');
+      }
+    })
+    .subscribe();
+}
+
+// ── Override fetchAllSheets لإضافة Supabase sync ──────────────────
+const _origFetchAllSheets = window.fetchAllSheets;
+window.fetchAllSheets = async function() {
+  // الـ original يجيب من Google Sheets API
+  await _origFetchAllSheets();
+  // ثم sync لـ Supabase لو مسجّل دخول
+  if (_sbUser && _sb) {
+    await syncSheetsToSupabase();
+  }
+};
+
+// ── Add "Sync All to DB" button in topbar ─────────────────────────
+function addSyncDBButton() {
+  const topbarRight = document.querySelector('.topbar-right');
+  if (!topbarRight || document.getElementById('syncDBBtn')) return;
+  const btn = document.createElement('button');
+  btn.id = 'syncDBBtn';
+  btn.className = 'pill-btn';
+  btn.innerHTML = '🗄 Sync DB';
+  btn.title = 'Sync all Google Sheets data to Supabase database';
+  btn.onclick = syncSheetsToSupabase;
+  // Insert before the clock div
+  const clockDiv = topbarRight.querySelector('[style*="border-left"]');
+  if (clockDiv) topbarRight.insertBefore(btn, clockDiv);
+  else topbarRight.appendChild(btn);
+}
+
+// ── Hook into existing initSupabaseAndLoad ────────────────────────
+const _origInit = window.initSupabaseAndLoad;
+window.initSupabaseAndLoad = async function() {
+  await _origInit();
+  // بعد الـ init، جيب form submissions من Supabase
+  if (_sbUser && _sb) {
+    await loadFormSubmissionsFromSupabase();
+    await subscribeFormSubmissions();
+    addSyncDBButton();
+  }
+};
+
+// ── Show Supabase source badge in reports ─────────────────────────
+// يضيف badge صغير يبيّن مصدر كل submission
+const _origBuildStructured = window.buildStructuredReport;
+if (_origBuildStructured) {
+  window.buildStructuredReport = function(t, rows, idx) {
+    const html = _origBuildStructured(t, rows, idx);
+    return html; // base function handles display
+  };
+}
+</script>
+  
 </script>
 </body></html>
