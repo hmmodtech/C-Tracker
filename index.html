@@ -4415,7 +4415,259 @@ function buildFirstAidReport(t, rows, idx){
 
   </div>`;
 }
+// ── EXPORT FIRST AID STYLE REPORT TO PDF ─────────────────────────
+function exportFirstAidStylePDF(trackerId, idx){
+  const t = trackers.find(x=>x.id===trackerId);
+  if(!t) return;
+  const rows = isLocalTracker(t.name) ? getLocalRows(trackerId) : sheetData[trackerId];
+  if(!rows||!rows.length){ showToast('No data to export','amber'); return; }
 
+  const row  = rows[idx];
+  const keys = Object.keys(row);
+
+  const META_KW = ['timestamp','email','done by','inspector','name','by','premise','facility','site name','branch','location','area','room','zone','floor','tag'];
+  const checkKeys = keys.filter(k => !META_KW.some(w => k.toLowerCase().includes(w)));
+
+  const findVal = (...kws) => {
+    const k = keys.find(k => kws.some(w => k.toLowerCase().includes(w)));
+    return k ? (row[k]||'') : '';
+  };
+
+  const rawDate  = findVal('timestamp','date');
+  let fmtDate = rawDate;
+  try{ const d=new Date(rawDate); if(!isNaN(d)){ fmtDate=`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; } }catch(e){}
+
+  const doneBy   = findVal('done by','inspector','name','by') || '—';
+  const premise  = findVal('premise','facility','site name','branch') || '—';
+  const location = findVal('location','area','room','zone','floor') || '—';
+  const tagKey   = keys.find(k=>k.toLowerCase().includes('tag'));
+  const tagVal   = tagKey ? (row[tagKey]||'') : '';
+  const tagText  = !_isImg(tagVal) ? tagVal : '';
+
+  const available = [], missing = [], other = [];
+  checkKeys.forEach(k=>{
+    const v = row[k]||'';
+    if(!v||v==='—') return;
+    if(isOk(v))  available.push({k,v});
+    else if(isBad(v)) missing.push({k,v});
+    else other.push({k,v});
+  });
+
+  const compPct = (available.length+missing.length)===0 ? 100
+    : Math.round((available.length/(available.length+missing.length))*100);
+  const compColor = compPct>=80?'#16a34a':compPct>=50?'#d97706':'#dc2626';
+
+  // Historical average
+  const avgComp = rows.length>1
+    ? Math.round(rows.reduce((s,r)=>s+_compRow(r),0)/rows.length) : compPct;
+
+  const esc2 = s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  const availRows = available.map(({k,v})=>`
+    <tr>
+      <td style="padding:8px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#111827;width:65%">${esc2(k)}</td>
+      <td style="padding:8px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;font-weight:700;color:#16a34a">✓ ${esc2(v)}</td>
+    </tr>`).join('');
+
+  const missRows = missing.map(({k,v})=>`
+    <tr>
+      <td style="padding:8px 14px;border-bottom:1px solid #fee2e2;font-size:12px;color:#111827;width:65%">${esc2(k)}</td>
+      <td style="padding:8px 14px;border-bottom:1px solid #fee2e2;font-size:12px;font-weight:700;color:#dc2626">✗ ${esc2(v)}</td>
+    </tr>`).join('');
+
+  const otherRows = other.map(({k,v})=>`
+    <tr>
+      <td style="padding:8px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151;width:65%">${esc2(k)}</td>
+      <td style="padding:8px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${esc2(v)}</td>
+    </tr>`).join('');
+
+  const verdictText = compPct>=80
+    ? `This inspection is in <strong>Good Standing</strong> at ${compPct}% compliance.`
+    : compPct>=50
+    ? `This inspection is <strong>Satisfactory but requires attention</strong> at ${compPct}% compliance. ${missing.length} item(s) missing — address before next cycle.`
+    : `This inspection shows <strong>Critical Non-Compliance</strong> at ${compPct}%. ${missing.length} item(s) missing — immediate action required.`;
+  const verdictColor = compPct>=80?'#16a34a':compPct>=50?'#d97706':'#dc2626';
+  const verdictBg    = compPct>=80?'#f0fdf4':compPct>=50?'#fffbeb':'#fef2f2';
+  const verdictBdr   = compPct>=80?'#86efac':compPct>=50?'#fcd34d':'#fca5a5';
+  const verdictEmoji = compPct>=80?'✅':compPct>=50?'⚠️':'🚨';
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>${esc2(t.name)} — Inspection Report #${idx+1}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;color:#111827;background:#fff;padding:32px;max-width:900px;margin:0 auto}
+@media print{body{padding:16px} .no-print{display:none!important} @page{margin:18mm 16mm}}
+</style>
+</head>
+<body>
+
+<!-- Print bar -->
+<div class="no-print" style="margin-bottom:24px;padding:12px 18px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+  <span style="font-size:13px;color:#1d4ed8">📄 Press <strong>Ctrl+P</strong> (Cmd+P on Mac) → <strong>Save as PDF</strong></span>
+  <button onclick="window.print()" style="padding:8px 18px;background:#1d4ed8;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">🖨 Print / Save as PDF</button>
+</div>
+
+<!-- Header -->
+<div style="background:linear-gradient(135deg,#0a0203,#1a0508);border-radius:16px;overflow:hidden;margin-bottom:24px;padding:24px 28px;display:flex;align-items:center;gap:20px;border:1px solid rgba(220,38,38,0.3)">
+  <div style="width:64px;height:64px;flex-shrink:0;border-radius:14px;background:rgba(220,38,38,0.15);border:2px solid rgba(220,38,38,0.4);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 0 24px rgba(220,38,38,0.2)">${t.icon}</div>
+  <div style="flex:1">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(220,38,38,0.6);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:4px">C-TRACKER · Inspection Report</div>
+    <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.02em;margin-bottom:4px">${esc2(t.name)}</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35)">Submission ${idx+1} of ${rows.length} &nbsp;·&nbsp; ${esc2(fmtDate)} &nbsp;·&nbsp; 👤 ${esc2(doneBy)}</div>
+  </div>
+  <div style="text-align:center;flex-shrink:0">
+    <div style="font-size:36px;font-weight:800;color:${compColor};text-shadow:0 0 20px ${compColor}66">${compPct}%</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;margin-top:3px">SCORE</div>
+  </div>
+</div>
+
+<!-- Meta cards -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;border-left:3px solid #dc2626">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px">📅 Date</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:#111827">${esc2(fmtDate)}</div>
+  </div>
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;border-left:3px solid #2563eb">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px">👤 Done By</div>
+    <div style="font-size:15px;font-weight:700;color:#111827">${esc2(doneBy)}</div>
+  </div>
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;border-left:3px solid #d97706">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px">🏢 Premise</div>
+    <div style="font-size:15px;font-weight:700;color:#111827">${esc2(premise)}</div>
+  </div>
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;border-left:3px solid #16a34a">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px">📍 Location</div>
+    <div style="font-size:15px;font-weight:700;color:#111827">${esc2(location)}</div>
+  </div>
+</div>
+
+${tagText ? `
+<!-- Tag -->
+<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px">
+  <span style="font-size:28px">🏷️</span>
+  <div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px">Tag / Kit ID</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:800;color:#111827">${esc2(tagText)}</div>
+  </div>
+</div>` : ''}
+
+<!-- KPI strip -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">
+  <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px;text-align:center">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:800;color:#16a34a">${available.length}</div>
+    <div style="font-size:10px;color:#16a34a;margin-top:3px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Available</div>
+  </div>
+  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:14px;text-align:center">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:800;color:#dc2626">${missing.length}</div>
+    <div style="font-size:10px;color:#dc2626;margin-top:3px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Missing</div>
+  </div>
+  <div style="background:#f0f9ff;border:1px solid #7dd3fc;border-radius:10px;padding:14px;text-align:center">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:800;color:#0284c7">${available.length+missing.length}</div>
+    <div style="font-size:10px;color:#0284c7;margin-top:3px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Checked</div>
+  </div>
+  <div style="background:${compPct>=80?'#f0fdf4':compPct>=50?'#fffbeb':'#fef2f2'};border:1px solid ${compPct>=80?'#86efac':compPct>=50?'#fcd34d':'#fca5a5'};border-radius:10px;padding:14px;text-align:center">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:800;color:${compColor}">${compPct}%</div>
+    <div style="font-size:10px;color:${compColor};margin-top:3px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Score</div>
+  </div>
+</div>
+
+<!-- Compliance bar -->
+<div style="display:flex;align-items:center;gap:14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px;margin-bottom:24px">
+  <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#6b7280;white-space:nowrap">Compliance Score</span>
+  <div style="flex:1;height:10px;background:#e5e7eb;border-radius:5px;overflow:hidden">
+    <div style="height:100%;width:${compPct}%;border-radius:5px;background:${compColor}"></div>
+  </div>
+  <span style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:800;color:${compColor};white-space:nowrap">${compPct}%</span>
+</div>
+
+${available.length>0 ? `
+<!-- Available Items -->
+<div style="margin-bottom:20px">
+  <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px 12px 0 0;padding:13px 18px;display:flex;align-items:center;gap:10px;border-bottom:none">
+    <span style="font-size:16px">✅</span>
+    <span style="font-size:14px;font-weight:800;color:#16a34a">Available Items</span>
+    <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;background:rgba(22,163,74,0.12);color:#16a34a;border:1px solid #86efac;padding:2px 9px;border-radius:8px">${available.length} item${available.length!==1?'s':''}</span>
+  </div>
+  <div style="border:1px solid #86efac;border-top:none;border-radius:0 0 12px 12px;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr>
+        <th style="padding:8px 14px;border-bottom:1px solid #d1fae5;font-size:10px;text-align:left;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;background:#f0fdf4">Item</th>
+        <th style="padding:8px 14px;border-bottom:1px solid #d1fae5;font-size:10px;text-align:left;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;background:#f0fdf4">Status</th>
+      </tr></thead>
+      <tbody>${availRows}</tbody>
+    </table>
+  </div>
+</div>` : ''}
+
+${missing.length>0 ? `
+<!-- Missing Items -->
+<div style="margin-bottom:20px">
+  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:12px 12px 0 0;padding:13px 18px;display:flex;align-items:center;gap:10px;border-bottom:none">
+    <span style="font-size:16px">❌</span>
+    <span style="font-size:14px;font-weight:800;color:#dc2626">Missing / Non-Compliant Items</span>
+    <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;background:rgba(220,38,38,0.12);color:#dc2626;border:1px solid #fca5a5;padding:2px 9px;border-radius:8px">${missing.length} item${missing.length!==1?'s':''}</span>
+  </div>
+  <div style="border:1px solid #fca5a5;border-top:none;border-radius:0 0 12px 12px;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr>
+        <th style="padding:8px 14px;border-bottom:1px solid #fee2e2;font-size:10px;text-align:left;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;background:#fef2f2">Item</th>
+        <th style="padding:8px 14px;border-bottom:1px solid #fee2e2;font-size:10px;text-align:left;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;background:#fef2f2">Status</th>
+      </tr></thead>
+      <tbody>${missRows}</tbody>
+    </table>
+  </div>
+</div>` : ''}
+
+${missing.length===0 ? `
+<!-- All pass -->
+<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+  <span style="font-size:24px">🎉</span>
+  <div>
+    <div style="font-weight:700;color:#16a34a;margin-bottom:3px">No Missing Items</div>
+    <div style="font-size:12px;color:#15803d">All checked items passed this inspection — full compliance.</div>
+  </div>
+</div>` : ''}
+
+${otherRows ? `
+<!-- Other fields -->
+<div style="margin-bottom:20px">
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px 12px 0 0;padding:12px 18px;border-bottom:none">
+    <span style="font-size:14px;font-weight:700;color:#374151">📋 Additional Fields</span>
+  </div>
+  <div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse"><tbody>${otherRows}</tbody></table>
+  </div>
+</div>` : ''}
+
+<!-- Verdict -->
+<div style="background:${verdictBg};border:1px solid ${verdictBdr};border-left:4px solid ${verdictColor};border-radius:0 10px 10px 0;padding:16px 18px;margin-bottom:24px">
+  <div style="font-size:12px;font-weight:700;color:${verdictColor};margin-bottom:6px">${verdictEmoji} Auditor's Conclusion</div>
+  <div style="font-size:13px;color:#374151;line-height:1.7">${verdictText}</div>
+  <div style="margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#6b7280">
+    Historical average: <strong style="color:#374151">${avgComp}%</strong> &nbsp;·&nbsp;
+    ${rows.length} total inspection${rows.length!==1?'s':''} on record &nbsp;·&nbsp;
+    Submission ${idx+1} of ${rows.length}
+  </div>
+</div>
+
+<!-- Footer -->
+<div style="margin-top:32px;padding-top:14px;border-top:2px solid #e5e7eb;display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;font-family:'JetBrains Mono',monospace">
+  <span>C-TRACKER · ${esc2(t.name)}</span>
+  <span>Generated: ${new Date().toLocaleString()}</span>
+</div>
+
+</body></html>`;
+
+  const blob = new Blob([html],{type:'text/html'});
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url,'_blank');
+  if(!win) showToast('Please allow popups to export PDF','amber');
+  else     showToast('✓ Report opened — use Ctrl+P to save as PDF','green');
+}
 // ── MAIN REPORT BUILDER ───────────────────────────────────────────
 function buildStructuredReport(t, rows, idx){
   // ── Route First Aid trackers to their custom report ──────────
@@ -6291,10 +6543,8 @@ function buildLocalTrackerReport(t, rows, idx){
       <select class="sr-sub-sel" id="srSubSel" onchange="srGoTo(parseInt(this.value))">${subOptions}</select>
       <button class="sr-sub-btn" onclick="srPrev()">‹</button>
       <button class="sr-sub-btn" onclick="srNext()">›</button>
-      <button class="sr-hist-btn" onclick="srToggleHist()">🕐 All Records (${rows.length})</button>
-      <button class="btn" style="margin-left:6px;font-size:10px;padding:5px 10px;border-color:var(--accent);color:var(--accent)" onclick="openAddLocalRecord('${t.id}')">＋ Add New</button>
-      <button class="btn danger" style="font-size:10px;padding:5px 10px" onclick="confirmDeleteLocalRecord('${t.id}',${idx})">🗑 Delete</button>
-      <button class="btn" style="font-size:10px;padding:5px 10px;border-color:var(--blue);color:var(--blue);background:var(--blue-bg)" onclick="exportLocalTrackerPDF('${t.id}')">⬇ Export PDF</button>
+      <button class="sr-hist-btn" onclick="srToggleHist()">🕐 History (${rows.length})</button>
+      <button class="btn" style="margin-left:6px;font-size:10px;padding:5px 11px;border-color:var(--blue);color:var(--blue);background:var(--blue-bg);flex-shrink:0" onclick="exportFirstAidStylePDF('${t.id}',${idx})">⬇ PDF</button>
     </div>
     <div class="sr-hist-drawer" id="srHistDrawer">${histRows}</div>
   </div>
