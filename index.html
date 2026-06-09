@@ -6620,30 +6620,7 @@ function getLocalTrackerType(name){
 }
 
 function getLocalTrackerFields(type){
-  const yesno = [{value:'Yes',label:'Yes'},{value:'No',label:'No'}];
-  switch(type){
-    case 'sms': return [
-      {key:'date',label:'Date of Record',type:'date',required:true},
-      {key:'doneBy',label:'Done By',type:'text',required:true},
-      {key:'smsUpdated',label:'Is the SMS Bulk Updated?',type:'yesno'},
-      {key:'smsAvailable',label:'Number of Available SMS',type:'number'},
-      {key:'numStaff',label:'Number of Staff',type:'number'},
-      {key:'numDailyWorkers',label:'Number of Daily Workers',type:'number'},
-      {key:'numDrivers',label:'Number of Drivers',type:'number'},
-      {key:'lastUpdate',label:'Last Update',type:'date'},
-    ];
-    case 'map': return [
-      {key:'date',label:'Date of Record',type:'date',required:true},
-      {key:'doneBy',label:'Done By',type:'text',required:true},
-      {key:'secTrackMapUpdated',label:'Is the Security Tracking Map Updated?',type:'yesno'},
-      {key:'secMapUpdated',label:'Is the Security Map Updated?',type:'yesno'},
-      {key:'mapsMe',label:'Maps.ME — Offline Navigation Updated?',type:'yesno'},
-      {key:'locusMap',label:'Locus Map — Offline Navigation Updated?',type:'yesno'},
-      {key:'googleEarth',label:'Google Earth Pro — Offline Navigation Updated?',type:'yesno'},
-      {key:'flashBackup',label:'Did you Backup the Maps on Flash Disk?',type:'yesno'},
-      {key:'lastUpdate',label:'Last Update',type:'date'},
-    ];
-    case 'master': return [
+  case 'master': return [
       {key:'date',label:'Date of Record',type:'date',required:true},
       {key:'doneBy',label:'Done By',type:'text',required:true},
       {key:'hrStaffGps',label:'Is HR Staff Sheet Updated with GPS?',type:'yesno'},
@@ -6695,6 +6672,7 @@ function getLocalTrackerFields(type){
     default: return [];
   }
 }
+
 
 // ── OPEN ADD RECORD MODAL ─────────────────────────────────────
 let _localRecordTrackerId = null;
@@ -6779,7 +6757,7 @@ function openAddLocalRecord(trackerId, editIdx){
   document.getElementById('localRecordFormBody').innerHTML = html;
   document.getElementById('localRecordErr').style.display = 'none';
 
-  // Apply initial conditional visibility based on current values
+// Apply initial conditional visibility based on current values
   _lrUpdateConditionals();
   openModal('localRecordOverlay');
 }
