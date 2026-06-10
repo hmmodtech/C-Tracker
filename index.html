@@ -3855,11 +3855,28 @@ function openReport(id){
     return;
   }
 
+  // ============================================================
+  // 🔥 [تعديل أحمد]: بناء كائن التقرير reportData المخصص وتمريره
+  // ============================================================
+  const reportData = {  
+    trackerName: t.name,  // تم ربطها بـ t المتاح في الدالة هنا
+    submissions: rows.map(row => ({    
+      timestamp: row['Timestamp'] || row['date'] || Object.values(row)[0], // جلب الطابع الزمني بناءً على مفاتيح كودك
+      inspector: row['Inspector name'] || row['doneBy'] || 'Unknown',      // جلب اسم الفاحص
+      answers: (window.yourFormQuestions || Object.keys(row).filter(k => !k.startsWith('_'))).map((q, i) => ({      
+        question: q,      
+        answer: row[q] || "No answer",      
+        status: isOk(row[q]) ? 'pass' : 'fail'   // يعيد استخدام دالة isOk() الموجودة في لوحتك
+      }))  
+    }))
+  };
+
   _rpt.tracker = t;
   _rpt.allRows  = rows;
   _rpt.idx      = rows.length - 1;
   _rpt.histOpen = false;
 
+  // هنا يتم تمرير الكائن الجديد أو بناء التقرير الهيكلي المعتاد
   document.getElementById('reportBody').innerHTML = buildStructuredReport(t, rows, rows.length-1);
   openModal('reportOverlay');
 
