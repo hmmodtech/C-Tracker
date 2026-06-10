@@ -1,596 +1,989 @@
-/*
- * ============================================================
- *  ACF TRACKERS — UNIFIED DESIGN SYSTEM
- *  Projects: C-Tracker · M-Tracker · S-Tracker
- *  Version:  1.0
- * ============================================================
- *
- *  HOW TO USE (for AI agents / developers)
- *  ----------------------------------------
- *  1. Import this file once in your project root:
- *       <link rel="stylesheet" href="acf-design-system.css">
- *     or in JS:
- *       import './acf-design-system.css';
- *
- *  2. All tokens live on :root — use them anywhere:
- *       background: var(--acf-glass-green);
- *       color: var(--acf-green);
- *
- *  3. Utility classes are ready to use directly in HTML.
- *
- *  4. Each project has its own accent variable:
- *       C-Tracker  → use --acf-green  (dashboard / central)
- *       M-Tracker  → use --acf-blue   (secure / field access)
- *       S-Tracker  → use --acf-green  (staff safety)
- *
- * ============================================================
- *  AI AGENT INSTRUCTIONS
- * ============================================================
- *
- *  IDENTITY
- *  - Organisation: ACF (Action Contre la Faim) — Gaza Operations
- *  - Brand logo colors: Green #4a9e35 (leaf) + Blue #3878c8 (water drop)
- *  - All three projects share ONE design system. Never invent new
- *    colors; always pull from the tokens below.
- *
- *  DESIGN LANGUAGE
- *  - Light, airy UI with frosted-glass transparency effects
- *  - White/near-white backgrounds with colored glass overlays
- *  - Subtle borders using rgba (never solid dark borders)
- *  - Border-radius: 8px components, 12-14px cards, 20px pills/badges
- *  - No drop-shadows except focus rings
- *  - Font: system sans-serif (Inter, Segoe UI, or similar)
- *  - Font weights: 400 regular, 500 medium only — never 600/700
- *  - All text: sentence case. No ALL CAPS except mono status tags.
- *
- *  COLOR RULES FOR AI
- *  - Green = active, healthy, nature, staff, operations
- *  - Blue  = data, sync, secure, water, reports, field access
- *  - Warning status → #ea9f14 (amber) — never yellow
- *  - Critical/danger → #dc3232 (red)
- *  - Glass effects: always rgba at 6-10% opacity for fills,
- *    20-25% for borders
- *  - Never use pure black (#000) for text — use --acf-text
- *  - Never use white (#fff) as a border — use rgba whites
- *
- *  COMPONENT RULES FOR AI
- *  - Buttons: solid fill for primary, glass fill for secondary
- *  - Cards: white 70% opacity background + colored top border (2px)
- *  - Badges: glass fill + matching border, 20px border-radius
- *  - Navbars: glass background, no hard borders
- *  - Login screens: white 82% opacity card, soft shadow
- *  - Progress bars: 3px height, rounded, colored fill
- *  - Status dots: 5x5px circles inside badges
- *
- *  PROJECT DIFFERENTIATION
- *  - C-Tracker: green accent, dashboard layout, central hub
- *  - M-Tracker: blue accent, secure login, field records
- *  - S-Tracker: green accent, staff profiles, incident tracking
- *
- * ============================================================
- */
-
-
-/* ============================================================
-   1. COLOR TOKENS
-   ============================================================ */
+/* ═══════════════════════════════════════════════════════════════
+   ACF Field Inspection Dashboard — Design System
+   Action contre la Faim · Light theme only
+   ═══════════════════════════════════════════════════════════════ */
 
 :root {
+  /* Brand palette */
+  --acf-bg: #f7f9fc;
+  --acf-green: #4a9e35;
+  --acf-green-soft: rgba(74, 158, 53, 0.09);
+  --acf-green-glass: rgba(74, 158, 53, 0.06);
+  --acf-green-border: rgba(74, 158, 53, 0.22);
+  --acf-green-glow: rgba(74, 158, 53, 0.15);
+  --acf-blue: #3878c8;
+  --acf-blue-soft: rgba(56, 120, 200, 0.1);
+  --acf-blue-glass: rgba(56, 120, 200, 0.08);
+  --acf-amber: #ea9f14;
+  --acf-amber-soft: rgba(234, 159, 20, 0.12);
+  --acf-critical: #dc3232;
+  --acf-critical-soft: rgba(220, 50, 50, 0.1);
 
-  /* --- Primary Brand Colors (from logo) --- */
-  --acf-green:            #4a9e35;
-  --acf-green-dark:       #357228;
-  --acf-green-light:      #e8f5e2;
-  --acf-green-mid:        #c2e0b4;
+  /* Surfaces */
+  --acf-card: rgba(255, 255, 255, 0.78);
+  --acf-modal: rgba(255, 255, 255, 0.82);
+  --acf-text: #2c3150;
+  --acf-text-dim: #505878;
+  --acf-muted: #8890aa;
+  --acf-border: rgba(74, 158, 53, 0.14);
+  --acf-border-neutral: #dde0ec;
 
-  --acf-blue:             #3878c8;
-  --acf-blue-dark:        #2a5fa0;
-  --acf-blue-light:       #e3edf9;
-  --acf-blue-mid:         #aecbf0;
-
-  /* --- Glass / Transparency Fills --- */
-  --acf-glass-green:         rgba(74, 158, 53,  0.08);
-  --acf-glass-green-hover:   rgba(74, 158, 53,  0.14);
-  --acf-glass-green-border:  rgba(74, 158, 53,  0.22);
-
-  --acf-glass-blue:          rgba(56, 120, 200, 0.08);
-  --acf-glass-blue-hover:    rgba(56, 120, 200, 0.14);
-  --acf-glass-blue-border:   rgba(56, 120, 200, 0.22);
-
-  /* --- Surface / Background --- */
-  --acf-bg:               #f7f9fc;
-  --acf-surface:          rgba(255, 255, 255, 0.72);
-  --acf-surface-border:   rgba(255, 255, 255, 0.90);
-  --acf-card-bg:          rgba(255, 255, 255, 0.82);
-
-  /* --- Text --- */
-  --acf-text:             #1a2332;
-  --acf-text-muted:       #5a6a7e;
-  --acf-text-faint:       #8fa0b4;
-
-  /* --- Status Colors --- */
-  --acf-status-active:    #4a9e35;   /* green — same as brand */
-  --acf-status-synced:    #3878c8;   /* blue  — same as brand */
-  --acf-status-warning:   #ea9f14;   /* amber */
-  --acf-status-critical:  #dc3232;   /* red */
-  --acf-status-nodata:    #8fa0b4;   /* faint gray */
-
-  /* Status glass backgrounds */
-  --acf-status-active-bg:   rgba(74,  158,  53, 0.09);
-  --acf-status-warning-bg:  rgba(234, 159,  20, 0.10);
-  --acf-status-critical-bg: rgba(220,  50,  50, 0.09);
-  --acf-status-synced-bg:   rgba(56,  120, 200, 0.09);
-
-  /* --- Border / Divider --- */
-  --acf-border:           rgba(0, 0, 0, 0.08);
-  --acf-border-strong:    rgba(0, 0, 0, 0.15);
-
-  /* --- Border Radius --- */
-  --acf-radius-sm:   6px;
-  --acf-radius-md:   8px;
-  --acf-radius-lg:   12px;
-  --acf-radius-xl:   14px;
-  --acf-radius-pill: 20px;
-
-  /* --- Spacing Scale --- */
-  --acf-space-xs:  4px;
-  --acf-space-sm:  8px;
-  --acf-space-md:  12px;
-  --acf-space-lg:  16px;
-  --acf-space-xl:  24px;
-  --acf-space-2xl: 40px;
-
-  /* --- Typography --- */
-  --acf-font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
-  --acf-font-mono: "JetBrains Mono", "Fira Code", "Consolas", monospace;
-
-  --acf-text-xs:   11px;
-  --acf-text-sm:   12px;
-  --acf-text-base: 14px;
-  --acf-text-md:   16px;
-  --acf-text-lg:   18px;
-  --acf-text-xl:   22px;
-  --acf-text-stat: 26px;
+  /* Map legacy tokens used throughout index.html */
+  --bg: var(--acf-bg);
+  --sidebar-bg: var(--acf-green-glass);
+  --sidebar-border: var(--acf-border);
+  --surface: var(--acf-card);
+  --surface2: rgba(255, 255, 255, 0.72);
+  --surface3: rgba(255, 255, 255, 0.65);
+  --border: var(--acf-border-neutral);
+  --border2: #c8cce0;
+  --text: var(--acf-text);
+  --text-dim: var(--acf-text-dim);
+  --muted: var(--acf-muted);
+  --dim: #bcc0d4;
+  --accent: var(--acf-green);
+  --accent-dim: rgba(74, 158, 53, 0.35);
+  --accent-bg: rgba(74, 158, 53, 0.08);
+  --accent-glow: var(--acf-green-glow);
+  --green: var(--acf-green);
+  --green-dim: rgba(74, 158, 53, 0.3);
+  --green-bg: rgba(74, 158, 53, 0.08);
+  --amber: var(--acf-amber);
+  --amber-dim: rgba(234, 159, 20, 0.35);
+  --amber-bg: var(--acf-amber-soft);
+  --red: var(--acf-critical);
+  --red-dim: rgba(220, 50, 50, 0.3);
+  --red-bg: var(--acf-critical-soft);
+  --blue: var(--acf-blue);
+  --blue-dim: rgba(56, 120, 200, 0.3);
+  --blue-bg: var(--acf-blue-soft);
+  --card-bg: var(--acf-card);
 }
 
-
-/* ============================================================
-   2. RESET & BASE
-   ============================================================ */
-
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* ── Typography: 400 / 500 only ─────────────────────────────── */
+body,
+body * {
+  font-weight: 400 !important;
 }
 
+.topbar-title,
+.brand-name,
+.modal-title,
+.card-name,
+.final-title,
+.section-label,
+.form-label,
+.tli-name,
+.rpt-hero-name,
+.rpt-hero-title,
+.sr-banner-title,
+.sr-section-title-main,
+.fin-hero-title,
+.fin-card-name,
+.ftc-name,
+.health-info h2,
+.insight-title,
+.cha-label,
+.so-head-title,
+.lr-hero-title {
+  font-weight: 500 !important;
+}
+
+/* ── Page base ────────────────────────────────────────────────── */
+html,
 body {
-  font-family: var(--acf-font);
-  font-size: var(--acf-text-base);
-  color: var(--acf-text);
-  background: var(--acf-bg);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
+  background: var(--acf-bg) !important;
+  color: var(--acf-text) !important;
 }
 
-
-/* ============================================================
-   3. TYPOGRAPHY UTILITIES
-   ============================================================ */
-
-.acf-page-title   { font-size: var(--acf-text-xl);  font-weight: 500; color: var(--acf-text); }
-.acf-section-title{ font-size: var(--acf-text-md);  font-weight: 500; color: var(--acf-text); }
-.acf-body         { font-size: var(--acf-text-base); font-weight: 400; color: var(--acf-text); }
-.acf-caption      { font-size: var(--acf-text-sm);  font-weight: 400; color: var(--acf-text-muted); }
-.acf-label        { font-size: var(--acf-text-xs);  font-weight: 500; color: var(--acf-text-faint);
-                    text-transform: uppercase; letter-spacing: 0.08em; }
-.acf-mono         { font-family: var(--acf-font-mono); font-size: var(--acf-text-sm); }
-.acf-stat         { font-size: var(--acf-text-stat); font-weight: 500; color: var(--acf-text); }
-
-
-/* ============================================================
-   4. BADGE / STATUS CHIPS
-   ============================================================ */
-
-.acf-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
-  border-radius: var(--acf-radius-pill);
-  font-size: var(--acf-text-xs);
-  font-weight: 500;
-  border: 0.5px solid transparent;
+/* ── Scrollbar ────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px !important;
+  height: 5px !important;
 }
 
-.acf-badge-green {
-  background: var(--acf-status-active-bg);
-  color: var(--acf-green-dark);
-  border-color: var(--acf-glass-green-border);
+::-webkit-scrollbar-track {
+  background: transparent !important;
 }
 
-.acf-badge-blue {
-  background: var(--acf-status-synced-bg);
-  color: var(--acf-blue-dark);
-  border-color: var(--acf-glass-blue-border);
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15) !important;
+  border-radius: 3px !important;
 }
 
-.acf-badge-warning {
-  background: var(--acf-status-warning-bg);
-  color: #8a5c00;
-  border-color: rgba(234, 159, 20, 0.25);
+/* ── Sidebar / nav ────────────────────────────────────────────── */
+.sidebar {
+  background: var(--acf-green-glass) !important;
+  border-right: 1px solid var(--acf-border) !important;
+  box-shadow: 2px 0 16px rgba(74, 158, 53, 0.06) !important;
 }
 
-.acf-badge-critical {
-  background: var(--acf-status-critical-bg);
-  color: #8a1a1a;
-  border-color: rgba(220, 50, 50, 0.22);
+.sidebar-brand {
+  border-bottom-color: var(--acf-border) !important;
 }
 
-.acf-badge-neutral {
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--acf-text-muted);
-  border-color: rgba(0, 0, 0, 0.10);
+.brand-logo {
+  background: linear-gradient(135deg, var(--acf-green), #3d852c) !important;
+  box-shadow: 0 2px 8px var(--acf-green-glow) !important;
+  color: #fff !important;
 }
 
-/* Status dot inside badge */
-.acf-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  display: inline-block;
-  flex-shrink: 0;
+.brand-name {
+  color: var(--acf-text) !important;
 }
 
-
-/* ============================================================
-   5. BUTTONS
-   ============================================================ */
-
-.acf-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 15px;
-  border-radius: var(--acf-radius-md);
-  font-size: 13px;
-  font-weight: 500;
-  font-family: var(--acf-font);
-  cursor: pointer;
-  border: 0.5px solid transparent;
-  transition: opacity 0.15s;
-  text-decoration: none;
-}
-.acf-btn:hover  { opacity: 0.88; }
-.acf-btn:active { transform: scale(0.98); }
-
-/* Solid — Green */
-.acf-btn-green {
-  background: var(--acf-green);
-  color: #fff;
-  border-color: var(--acf-green-dark);
+.nav-item:hover {
+  background: rgba(74, 158, 53, 0.05) !important;
+  color: var(--acf-text) !important;
 }
 
-/* Solid — Blue */
-.acf-btn-blue {
-  background: var(--acf-blue);
-  color: #fff;
-  border-color: var(--acf-blue-dark);
+.nav-item.active {
+  background: var(--acf-green-soft) !important;
+  border-color: var(--acf-border) !important;
+  color: var(--acf-text) !important;
 }
 
-/* Ghost — Green */
-.acf-btn-ghost-green {
-  background: var(--acf-glass-green);
-  color: var(--acf-green-dark);
-  border-color: var(--acf-glass-green-border);
-}
-.acf-btn-ghost-green:hover {
-  background: var(--acf-glass-green-hover);
-  opacity: 1;
+.nav-item.active .nav-icon {
+  color: var(--acf-green) !important;
 }
 
-/* Ghost — Blue */
-.acf-btn-ghost-blue {
-  background: var(--acf-glass-blue);
-  color: var(--acf-blue-dark);
-  border-color: var(--acf-glass-blue-border);
-}
-.acf-btn-ghost-blue:hover {
-  background: var(--acf-glass-blue-hover);
-  opacity: 1;
+.nav-badge {
+  background: rgba(74, 158, 53, 0.08) !important;
+  color: var(--acf-green) !important;
+  border-color: var(--acf-green-dim) !important;
 }
 
-/* Outline (neutral / danger) */
-.acf-btn-outline {
-  background: transparent;
-  color: var(--acf-text-muted);
-  border-color: var(--acf-border-strong);
+.sidebar-footer {
+  background: var(--acf-bg) !important;
+  border-top-color: var(--acf-border) !important;
 }
 
-/* Danger */
-.acf-btn-danger {
-  background: var(--acf-status-critical-bg);
-  color: #8a1a1a;
-  border-color: rgba(220, 50, 50, 0.22);
+/* ── Topbar / navbar ──────────────────────────────────────────── */
+.topbar {
+  background: var(--acf-green-glass) !important;
+  border-bottom: 1px solid var(--acf-border) !important;
+  box-shadow: 0 2px 10px rgba(74, 158, 53, 0.05) !important;
 }
 
-/* Button sizes */
-.acf-btn-sm { padding: 5px 10px; font-size: 12px; }
-.acf-btn-lg { padding: 10px 20px; font-size: 14px; }
-.acf-btn-full { width: 100%; justify-content: center; }
+.topbar-title,
+.topbar-clock {
+  color: var(--acf-text) !important;
+}
 
+.topbar-sub {
+  color: var(--acf-muted) !important;
+}
 
-/* ============================================================
-   6. CARDS
-   ============================================================ */
+.cloud-bar {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border-bottom-color: var(--acf-border-neutral) !important;
+  color: var(--acf-text-dim) !important;
+}
 
-/* Base glass card */
-.acf-card {
-  background: var(--acf-card-bg);
-  border: 0.5px solid var(--acf-surface-border);
-  border-radius: var(--acf-radius-xl);
-  padding: 16px 20px;
+/* ── Pills & cloud status ─────────────────────────────────────── */
+.pill-btn {
+  background: rgba(74, 158, 53, 0.08) !important;
+  border: 1px solid rgba(74, 158, 53, 0.18) !important;
+  color: var(--acf-text-dim) !important;
+}
+
+.pill-btn:hover {
+  background: rgba(74, 158, 53, 0.14) !important;
+  color: var(--acf-text) !important;
+}
+
+.pill-live {
+  background: rgba(74, 158, 53, 0.1) !important;
+  color: var(--acf-green) !important;
+  border-color: rgba(74, 158, 53, 0.28) !important;
+}
+
+.pill-dot {
+  background: var(--acf-green) !important;
+}
+
+.pill-cloud,
+.pill-cloud-ok {
+  background: var(--acf-blue-soft) !important;
+  color: var(--acf-blue) !important;
+  border-color: rgba(56, 120, 200, 0.28) !important;
+}
+
+.cloud-dot.synced {
+  background: var(--acf-blue) !important;
+  box-shadow: 0 0 5px rgba(56, 120, 200, 0.4) !important;
+}
+
+.cloud-dot.syncing {
+  background: var(--acf-amber) !important;
+}
+
+.cloud-dot.error {
+  background: var(--acf-critical) !important;
+}
+
+/* ── Summary stat cards ───────────────────────────────────────── */
+.sum-card {
+  background: var(--acf-card) !important;
+  border: 1px solid var(--acf-border-neutral) !important;
+  border-radius: 12px !important;
+  border-top: 2px solid var(--acf-green) !important;
+  box-shadow: 0 2px 12px rgba(44, 49, 80, 0.06) !important;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
 
-/* Tracker card — green accent top */
-.acf-card-green {
-  background: rgba(255, 255, 255, 0.78);
-  border: 0.5px solid var(--acf-glass-green-border);
-  border-top: 2px solid var(--acf-green);
-  border-radius: var(--acf-radius-lg);
-  padding: 16px 18px;
+.sum-card::before {
+  display: none !important;
 }
 
-/* Tracker card — blue accent top */
-.acf-card-blue {
-  background: rgba(255, 255, 255, 0.78);
-  border: 0.5px solid var(--acf-glass-blue-border);
-  border-top: 2px solid var(--acf-blue);
-  border-radius: var(--acf-radius-lg);
-  padding: 16px 18px;
+.sum-card.c-red::before,
+.sum-card.c-green::before,
+.sum-card.c-amber::before,
+.sum-card.c-blue::before {
+  display: none !important;
 }
 
-/* Tracker card — warning accent */
-.acf-card-warning {
-  background: rgba(255, 255, 255, 0.78);
-  border: 0.5px solid rgba(234, 159, 20, 0.25);
-  border-top: 2px solid var(--acf-status-warning);
-  border-radius: var(--acf-radius-lg);
-  padding: 16px 18px;
+.sum-value,
+.sum-value.ok,
+.sum-value.warn,
+.sum-value.bad,
+.sum-value.blue,
+.kpi-val,
+.kpi-val.ok,
+.kpi-val.warn,
+.kpi-val.bad,
+.report-stat-val,
+.report-stat-val.ok,
+.rpt-kpi-val,
+.rpt-kpi-val.ok,
+.rpt-kpi-val.warn,
+.rpt-kpi-val.bad,
+.rpt-kpi-val.blue,
+.sr-kpi-val,
+.sr-kpi-val.blue,
+.sr-kpi-val.green,
+.sr-kpi-val.red,
+.sr-kpi-val.amber,
+.fhs-val,
+.fhs-val.fhs-ok,
+.fhs-val.fhs-warn,
+.fhs-val.fhs-bad,
+.fhs-val.fhs-blue,
+.cs-val,
+.cs-val.ok,
+.rpt-hero-comp,
+.rpt-hero-comp-ok,
+.rpt-hero-comp-warn,
+.rpt-hero-comp-bad,
+.sr-comp-pct,
+.sr-comp-pct.ok,
+.sr-comp-pct.warn,
+.sr-comp-pct.bad,
+.sr-sub-comp-v2,
+.sr-hist-comp,
+.sr-freq-count,
+.ftc-val.ok {
+  color: var(--acf-green) !important;
 }
 
-/* Icon container inside card */
-.acf-card-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--acf-radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-}
-.acf-card-icon-green {
-  background: var(--acf-glass-green);
-  border: 0.5px solid var(--acf-glass-green-border);
-}
-.acf-card-icon-blue {
-  background: var(--acf-glass-blue);
-  border: 0.5px solid var(--acf-glass-blue-border);
-}
-
-/* Stat summary mini card */
-.acf-stat-mini {
-  background: rgba(0, 0, 0, 0.03);
-  border: 0.5px solid var(--acf-border);
-  border-radius: var(--acf-radius-md);
-  padding: 10px 12px;
+.sum-value.warn,
+.cs-val.warn,
+.kpi-val.warn,
+.report-stat-val.warn,
+.rpt-kpi-val.warn,
+.fhs-val.fhs-warn,
+.sr-comp-pct.warn,
+.ftc-val.warn,
+.sum-value.bad,
+.cs-val.bad,
+.kpi-val.bad,
+.report-stat-val.bad,
+.rpt-kpi-val.bad,
+.fhs-val.fhs-bad,
+.sr-comp-pct.bad,
+.ftc-val.bad {
+  color: var(--acf-green) !important;
 }
 
-
-/* ============================================================
-   7. PROGRESS BAR
-   ============================================================ */
-
-.acf-progress {
-  height: 3px;
-  background: rgba(0, 0, 0, 0.07);
-  border-radius: 2px;
-  margin: 10px 0 6px;
-  overflow: hidden;
+.sum-label,
+.sum-sub {
+  color: var(--acf-muted) !important;
 }
 
-.acf-progress-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.4s ease;
+/* ── Tracker cards ────────────────────────────────────────────── */
+.tracker-card {
+  background: var(--acf-card) !important;
+  border: 1px solid var(--acf-border-neutral) !important;
+  border-radius: 12px !important;
+  border-top: 2px solid var(--acf-green) !important;
+  box-shadow: 0 3px 16px rgba(44, 49, 80, 0.07) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
 }
 
-.acf-progress-green   { background: var(--acf-green); }
-.acf-progress-blue    { background: var(--acf-blue); }
-.acf-progress-warning { background: var(--acf-status-warning); }
-.acf-progress-critical{ background: var(--acf-status-critical); }
-
-
-/* ============================================================
-   8. NAVBAR
-   ============================================================ */
-
-.acf-navbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: var(--acf-radius-lg);
-  border: 0.5px solid var(--acf-border);
+.tracker-card::before {
+  display: none !important;
 }
 
-/* Per-project navbar tints */
-.acf-navbar-c {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: var(--acf-border);
-}
-.acf-navbar-m {
-  background: var(--acf-glass-blue);
-  border-color: var(--acf-glass-blue-border);
-}
-.acf-navbar-s {
-  background: var(--acf-glass-green);
-  border-color: var(--acf-glass-green-border);
+.tracker-card:hover {
+  border-color: rgba(74, 158, 53, 0.35) !important;
+  box-shadow: 0 10px 32px rgba(44, 49, 80, 0.1), 0 2px 8px rgba(74, 158, 53, 0.08) !important;
 }
 
-.acf-navbar-brand {
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.05em;
+.tracker-card:hover::after {
+  display: none !important;
 }
-.acf-navbar-brand-green { color: var(--acf-green-dark); }
-.acf-navbar-brand-blue  { color: var(--acf-blue-dark); }
 
-.acf-nav-link {
-  font-size: 12px;
-  color: var(--acf-text-muted);
-  padding: 3px 8px;
-  border-radius: 6px;
-  text-decoration: none;
-  transition: background 0.15s;
+.tracker-card .card-top-glow {
+  display: none !important;
 }
-.acf-nav-link:hover          { background: rgba(0,0,0,0.05); }
-.acf-nav-link-active-green   { background: var(--acf-glass-green); color: var(--acf-green-dark); }
-.acf-nav-link-active-blue    { background: var(--acf-glass-blue);  color: var(--acf-blue-dark);  }
 
-/* Logo mark */
-.acf-logo-mark {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 13px;
+.card-ill {
+  background: linear-gradient(160deg, rgba(247, 249, 252, 0.9) 0%, rgba(255, 255, 255, 0.5) 100%) !important;
 }
-.acf-logo-green { background: var(--acf-green); }
-.acf-logo-blue  { background: var(--acf-blue);  }
 
+.card-glass-divider {
+  background: linear-gradient(90deg, transparent, rgba(74, 158, 53, 0.12), transparent) !important;
+}
 
-/* ============================================================
-   9. LOGIN / AUTH SCREEN
-   ============================================================ */
+.card-info {
+  background: transparent !important;
+}
 
-.acf-login-card {
-  background: var(--acf-card-bg);
-  border: 0.5px solid var(--acf-border);
-  border-radius: var(--acf-radius-xl);
-  padding: 24px;
+.card-name {
+  color: var(--acf-text) !important;
+}
+
+.cs-item {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border-color: var(--acf-border-neutral) !important;
+}
+
+.cs-item:hover {
+  background: rgba(74, 158, 53, 0.06) !important;
+  border-color: rgba(74, 158, 53, 0.2) !important;
+}
+
+.cs-label {
+  color: var(--acf-muted) !important;
+}
+
+.card-footer {
+  background: rgba(255, 255, 255, 0.5) !important;
+  border-top-color: var(--acf-border-neutral) !important;
+}
+
+.card-footer-person,
+.card-footer-pct {
+  color: var(--acf-muted) !important;
+}
+
+/* ── Badges (glass fills + 5px status dot) ───────────────────── */
+.card-badge-status,
+.card-badge-link,
+.ftc-badge,
+.fin-card-badge,
+.sr-status,
+.sr-banner-pill,
+.sr-pri,
+.sr-verdict,
+.pill-btn {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.card-badge-status.badge-ok,
+.ftc-badge.ok,
+.fin-badge-ok,
+.ss-pass,
+.sbp-ok,
+.sv-ok {
+  background: rgba(74, 158, 53, 0.12) !important;
+  color: var(--acf-green) !important;
+  border: 1px solid rgba(74, 158, 53, 0.28) !important;
+}
+
+.card-badge-status.badge-ok::before {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+  background: var(--acf-green);
+}
+
+.card-badge-link.badge-linked::before {
+  display: none !important;
+}
+
+.card-badge-link.badge-linked {
+  background: rgba(56, 120, 200, 0.1) !important;
+  color: var(--acf-blue) !important;
+  border: 1px solid rgba(56, 120, 200, 0.28) !important;
+}
+
+.card-badge-status.badge-pending,
+.card-badge-link.badge-unlinked,
+.ftc-badge.na,
+.fin-badge-na,
+.ss-pending,
+.ss-na {
+  background: rgba(136, 144, 170, 0.1) !important;
+  color: var(--acf-muted) !important;
+  border: 1px solid var(--acf-border-neutral) !important;
+}
+
+.ss-fail,
+.sbp-bad,
+.sv-bad {
+  background: rgba(220, 50, 50, 0.1) !important;
+  color: var(--acf-critical) !important;
+  border: 1px solid rgba(220, 50, 50, 0.28) !important;
+}
+
+.ss-obs,
+.sbp-warn,
+.sv-warn {
+  background: rgba(234, 159, 20, 0.12) !important;
+  color: var(--acf-amber) !important;
+  border: 1px solid rgba(234, 159, 20, 0.28) !important;
+}
+
+.sbp-blue {
+  background: var(--acf-blue-soft) !important;
+  color: var(--acf-blue) !important;
+  border-color: rgba(56, 120, 200, 0.28) !important;
+}
+
+.sr-status::before {
+  width: 5px !important;
+  height: 5px !important;
+}
+
+.ss-pass::before { background: var(--acf-green) !important; }
+.ss-fail::before { background: var(--acf-critical) !important; }
+.ss-obs::before { background: var(--acf-amber) !important; }
+
+/* ── Progress bars (3px) ──────────────────────────────────────── */
+.comp-bar-track,
+.ftc-prog,
+.fin-card-prog {
+  height: 3px !important;
+  background: var(--acf-border-neutral) !important;
+  border-radius: 2px !important;
+}
+
+.comp-bar-fill,
+.ftc-prog-fill,
+.fin-card-prog-fill {
+  height: 3px !important;
+  border-radius: 2px !important;
+  background: var(--acf-green) !important;
+}
+
+.comp-bar-fill.warn,
+.ftc-prog-fill.warn,
+.fin-card-prog-fill.warn {
+  background: var(--acf-amber) !important;
+}
+
+.comp-bar-fill.bad,
+.ftc-prog-fill.bad,
+.fin-card-prog-fill.bad {
+  background: var(--acf-critical) !important;
+}
+
+.sr-comp-track {
+  height: 3px !important;
+  border-radius: 2px !important;
+}
+
+.sr-comp-fill.ok {
+  background: var(--acf-green) !important;
+  box-shadow: none !important;
+}
+
+.sr-comp-fill.warn {
+  background: var(--acf-amber) !important;
+  box-shadow: none !important;
+}
+
+.sr-comp-fill.bad {
+  background: var(--acf-critical) !important;
+  box-shadow: none !important;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────── */
+.btn {
+  background: rgba(74, 158, 53, 0.08) !important;
+  border: 1px solid rgba(74, 158, 53, 0.22) !important;
+  color: var(--acf-green) !important;
+}
+
+.btn:hover {
+  background: rgba(74, 158, 53, 0.14) !important;
+  color: #3d852c !important;
+}
+
+.btn.primary {
+  background: var(--acf-green) !important;
+  border-color: var(--acf-green) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px var(--acf-green-glow) !important;
+}
+
+.btn.primary:hover {
+  background: #3d852c !important;
+  opacity: 1 !important;
+}
+
+.btn.danger {
+  background: var(--acf-critical-soft) !important;
+  border-color: rgba(220, 50, 50, 0.28) !important;
+  color: var(--acf-critical) !important;
+}
+
+.btn.add-tracker {
+  border-color: rgba(74, 158, 53, 0.35) !important;
+  color: var(--acf-green) !important;
+}
+
+.btn.add-tracker:hover {
+  background: rgba(74, 158, 53, 0.08) !important;
+  border-color: var(--acf-green) !important;
+  box-shadow: 0 0 12px var(--acf-green-glow) !important;
+}
+
+.connect-btn {
+  background: rgba(74, 158, 53, 0.08) !important;
+  border-color: rgba(74, 158, 53, 0.28) !important;
+  color: var(--acf-green) !important;
+}
+
+/* Card hover action buttons */
+.card-hover-actions {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-top: 1px solid var(--acf-border) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.card-hover-actions .btn {
+  background: rgba(74, 158, 53, 0.08) !important;
+  border-color: rgba(74, 158, 53, 0.2) !important;
+  color: var(--acf-text-dim) !important;
+}
+
+.cha-btn {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border-color: var(--acf-border-neutral) !important;
+}
+
+.cha-start {
+  background: rgba(74, 158, 53, 0.12) !important;
+  border-color: rgba(74, 158, 53, 0.28) !important;
+}
+
+.cha-start .cha-icon,
+.cha-start .cha-label {
+  color: var(--acf-green) !important;
+}
+
+.cha-status {
+  background: rgba(74, 158, 53, 0.08) !important;
+  border-color: rgba(74, 158, 53, 0.2) !important;
+}
+
+.cha-status .cha-icon,
+.cha-status .cha-label {
+  color: var(--acf-green) !important;
+}
+
+.cha-report {
+  background: var(--acf-blue-soft) !important;
+  border-color: rgba(56, 120, 200, 0.22) !important;
+}
+
+.cha-report .cha-icon,
+.cha-report .cha-label {
+  color: var(--acf-blue) !important;
+}
+
+/* ── Modals & login ───────────────────────────────────────────── */
+.overlay {
+  background: rgba(44, 49, 80, 0.35) !important;
+}
+
+.modal,
+.so-panel {
+  background: var(--acf-modal) !important;
+  border: 1px solid var(--acf-green-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 60px rgba(44, 49, 80, 0.14) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  max-width: 320px;
-  width: 100%;
 }
 
-.acf-login-card-green { border-color: var(--acf-glass-green-border); }
-.acf-login-card-blue  { border-color: var(--acf-glass-blue-border);  }
-
-.acf-login-field {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.04);
-  border: 0.5px solid var(--acf-border-strong);
-  border-radius: var(--acf-radius-md);
-  padding: 9px 12px;
-  font-size: 13px;
-  font-family: var(--acf-font);
-  color: var(--acf-text);
-  outline: none;
-  transition: border-color 0.15s;
-}
-.acf-login-field:focus {
-  border-color: var(--acf-blue);
-  box-shadow: 0 0 0 3px var(--acf-glass-blue);
+.modal-head,
+.modal-foot,
+.so-head {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border-color: var(--acf-border-neutral) !important;
 }
 
-
-/* ============================================================
-   10. DIVIDER
-   ============================================================ */
-
-.acf-divider {
-  height: 0.5px;
-  background: var(--acf-border);
-  border: none;
-  margin: 20px 0;
+.modal-title,
+.so-head-title {
+  color: var(--acf-text) !important;
 }
 
-
-/* ============================================================
-   11. LAYOUT HELPERS
-   ============================================================ */
-
-.acf-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.acf-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.acf-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-
-.acf-flex   { display: flex; align-items: center; }
-.acf-flex-between { display: flex; align-items: center; justify-content: space-between; }
-.acf-gap-sm { gap: 8px;  }
-.acf-gap-md { gap: 12px; }
-.acf-gap-lg { gap: 16px; }
-.acf-spacer { flex: 1; }
-
-
-/* ============================================================
-   12. FORM INPUTS (general)
-   ============================================================ */
-
-.acf-input {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.03);
-  border: 0.5px solid var(--acf-border-strong);
-  border-radius: var(--acf-radius-md);
-  padding: 8px 12px;
-  font-size: 13px;
-  font-family: var(--acf-font);
-  color: var(--acf-text);
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-.acf-input:focus {
-  border-color: var(--acf-blue);
-  box-shadow: 0 0 0 3px var(--acf-glass-blue);
+#sbLoginOverlay {
+  background: rgba(44, 49, 80, 0.35) !important;
 }
 
-.acf-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238fa0b4' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  padding-right: 28px;
+#sbLoginOverlay > div {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border: 1px solid rgba(74, 158, 53, 0.22) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 60px rgba(44, 49, 80, 0.14) !important;
 }
 
-
-/* ============================================================
-   13. SCROLL & MISC
-   ============================================================ */
-
-:focus-visible {
-  outline: 2px solid var(--acf-blue);
-  outline-offset: 2px;
+#sbLoginBtn,
+#sbSignupBtn {
+  background: var(--acf-green) !important;
+  font-weight: 500 !important;
+  box-shadow: 0 2px 8px var(--acf-green-glow) !important;
 }
 
-::selection {
-  background: var(--acf-blue-light);
-  color: var(--acf-blue-dark);
+/* ── Forms ────────────────────────────────────────────────────── */
+.form-input,
+.sr-sub-sel,
+.lr-date-input {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border-color: var(--acf-border-neutral) !important;
+  color: var(--acf-text) !important;
 }
 
-/* Scrollbar (webkit) */
-::-webkit-scrollbar       { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+.form-input:focus {
+  border-color: var(--acf-green) !important;
+  box-shadow: 0 0 0 2px var(--acf-green-glow) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+}
 
+.emoji-opt {
+  background: rgba(255, 255, 255, 0.6) !important;
+}
 
-/* ============================================================
-   END OF FILE
-   acf-design-system.css — v1.0
-   C-Tracker · M-Tracker · S-Tracker
-   ============================================================ */
+.emoji-opt.selected {
+  border-color: var(--acf-green) !important;
+  background: rgba(74, 158, 53, 0.08) !important;
+}
+
+/* ── Final report button & cards ──────────────────────────────── */
+.final-btn {
+  background: var(--acf-card) !important;
+  border: 1px solid var(--acf-border-neutral) !important;
+  border-top: 2px solid var(--acf-green) !important;
+  border-radius: 12px !important;
+  color: var(--acf-text) !important;
+}
+
+.final-btn:hover {
+  border-color: rgba(74, 158, 53, 0.35) !important;
+  box-shadow: 0 4px 20px rgba(74, 158, 53, 0.1) !important;
+}
+
+.final-icon {
+  background: rgba(74, 158, 53, 0.1) !important;
+  border-color: rgba(74, 158, 53, 0.25) !important;
+}
+
+.final-arrow {
+  color: var(--acf-green) !important;
+}
+
+.ftc,
+.fin-card,
+.kpi,
+.rpt-kpi,
+.vis-card,
+.insight-box,
+.rpt-section,
+.sr-section,
+.sr-kpi,
+.health-wrap,
+.notice,
+.tracker-list-item,
+.report-tabs,
+.rpt-tabs-v2,
+.rtab,
+.rpt-tab-v2,
+.status-key4,
+.conclusion-box4,
+.fa-meta-card,
+.fa-tag-block,
+.fa-comp-strip,
+.lr-meta-card,
+.lr-comp-strip {
+  background: var(--acf-card) !important;
+  border-color: var(--acf-border-neutral) !important;
+  border-radius: 12px !important;
+}
+
+.ftc::before,
+.fin-card::before,
+.kpi::before,
+.rpt-kpi::before,
+.sr-kpi::before {
+  background: var(--acf-green) !important;
+  height: 2px !important;
+}
+
+.section-label::after,
+.separator {
+  background: var(--acf-border-neutral) !important;
+}
+
+.sl-icon {
+  color: var(--acf-green) !important;
+}
+
+/* ── Report hero / banners — light, no dark cinematic ─────────── */
+.rpt-hero,
+.rpt-hero-v2,
+.sr-banner,
+.fin-hero,
+.lr-report-hero {
+  background: var(--acf-card) !important;
+  border: 1px solid var(--acf-border-neutral) !important;
+  border-top: 2px solid var(--acf-green) !important;
+  border-radius: 12px !important;
+}
+
+.rpt-hero-glass,
+.sr-banner-gradient,
+.sr-banner-texture {
+  background: rgba(255, 255, 255, 0.75) !important;
+}
+
+.rpt-hero-name,
+.rpt-hero-title,
+.sr-banner-title,
+.lr-hero-title {
+  color: var(--acf-text) !important;
+}
+
+.rpt-hero-sub,
+.rpt-hero-meta,
+.sr-banner-meta,
+.sr-banner-tag,
+.lr-hero-tag,
+.lr-hero-sub {
+  color: var(--acf-muted) !important;
+}
+
+.rpt-hero-bg svg,
+.sr-banner-bg svg {
+  filter: brightness(1.1) saturate(0.7) opacity(0.35) !important;
+}
+
+/* ── Tables ───────────────────────────────────────────────────── */
+.insp-table th,
+.action-table th,
+.sr-table th {
+  background: rgba(247, 249, 252, 0.95) !important;
+  color: var(--acf-muted) !important;
+}
+
+.sr-table tbody tr:hover td {
+  background: rgba(74, 158, 53, 0.04) !important;
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────── */
+.report-tabs,
+.rpt-tabs-v2,
+.sr-tabs-bar {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border-color: var(--acf-border-neutral) !important;
+  border-radius: 12px !important;
+}
+
+.rtab.active,
+.rpt-tab-v2.active,
+.sr-tab.active {
+  background: var(--acf-card) !important;
+  color: var(--acf-text) !important;
+  border-color: var(--acf-border-neutral) !important;
+  box-shadow: 0 2px 8px rgba(44, 49, 80, 0.06) !important;
+}
+
+.so-style-btn.active,
+.so-density-btn.active {
+  border-color: var(--acf-green) !important;
+  color: var(--acf-green) !important;
+  background: rgba(74, 158, 53, 0.08) !important;
+}
+
+/* ── Toasts ───────────────────────────────────────────────────── */
+.save-toast.green {
+  background: rgba(74, 158, 53, 0.12) !important;
+  border-color: rgba(74, 158, 53, 0.28) !important;
+  color: var(--acf-green) !important;
+}
+
+.save-toast.amber {
+  background: rgba(234, 159, 20, 0.12) !important;
+  border-color: rgba(234, 159, 20, 0.28) !important;
+  color: var(--acf-amber) !important;
+}
+
+/* ── Status dots ──────────────────────────────────────────────── */
+.dot-ok {
+  background: var(--acf-green) !important;
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+.dot-warn {
+  background: var(--acf-amber) !important;
+}
+
+.dot-bad {
+  background: var(--acf-critical) !important;
+}
+
+.sheet-dot.linked {
+  background: var(--acf-blue) !important;
+}
+
+/* ── Force light theme even when dark-mode class removed ──────── */
+body:not(.light-mode) {
+  background: var(--acf-bg) !important;
+  color: var(--acf-text) !important;
+}
+
+body:not(.light-mode) .sidebar,
+body:not(.light-mode) .topbar,
+body:not(.light-mode) .tracker-card,
+body:not(.light-mode) .sum-card,
+body:not(.light-mode) .modal {
+  background: var(--acf-card) !important;
+  color: var(--acf-text) !important;
+}
+
+/* ── Screen options panel ─────────────────────────────────────── */
+.so-panel {
+  border-left: 1px solid var(--acf-border) !important;
+}
+
+.so-style-btn,
+.so-density-btn {
+  background: rgba(74, 158, 53, 0.06) !important;
+  border-color: var(--acf-border-neutral) !important;
+  color: var(--acf-text-dim) !important;
+}
+
+/* ── Lightbox overlay stays readable ──────────────────────────── */
+.lightbox {
+  background: rgba(44, 49, 80, 0.75) !important;
+}
+
+/* ── Local record / yes-no controls ───────────────────────────── */
+.lr-yesno-btn.active-yes,
+.lr-disposal-btn.lr-disposal-confirmed {
+  background: rgba(74, 158, 53, 0.1) !important;
+  color: var(--acf-green) !important;
+  border-color: rgba(74, 158, 53, 0.28) !important;
+}
+
+.lr-yesno-btn.active-no,
+.lr-disposal-btn {
+  background: rgba(220, 50, 50, 0.08) !important;
+  color: var(--acf-critical) !important;
+  border-color: rgba(220, 50, 50, 0.25) !important;
+}
+
+/* ── Injected report views (First Aid, Local Record) ──────────── */
+.fa-hero,
+.lr-report-hero {
+  background: var(--acf-card) !important;
+  border: 1px solid var(--acf-border-neutral) !important;
+  border-top: 2px solid var(--acf-green) !important;
+  border-radius: 12px !important;
+}
+
+.fa-hero-grid,
+.lr-hero-grid {
+  background: none !important;
+}
+
+.fa-hero-bg {
+  opacity: 0.2 !important;
+}
+
+.fa-hero-bg svg {
+  filter: saturate(0.8) brightness(1.1) !important;
+}
+
+.fa-hero-title,
+.lr-hero-title {
+  color: var(--acf-text) !important;
+}
+
+.fa-hero-tag-line {
+  color: var(--acf-green) !important;
+}
+
+.fa-hero-sub,
+.lr-hero-tag,
+.lr-hero-sub {
+  color: var(--acf-muted) !important;
+}
+
+.fa-meta-card,
+.fa-tag-block,
+.fa-comp-strip,
+.lr-meta-card,
+.lr-comp-strip {
+  background: var(--acf-card) !important;
+  border-color: var(--acf-border-neutral) !important;
+  border-radius: 12px !important;
+}
+
+.fa-comp-track,
+.lr-comp-track {
+  height: 3px !important;
+  border-radius: 2px !important;
+  background: var(--acf-border-neutral) !important;
+}
+
+.fa-comp-ok,
+.lr-comp-ok {
+  background: var(--acf-green) !important;
+  box-shadow: none !important;
+}
+
+.fa-comp-warn,
+.lr-comp-warn {
+  background: var(--acf-amber) !important;
+}
+
+.fa-comp-bad,
+.lr-comp-bad {
+  background: var(--acf-critical) !important;
+}
+
+.fa-comp-pct,
+.lr-comp-pct,
+.lr-meta-value {
+  color: var(--acf-green) !important;
+}
+
+.fa-list-avail {
+  background: rgba(74, 158, 53, 0.04) !important;
+}
+
+.fa-list-miss {
+  background: rgba(220, 50, 50, 0.04) !important;
+}
