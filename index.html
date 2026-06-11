@@ -9260,10 +9260,24 @@ function vfrExportPDF(trackerId, idx) {
   const doneBy  = row[nameKey] || '—';
   const location= row[locKey]  || '';
   const fmtDate = _vFmtDate(rawDate);
-  const iKeys   = keys.filter(k => !_vSkip(k));
-  const allItems = iKeys.map((k, qi) => ({ k, v: row[k] || '', qi: qi+1, cls: _vClass(row[k] || '') }));
-  const answered = allItems.filter(x => x.cls !== 'missing');
-  const missing  = allItems.filter(x => x.cls === 'missing');
+const iKeys = keys.filter(k => !_vSkip(k));
+
+// First, map all potential items, then filter out any that are truly empty
+const allItems = iKeys
+  .map((k, qi) => ({
+    k,
+    v: row[k] || '',
+    qi: qi + 1
+  }))
+  .filter(item => item.v.trim() !== '' && item.v !== '—'); // This line filters out all empty/unanswered fields
+
+// Now, classify the remaining items that have actual content
+allItems.forEach(item => {
+  item.cls = _vClass(item.v);
+});
+
+const answered = allItems.filter(x => x.cls !== 'missing');
+const missing  = allItems.filter(x => x.cls === 'missing');
   const pct = allItems.length === 0 ? 100 : Math.round((answered.length / allItems.length) * 100);
   const color = pct >= 80 ? '#16a34a' : pct >= 50 ? '#d97706' : '#dc2626';
   const esc2 = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
