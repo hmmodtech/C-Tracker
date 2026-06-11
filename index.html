@@ -8956,16 +8956,26 @@ function vfrBuild(t, rows, idx) {
   // Inspection keys (skip meta)
   const iKeys = keys.filter(k => !_vSkip(k));
 
-  // Build items with original Q index
-  const allItems = iKeys.map((k, qi) => ({
-    k, v: row[k] || '', qi: qi + 1,
-    cls: _vClass(row[k] || '')
-  }));
+ // Build items with original Q index, filtering out any that have no user input
+const allItems = iKeys
+  .map((k, qi) => ({
+    k,
+    v: row[k] || '',
+    qi: qi + 1
+  }))
+  .filter(item => item.v.trim() !== '' && item.v !== '—'); // Filter out empty/default unanswered items
 
-  // Sort: answered (incl. photos) first, missing second
-  const answered = allItems.filter(x => x.cls !== 'missing');
-  const missing  = allItems.filter(x => x.cls === 'missing');
+// Add classification after filtering
+allItems.forEach(item => {
+  item.cls = _vClass(item.v);
+});
 
+// Sort: answered (incl. photos) first, missing second
+// The 'missing' array will now only contain items that were explicitly answered in a way
+// that classifies them as 'missing' (e.g., a non-empty but invalid response),
+// not items that were simply left blank.
+const answered = allItems.filter(x => x.cls !== 'missing');
+const missing  = allItems.filter(x => x.cls === 'missing');
   // Compliance
   const total   = allItems.length;
   const passN   = answered.length;
