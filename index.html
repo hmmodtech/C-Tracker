@@ -1200,93 +1200,6 @@
   .fin-finding.ff-warn{background:rgba(176,104,0,0.04);border-color:rgba(176,104,0,0.16)}
   .fin-finding.ff-ok{background:rgba(26,143,82,0.04);border-color:rgba(26,143,82,0.16)}
 
-
-  /* ═══════════════════════════════════════════════════════════════
-     SCREEN OPTIONS PANEL
-  ═══════════════════════════════════════════════════════════════ */
-  .so-panel{
-    position:fixed;top:0;right:0;bottom:0;
-    width:320px;
-    background:var(--surface);
-    border-left:1px solid var(--border2);
-    z-index:900;
-    display:flex;flex-direction:column;
-    transform:translateX(100%);
-    transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
-    box-shadow:-8px 0 40px rgba(0,0,0,0.4);
-    overflow:hidden;
-  }
-  .so-panel.open{transform:translateX(0)}
-  .so-backdrop{
-    position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:899;
-    opacity:0;pointer-events:none;transition:opacity 0.25s;backdrop-filter:blur(2px);
-  }
-  .so-backdrop.open{opacity:1;pointer-events:all}
-  .so-head{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:16px 18px;
-    border-bottom:1px solid var(--border2);
-    background:var(--surface2);
-    flex-shrink:0;
-  }
-  .so-head-title{font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--text);display:flex;align-items:center;gap:8px}
-  .so-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:3px 5px;border-radius:4px;transition:all 0.15s}
-  .so-close:hover{color:var(--text);background:var(--surface3)}
-  .so-body{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:22px}
-  .so-section{display:flex;flex-direction:column;gap:10px}
-  .so-section-label{font-family:var(--font-mono);font-size:9px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;display:flex;align-items:center;gap:6px}
-  .so-section-label svg{flex-shrink:0}
-  /* colour swatches */
-  .so-swatches{display:flex;flex-wrap:wrap;gap:6px}
-  .so-swatch{
-    width:34px;height:34px;border-radius:9px;cursor:pointer;
-    border:2px solid transparent;
-    transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s;
-    position:relative;flex-shrink:0;
-  }
-  .so-swatch:hover{transform:scale(1.12)}
-  .so-swatch.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(74,158,53,0.20),0 4px 12px rgba(26,35,50,0.10)}
-  .so-swatch.active::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.5)}
-  /* custom colour row */
-  .so-custom-row{display:flex;align-items:center;gap:8px;margin-top:2px}
-  .so-custom-label{font-family:var(--font-mono);font-size:10px;color:var(--muted);flex-shrink:0}
-  .so-color-input{width:32px;height:32px;border-radius:7px;border:1px solid var(--border2);cursor:pointer;padding:2px;background:var(--surface2)}
-  .so-color-hex{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);flex:1}
-  .so-reset{font-family:var(--font-mono);font-size:10px;padding:4px 10px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.15s;margin-left:auto}
-  .so-reset:hover{background:var(--surface3);color:var(--text)}
-  /* card style buttons */
-  .so-style-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .so-style-btn{
-    background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--acf-radius-md, 8px);
-    padding:12px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;
-    font-family:var(--font-mono);font-size:10px;color:var(--muted);
-    transition:all 0.15s;
-  }
-  .so-style-btn:hover{border-color:var(--border2);color:var(--text)}
-  .so-style-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
-  .so-style-icon{font-size:18px;line-height:1}
-  /* density buttons */
-  .so-density-row{display:flex;gap:6px}
-  .so-density-btn{
-    flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;
-    padding:9px 6px;cursor:pointer;font-family:var(--font-mono);font-size:10px;color:var(--muted);
-    transition:all 0.15s;text-align:center;
-  }
-  .so-density-btn:hover{border-color:var(--border2);color:var(--text)}
-  .so-density-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
-  /* preview bar */
-  .so-preview{
-    margin-top:auto;padding:14px 16px;border-top:1px solid var(--border);
-    background:var(--surface2);
-    display:flex;align-items:center;justify-content:space-between;
-    font-family:var(--font-mono);font-size:10px;color:var(--muted);
-    flex-shrink:0;
-  }
-  .so-save-btn{
-    font-family:var(--font-mono);font-size:10px;padding:6px 14px;border-radius:6px;
-    background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:500;border-radius:var(--acf-radius-md, 8px);
-    transition:opacity 0.15s;
-  }
   /* ── LOCAL RECORD YES/NO BUTTONS ─────────────────────────────── */
   .lr-yesno-btn{
     font-family:var(--font-mono);font-size:11px;font-weight:500;
@@ -1593,7 +1506,9 @@
     <div class="topbar-right">
       <div class="pill-btn pill-live"><span class="pill-dot"></span> LIVE</div>
       <button class="pill-btn" id="themeToggle" onclick="toggleTheme()" style="font-size:13px;padding:4px 10px" title="Toggle light/dark mode">☀️</button>
-      <button class="pill-btn" onclick="openScreenOptions()" title="Screen Options" style="font-size:13px;padding:4px 10px">⚙️ Screen Options</button>
+      <button class="pill-btn" id="themeToggle" onclick="toggleTheme()" style="font-size:13px;padding:4px 10px" title="Toggle light/dark mode">☀️</button>
+<!-- ADD THIS NEW BUTTON -->
+<button class="pill-btn" id="cardStyleToggle" onclick="cycleCardStyle()" title="Cycle Card Style" style="font-size:13px;padding:4px 10px">🃏</button>
       <div class="pill-btn pill-cloud-ok" id="cloudPill" onclick="manualCloudSync()" title="Cloud sync status">☁ Synced</div>
       <button class="pill-btn" onclick="fetchAllSheets()">↻ Sync Data</button>
       <button class="pill-btn" onclick="openFinalReport()">⬡ Report</button>
@@ -3129,7 +3044,52 @@ const LS_KEY = 'ct_v5';
 let trackers=[], apiKey='', sheetData={};
 let scriptUrl = '';
 const charts={};
+// ═══════════════════════════════════════════════════════════════
+// CARD STYLE TOGGLE LOGIC
+// ═══════════════════════════════════════════════════════════════
+const CARD_STYLES = ['default', 'flat', 'rounded', 'bordered'];
+let currentCardStyleIndex = 0;
 
+function applyCardStyle(style) {
+  // This function applies the visual style to the cards
+  let styleEl = document.getElementById('so-card-style');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'so-card-style';
+    document.head.appendChild(styleEl);
+  }
+  const rules = {
+    flat:     `.tracker-card { border-radius:6px !important; box-shadow:none !important; border-bottom-width:3px !important; }`,
+    rounded:  `.tracker-card { border-radius:24px !important; } .tracker-card .card-ill { border-radius:22px 22px 0 0 !important; }`,
+    bordered: `.tracker-card { border-width:2px !important; border-radius:8px !important; box-shadow:none !important; }`
+  };
+  styleEl.textContent = rules[style] || '';
+  // Save the preference to local storage
+  try { localStorage.setItem('ct_card_style', style); } catch(e) {}
+}
+
+function cycleCardStyle() {
+  // Move to the next style in the array, or loop back to the start
+  currentCardStyleIndex = (currentCardStyleIndex + 1) % CARD_STYLES.length;
+  const newStyle = CARD_STYLES[currentCardStyleIndex];
+  applyCardStyle(newStyle);
+  // Provide user feedback
+  showToast(`Card Style: ${newStyle.charAt(0).toUpperCase() + newStyle.slice(1)}`, 'green');
+}
+
+// Load the saved card style on startup
+function loadCardStyle() {
+  try {
+    const savedStyle = localStorage.getItem('ct_card_style');
+    if (savedStyle && CARD_STYLES.includes(savedStyle)) {
+      currentCardStyleIndex = CARD_STYLES.indexOf(savedStyle);
+      applyCardStyle(savedStyle);
+    }
+  } catch(e) {}
+}
+
+// Call this function when the application initializes
+loadCardStyle();
 // ══════════════════════════════════════════════════════════════════
 // CLOUD SYNC ENGINE
 // Read  → GET  ?action=read
@@ -6754,12 +6714,10 @@ const _origRenderTrackers = typeof renderTrackers==='function'?renderTrackers:nu
 
 // ── Init ──────────────────────────────────────────────────────
 loadTheme();
-loadSOState();
-applySOState();
+loadCardStyle(); // Add this line
 loadLocalRecords();
 
 tick();setInterval(tick,1000);
-
 // ══════════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════════
@@ -6841,152 +6799,6 @@ loadState().then(()=>{
     </div>
   </div>
 </div>
-
-
-<!-- SCREEN OPTIONS BACKDROP -->
-<div class="so-backdrop" id="soBackdrop" onclick="closeScreenOptions()"></div>
-
-<!-- SCREEN OPTIONS PANEL -->
-<div class="so-panel" id="soPanel">
-  <div class="so-head">
-    <div class="so-head-title">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"></path></svg>
-      SCREEN OPTIONS
-    </div>
-    <button class="so-close" onclick="closeScreenOptions()">✕</button>
-  </div>
-  <div class="so-body">
-
-    <!-- ACCENT COLOR -->
-    <div class="so-section">
-      <div class="so-section-label">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"></circle></svg>
-        Accent Color
-      </div>
-      <div class="so-swatches" id="soAccentSwatches">
-        <div class="so-swatch" style="background:#e8394a" data-color="#e8394a" onclick="setAccent(this)" title="Red"></div>
-        <div class="so-swatch" style="background:#4a9eff" data-color="#4a9eff" onclick="setAccent(this)" title="Blue"></div>
-        <div class="so-swatch" style="background:#9d6fff" data-color="#9d6fff" onclick="setAccent(this)" title="Purple"></div>
-        <div class="so-swatch" style="background:#2dd17a" data-color="#2dd17a" onclick="setAccent(this)" title="Green"></div>
-        <div class="so-swatch" style="background:#f0a030" data-color="#f0a030" onclick="setAccent(this)" title="Amber"></div>
-        <div class="so-swatch" style="background:#00c8d4" data-color="#00c8d4" onclick="setAccent(this)" title="Cyan"></div>
-        <div class="so-swatch" style="background:#ff6b6b" data-color="#ff6b6b" onclick="setAccent(this)" title="Coral"></div>
-        <div class="so-swatch" style="background:#06b6d4" data-color="#06b6d4" onclick="setAccent(this)" title="Sky"></div>
-      </div>
-      <div class="so-custom-row">
-        <span class="so-custom-label">CUSTOM:</span>
-        <input type="color" class="so-color-input" id="soAccentCustom" value="#e8394a" oninput="setAccentCustom(this)">
-        <span class="so-color-hex" id="soAccentHex">#e8394a</span>
-        <button class="so-reset" onclick="resetAccent()">Reset</button>
-      </div>
-    </div>
-
-    <!-- BACKGROUND COLOR -->
-    <div class="so-section">
-      <div class="so-section-label">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="3"></rect></svg>
-        Background Color
-      </div>
-      <div class="so-swatches" id="soBgSwatches">
-        <div class="so-swatch" style="background:#f9fafd;border:1.5px solid var(--border)" data-color="#f9fafd" onclick="setBg(this)" title="Warm White"></div>
-        <div class="so-swatch" style="background:#e8f5e2" data-color="#e8f5e2" onclick="setBg(this)" title="Mint"></div>
-        <div class="so-swatch" style="background:#e3edf9" data-color="#e3edf9" onclick="setBg(this)" title="Sky"></div>
-        <div class="so-swatch" style="background:#fdf8ea" data-color="#fdf8ea" onclick="setBg(this)" title="Cream"></div>
-        <div class="so-swatch" style="background:#f0eef5" data-color="#f0eef5" onclick="setBg(this)" title="Lavender"></div>
-        <div class="so-swatch" style="background:#0f0a1c" data-color="#0f0a1c" onclick="setBg(this)" title="Dark Purple"></div>
-        <div class="so-swatch" style="background:#0a0c0e" data-color="#0a0c0e" onclick="setBg(this)" title="Charcoal"></div>
-        <div class="so-swatch" style="background:#fdf6ee;border:1.5px solid #e8d9c4" data-color="#fdf6ee" onclick="setBg(this)" title="Warm Cream"></div>
-        <div class="so-swatch" style="background:#eef0f5;border:1.5px solid var(--border)" data-color="#eef0f5" onclick="setBg(this)" title="Cool Gray"></div>
-        <div class="so-swatch" style="background:#f5f0eb;border:1.5px solid #e0d8d0" data-color="#f5f0eb" onclick="setBg(this)" title="Sand"></div>
-      </div>
-      <div class="so-custom-row">
-        <span class="so-custom-label">CUSTOM:</span>
-        <input type="color" class="so-color-input" id="soBgCustom" value="#f7f9fc" oninput="setBgCustom(this)">
-        <span class="so-color-hex" id="soBgHex">#f7f9fc</span>
-        <button class="so-reset" onclick="resetBg()">Reset</button>
-      </div>
-    </div>
-
-    <!-- TEXT COLOR -->
-    <div class="so-section">
-      <div class="so-section-label">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"></path></svg>
-        Text Color
-      </div>
-      <div class="so-swatches" id="soTextSwatches">
-        <div class="so-swatch" style="background:#5a6a7e" data-color="#5a6a7e" onclick="setTextColor(this)" title="Slate"></div>
-        <div class="so-swatch" style="background:#ffffff;border:1.5px solid #555" data-color="#ffffff" onclick="setTextColor(this)" title="White"></div>
-        <div class="so-swatch" style="background:#f0ece0;border:1.5px solid #555" data-color="#f0ece0" onclick="setTextColor(this)" title="Warm White"></div>
-        <div class="so-swatch" style="background:#00ffcc" data-color="#00ffcc" onclick="setTextColor(this)" title="Neon Cyan"></div>
-        <div class="so-swatch" style="background:#ffd700" data-color="#ffd700" onclick="setTextColor(this)" title="Gold"></div>
-        <div class="so-swatch" style="background:#7fff7f" data-color="#7fff7f" onclick="setTextColor(this)" title="Neon Green"></div>
-        <div class="so-swatch" style="background:#1a2332;border:1.5px solid rgba(0,0,0,0.15)" data-color="#1a2332" onclick="setTextColor(this)" title="Charcoal"></div>
-        <div class="so-swatch" style="background:#357228;border:1.5px solid rgba(0,0,0,0.15)" data-color="#357228" onclick="setTextColor(this)" title="Forest"></div>
-      </div>
-      <div class="so-custom-row">
-        <span class="so-custom-label">CUSTOM:</span>
-        <input type="color" class="so-color-input" id="soTextCustom" value="#d8dce8" oninput="setTextCustom(this)">
-        <span class="so-color-hex" id="soTextHex">#d8dce8</span>
-        <button class="so-reset" onclick="resetText()">Reset</button>
-      </div>
-    </div>
-
-    <!-- CARD STYLE -->
-    <div class="so-section">
-      <div class="so-section-label">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect></svg>
-        Card Style
-      </div>
-      <div class="so-style-grid">
-        <button class="so-style-btn active" id="cs-default" onclick="setCardStyle('default',this)">
-          <div class="so-style-icon">
-            <svg width="28" height="20" viewBox="0 0 28 20"><rect x="1" y="1" width="26" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"></rect></svg>
-          </div>
-          Default
-        </button>
-        <button class="so-style-btn" id="cs-flat" onclick="setCardStyle('flat',this)">
-          <div class="so-style-icon">
-            <svg width="28" height="20" viewBox="0 0 28 20"><rect x="1" y="5" width="26" height="13" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"></rect><line x1="1" y1="5" x2="27" y2="5" stroke="currentColor" stroke-width="2"></line></svg>
-          </div>
-          Flat
-        </button>
-        <button class="so-style-btn" id="cs-rounded" onclick="setCardStyle('rounded',this)">
-          <div class="so-style-icon">
-            <svg width="28" height="20" viewBox="0 0 28 20"><rect x="1" y="1" width="26" height="18" rx="9" fill="none" stroke="currentColor" stroke-width="1.5"></rect></svg>
-          </div>
-          Rounded
-        </button>
-        <button class="so-style-btn" id="cs-bordered" onclick="setCardStyle('bordered',this)">
-          <div class="so-style-icon">
-            <svg width="28" height="20" viewBox="0 0 28 20"><rect x="1" y="1" width="26" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2.5"></rect></svg>
-          </div>
-          Bordered
-        </button>
-      </div>
-    </div>
-
-    <!-- CONTENT DENSITY -->
-    <div class="so-section">
-      <div class="so-section-label">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-        Content Density
-      </div>
-      <div class="so-density-row">
-        <button class="so-density-btn" id="cd-compact" onclick="setDensity('compact',this)">Compact</button>
-        <button class="so-density-btn active" id="cd-default" onclick="setDensity('default',this)">Default</button>
-        <button class="so-density-btn" id="cd-spacious" onclick="setDensity('spacious',this)">Spacious</button>
-      </div>
-    </div>
-
-  </div>
-  <!-- FOOTER -->
-  <div class="so-preview">
-    <span id="soStatusText">Unsaved changes will reset on reload</span>
-    <button class="so-save-btn" onclick="saveScreenOptions()">Save Preferences</button>
-  </div>
-</div>
-
-
 <script>
 // ══ MOBILE SIDEBAR TOGGLE ════════════════════════════════════════
 function toggleMobileSidebar(){
