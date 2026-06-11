@@ -5,6 +5,31 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;family=Inter:wght@400;500&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="acf-design-system.css">
 <style>
+  /* ═══ DARK MODE THEME ══════════════════════════════════════════ */
+body.dark-mode {
+  --bg: #0a0c0e;
+  --sidebar-bg: rgba(16, 18, 22, 0.85);
+  --sidebar-border: rgba(74, 158, 53, 0.12);
+  --surface: rgba(22, 25, 31, 0.75);
+  --surface2: rgba(28, 32, 40, 0.8);
+  --surface3: rgba(34, 38, 47, 0.85);
+  --border: rgba(255, 255, 255, 0.07);
+  --border2: rgba(255, 255, 255, 0.14);
+  --text: #d8dce8;
+  --text-dim: #8f9bb3;
+  --muted: #5c6278;
+  --dim: rgba(255, 255, 255, 0.1);
+  --card-bg: rgba(19, 21, 26, 0.8);
+}
+body.dark-mode .sr-banner-gradient {
+  background: linear-gradient(105deg, rgba(10,12,16,0.92) 0%, rgba(10,12,16,0.75) 55%, rgba(10,12,16,0.88) 100%);
+}
+body.dark-mode .sr-banner-title { color: #fff; }
+body.dark-mode .sr-banner-meta { color: rgba(255,255,255,0.3); }
+body.dark-mode .sr-banner-tag { color: rgba(255,255,255,0.25); }
+body.dark-mode .sr-banner-tag::before { background: rgba(255,255,255,0.15); }
+body.dark-mode .sr-score-center-label { fill: rgba(255,255,255,0.25); }
+body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
   :root {
     --bg:var(--acf-bg, #f7f9fc);--sidebar-bg:rgba(255,255,255,0.85);--sidebar-border:var(--acf-glass-green-border, rgba(74,158,53,0.22));
     --surface:var(--acf-surface, rgba(255,255,255,0.72));--surface2:rgba(255,255,255,0.88);--surface3:rgba(255,255,255,0.95);
@@ -1507,7 +1532,7 @@
       <div class="pill-btn pill-live"><span class="pill-dot"></span> LIVE</div>
       <button class="pill-btn" id="themeToggle" onclick="toggleTheme()" style="font-size:13px;padding:4px 10px" title="Toggle light/dark mode">☀️</button>
 <!-- ADD THIS NEW BUTTON -->
-<button class="pill-btn" id="cardStyleToggle" onclick="cycleCardStyle()" title="Cycle Card Style" style="font-size:13px;padding:4px 10px">🃏</button>
+<button class="pill-btn" id="cardStyleToggle" onclick="cycleCardStyle()" title="Cycle Card Style" style="font-size: 16px; padding: 4px 10px;">🔲</button>
       <div class="pill-btn pill-cloud-ok" id="cloudPill" onclick="manualCloudSync()" title="Cloud sync status">☁ Synced</div>
       <button class="pill-btn" onclick="fetchAllSheets()">↻ Sync Data</button>
       <button class="pill-btn" onclick="openFinalReport()">⬡ Report</button>
@@ -6484,22 +6509,34 @@ function tick(){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// THEME TOGGLE
+// THEME TOGGLE (FUNCTIONAL)
 // ═══════════════════════════════════════════════════════════════
-function toggleTheme(){
-  // ACF design system: light-only mode, no dark toggle
-  document.body.classList.add('light-mode');
-  document.getElementById('themeToggle').textContent = '☀️';
-  try{ localStorage.setItem('ct_theme', 'light'); }catch(e){}
+function toggleTheme() {
+  const body = document.body;
+  const isDark = body.classList.toggle('dark-mode');
+  const theme = isDark ? 'dark' : 'light';
+  document.getElementById('themeToggle').textContent = isDark ? '🌙' : '☀️';
+  try {
+    localStorage.setItem('ct_theme', theme);
+  } catch (e) {}
 }
 
-function loadTheme(){
-  // ACF design system: always light mode
-  document.body.classList.add('light-mode');
-  const btn=document.getElementById('themeToggle');
-  if(btn) btn.textContent='☀️';
+function loadTheme() {
+  try {
+    const savedTheme = localStorage.getItem('ct_theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark-mode');
+      document.getElementById('themeToggle').textContent = '🌙';
+    } else {
+      document.body.classList.remove('dark-mode');
+      document.getElementById('themeToggle').textContent = '☀️';
+    }
+  } catch (e) {
+    // Default to light mode if anything fails
+    document.body.classList.remove('dark-mode');
+    document.getElementById('themeToggle').textContent = '☀️';
+  }
 }
-
 // ═══════════════════════════════════════════════════════════════
 // SCREEN OPTIONS ENGINE
 // ═══════════════════════════════════════════════════════════════
