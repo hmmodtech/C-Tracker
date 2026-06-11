@@ -7857,4 +7857,811 @@ if (_origBuildStructured) {
   };
 } 
 </script>
+  <!-- ══════════════════════════════════════════════════════════════
+     C-TRACKER PATCH: VISUAL FORM REPORT
+     Paste this entire block just before </body> in your index.html
+     Replaces the generic tabbed report for all Google Forms cards
+     (Fire Extinguisher, Smoke Detector, Office Security + First Aid)
+     with the new visual card layout + PDF export.
+══════════════════════════════════════════════════════════════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style id="vfr-styles">
+/* ── VISUAL FORM REPORT STYLES ─────────────────────────────── */
+
+/* Hero banner */
+.vfr-hero {
+  position:relative; border-radius:18px; overflow:hidden;
+  margin-bottom:18px; min-height:148px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:linear-gradient(135deg,#060810,#0e1018);
+}
+.vfr-hero-bg {
+  position:absolute; inset:0; pointer-events:none; overflow:hidden;
+}
+.vfr-hero-bg svg { width:100%; height:100%; object-fit:cover; filter:brightness(0.22) saturate(1.6); }
+.vfr-hero-grid {
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size:30px 30px;
+}
+.vfr-hero-overlay {
+  position:absolute; inset:0;
+  background:linear-gradient(105deg,rgba(0,0,0,0.82) 0%,rgba(0,0,0,0.4) 60%,rgba(0,0,0,0.7) 100%);
+}
+.vfr-hero-inner {
+  position:relative; z-index:2;
+  display:flex; align-items:center; gap:18px; padding:20px 24px;
+}
+.vfr-hero-icon {
+  width:60px; height:60px; flex-shrink:0; border-radius:14px;
+  display:flex; align-items:center; justify-content:center; font-size:26px;
+  border:1px solid rgba(255,255,255,0.12);
+  box-shadow:0 0 24px rgba(0,0,0,0.5);
+}
+.vfr-hero-text { flex:1; min-width:0; }
+.vfr-hero-tag {
+  font-family:'JetBrains Mono',monospace; font-size:9px;
+  color:rgba(255,255,255,0.32); letter-spacing:0.2em; text-transform:uppercase;
+  margin-bottom:4px;
+}
+.vfr-hero-title {
+  font-size:20px; font-weight:800; color:#fff; letter-spacing:-0.025em;
+  margin-bottom:5px; line-height:1.1; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.vfr-hero-meta {
+  font-family:'JetBrains Mono',monospace; font-size:10px;
+  color:rgba(255,255,255,0.38); display:flex; gap:12px; flex-wrap:wrap;
+}
+.vfr-hero-meta-item { display:flex; align-items:center; gap:4px; }
+.vfr-hero-ring { flex-shrink:0; }
+
+/* Meta grid */
+.vfr-meta-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:16px;
+}
+.vfr-meta-card {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:11px; padding:12px 14px; position:relative; overflow:hidden;
+}
+.vfr-meta-card::before {
+  content:''; position:absolute; top:0; left:0; bottom:0; width:3px; border-radius:3px 0 0 3px;
+}
+.vfr-mc-red::before   { background:var(--red); }
+.vfr-mc-blue::before  { background:var(--blue); }
+.vfr-mc-green::before { background:var(--green); }
+.vfr-mc-amber::before { background:var(--amber); }
+.vfr-meta-label {
+  font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--muted);
+  letter-spacing:0.1em; text-transform:uppercase; margin-bottom:4px;
+}
+.vfr-meta-value { font-size:14px; font-weight:700; color:var(--text); line-height:1.3; }
+.vfr-meta-value-mono { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; color:var(--text); }
+
+/* Score bar */
+.vfr-score-bar {
+  display:flex; align-items:center; gap:12px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; padding:13px 16px; margin-bottom:16px;
+}
+.vfr-score-label { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); white-space:nowrap; }
+.vfr-score-track { flex:1; height:10px; background:var(--surface3); border-radius:5px; overflow:hidden; }
+.vfr-score-fill  { height:100%; border-radius:5px; transition:width 1.4s cubic-bezier(0.4,0,0.2,1); }
+.vfr-score-fill-ok   { background:linear-gradient(90deg,#12522a,#2dd17a); box-shadow:0 0 8px rgba(45,209,122,0.4); }
+.vfr-score-fill-warn { background:linear-gradient(90deg,#5a3200,#f0a030); }
+.vfr-score-fill-bad  { background:linear-gradient(90deg,#5a0a12,#e8394a); }
+.vfr-score-pct { font-family:'JetBrains Mono',monospace; font-size:17px; font-weight:800; white-space:nowrap; }
+
+/* Section dividers */
+.vfr-section-head {
+  display:flex; align-items:center; gap:10px;
+  padding:12px 16px; border-radius:12px 12px 0 0; margin-top:16px;
+}
+.vfr-sh-green {
+  background:linear-gradient(135deg,rgba(45,209,122,0.14),rgba(45,209,122,0.06));
+  border:1px solid rgba(45,209,122,0.25); border-bottom:none;
+}
+.vfr-sh-red {
+  background:linear-gradient(135deg,rgba(232,57,74,0.14),rgba(232,57,74,0.06));
+  border:1px solid rgba(232,57,74,0.25); border-bottom:none;
+}
+.vfr-sh-amber {
+  background:linear-gradient(135deg,rgba(240,160,48,0.14),rgba(240,160,48,0.06));
+  border:1px solid rgba(240,160,48,0.25); border-bottom:none;
+}
+.vfr-section-title { font-size:14px; font-weight:800; letter-spacing:-0.01em; }
+.vfr-st-green { color:var(--green); }
+.vfr-st-red   { color:var(--red);   }
+.vfr-st-amber { color:var(--amber); }
+.vfr-section-count {
+  margin-left:auto; font-family:'JetBrains Mono',monospace;
+  font-size:11px; font-weight:700; padding:3px 10px; border-radius:8px;
+}
+.vfr-count-green { background:rgba(45,209,122,0.12); color:var(--green); border:1px solid rgba(45,209,122,0.3); }
+.vfr-count-red   { background:rgba(232,57,74,0.12);  color:var(--red);   border:1px solid rgba(232,57,74,0.3); }
+.vfr-count-amber { background:rgba(240,160,48,0.12); color:var(--amber); border:1px solid rgba(240,160,48,0.3); }
+
+/* Item list */
+.vfr-list {
+  border:1px solid; border-top:none; border-radius:0 0 12px 12px; overflow:hidden;
+}
+.vfr-list-green { border-color:rgba(45,209,122,0.18); background:rgba(45,209,122,0.025); }
+.vfr-list-red   { border-color:rgba(232,57,74,0.18);  background:rgba(232,57,74,0.025);  }
+.vfr-list-amber { border-color:rgba(240,160,48,0.18); background:rgba(240,160,48,0.025); }
+
+.vfr-item {
+  display:flex; align-items:flex-start; gap:12px;
+  padding:11px 16px; border-bottom:1px solid;
+  transition:background 0.12s; cursor:default;
+}
+.vfr-item:last-child { border-bottom:none; }
+.vfr-item-green { border-color:rgba(45,209,122,0.1); }
+.vfr-item-green:hover { background:rgba(45,209,122,0.05); }
+.vfr-item-red   { border-color:rgba(232,57,74,0.1); }
+.vfr-item-red:hover   { background:rgba(232,57,74,0.05); }
+.vfr-item-amber { border-color:rgba(240,160,48,0.1); }
+.vfr-item-amber:hover { background:rgba(240,160,48,0.05); }
+
+.vfr-item-num {
+  font-family:'JetBrains Mono',monospace; font-size:9px;
+  color:var(--dim); padding-top:2px; min-width:18px; text-align:right; flex-shrink:0;
+}
+.vfr-item-icon {
+  width:26px; height:26px; border-radius:7px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700;
+}
+.vfr-icon-green { background:rgba(45,209,122,0.15); color:var(--green); border:1px solid rgba(45,209,122,0.3); }
+.vfr-icon-red   { background:rgba(232,57,74,0.15);  color:var(--red);   border:1px solid rgba(232,57,74,0.3); }
+.vfr-icon-amber { background:rgba(240,160,48,0.15); color:var(--amber); border:1px solid rgba(240,160,48,0.3); }
+.vfr-icon-dim   { background:rgba(92,98,120,0.15);  color:var(--muted); border:1px solid rgba(92,98,120,0.3); }
+
+.vfr-item-body  { flex:1; min-width:0; }
+.vfr-item-question {
+  font-size:12px; font-weight:600; color:var(--text); line-height:1.45;
+  margin-bottom:4px;
+}
+.vfr-item-answer {
+  font-size:12px; line-height:1.5; word-break:break-word;
+}
+.vfr-ans-green { color:var(--green); font-weight:600; }
+.vfr-ans-red   { color:var(--red);   font-style:italic; }
+.vfr-ans-amber { color:var(--amber); }
+.vfr-ans-dim   { color:var(--muted); }
+
+/* Photo thumbnail inside item */
+.vfr-thumb {
+  width:56px; height:42px; object-fit:cover; border-radius:6px;
+  border:1px solid var(--border2); cursor:zoom-in; flex-shrink:0;
+  transition:transform 0.2s, box-shadow 0.2s; display:block; margin-top:2px;
+}
+.vfr-thumb:hover { transform:scale(1.1); box-shadow:0 4px 16px rgba(0,0,0,0.5); }
+
+/* Submission navigator (reuse sr-* styles from main code) */
+
+/* Export button */
+.vfr-export-btn {
+  width:100%; padding:12px 16px;
+  border-radius:10px; border:1px solid var(--border2);
+  background:transparent; color:var(--text);
+  font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  gap:8px; transition:background 0.15s; margin-top:14px; letter-spacing:0.04em;
+}
+.vfr-export-btn:hover { background:var(--surface2); }
+.vfr-export-btn:disabled { opacity:0.6; cursor:default; }
+
+/* Empty state */
+.vfr-empty {
+  padding:22px 16px; text-align:center;
+  font-family:'JetBrains Mono',monospace; font-size:11px;
+}
+.vfr-empty-green { color:var(--green); }
+.vfr-empty-muted { color:var(--muted); }
+
+/* Footer */
+.vfr-footer {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:12px 0 2px; border-top:1px solid var(--border); margin-top:14px;
+  font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--dim);
+}
+
+/* Recurring issues mini bar */
+.vfr-recurring {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:12px; overflow:hidden; margin-top:16px;
+}
+.vfr-recurring-head {
+  padding:12px 16px; border-bottom:1px solid var(--border);
+  font-family:'JetBrains Mono',monospace; font-size:10px;
+  color:var(--muted); letter-spacing:0.08em; text-transform:uppercase;
+  display:flex; align-items:center; gap:8px;
+}
+.vfr-freq-row {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 16px; border-bottom:1px solid rgba(34,38,47,0.3);
+}
+.vfr-freq-row:last-child { border-bottom:none; }
+.vfr-freq-rank { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--dim); width:16px; text-align:center; flex-shrink:0; }
+.vfr-freq-label { font-size:11px; color:var(--text-dim); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.vfr-freq-bar-wrap { width:80px; height:7px; background:var(--surface3); border-radius:4px; overflow:hidden; flex-shrink:0; }
+.vfr-freq-bar { height:100%; border-radius:4px; transition:width 0.9s cubic-bezier(0.4,0,0.2,1); }
+.vfr-freq-count { font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--text); white-space:nowrap; min-width:30px; text-align:right; }
+
+/* Light mode overrides */
+body.light-mode .vfr-meta-card    { background:#f9fafd; border-color:#e2e5f0; }
+body.light-mode .vfr-score-bar    { background:#f9fafd; border-color:#e2e5f0; }
+body.light-mode .vfr-recurring    { background:#f9fafd; border-color:#e2e5f0; }
+body.light-mode .vfr-score-track  { background:#eef0f8; }
+body.light-mode .vfr-freq-bar-wrap{ background:#eef0f8; }
+body.light-mode .vfr-hero         { background:linear-gradient(135deg,#e8eaf4,#d8dcea); border-color:#c4c8dc; }
+body.light-mode .vfr-hero-title   { color:#1c2033; }
+body.light-mode .vfr-hero-tag,
+body.light-mode .vfr-hero-meta    { color:#8890aa; }
+</style>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// VFR — VISUAL FORM REPORT PATCH
+// Overrides buildStructuredReport() for sheet-based trackers.
+// Must be pasted AFTER the main app script.
+// ══════════════════════════════════════════════════════════════════
+
+// ── Field classification helpers ─────────────────────────────────
+const VFR_META_SKIP = [
+  'timestamp','email address','email','score','form response edit url'
+];
+function _vfrIsMetaKey(k) {
+  const lo = k.toLowerCase();
+  return VFR_META_SKIP.some(m => lo.includes(m));
+}
+function _vfrIsDateKey(k) {
+  const lo = k.toLowerCase();
+  return lo.includes('timestamp') || lo.includes('date');
+}
+function _vfrIsNameKey(k) {
+  const lo = k.toLowerCase();
+  return lo.includes('done by') || lo.includes('inspector') || lo.includes('done_by') ||
+         lo.includes('submitted by') || lo.includes('full name') || lo.includes('name');
+}
+function _vfrIsLocKey(k) {
+  const lo = k.toLowerCase();
+  return lo.includes('location') || lo.includes('site') || lo.includes('premise') || lo.includes('area');
+}
+
+// ── Classify a value (answered / missing / photo / number / other) ──
+function _vfrClassify(v) {
+  if (!v || v === '—' || v.trim() === '') return 'missing';
+  if (_isImg(v)) return 'photo';
+  return 'answered';
+}
+
+// ── Format a date string cleanly ─────────────────────────────────
+function _vfrFmtDate(raw) {
+  if (!raw || raw === '—') return '—';
+  try {
+    const d = new Date(raw);
+    if (!isNaN(d)) {
+      return d.toLocaleDateString('en-GB', {
+        weekday:'short', day:'2-digit', month:'short', year:'numeric'
+      }) + ' · ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    }
+  } catch(e) {}
+  return raw;
+}
+
+// ── Build the visual report HTML ─────────────────────────────────
+function buildVisualFormReport(t, rows, idx) {
+  const row  = rows[idx];
+  const keys = Object.keys(row);
+
+  // Extract meta fields
+  const dateKey   = keys.find(_vfrIsDateKey) || '';
+  const nameKey   = keys.find(_vfrIsNameKey) || '';
+  const locKey    = keys.find(_vfrIsLocKey)  || '';
+
+  const rawDate  = dateKey  ? (row[dateKey]  || '') : '';
+  const doneBy   = nameKey  ? (row[nameKey]  || '') : '';
+  const location = locKey   ? (row[locKey]   || '') : '';
+  const fmtDate  = _vfrFmtDate(rawDate);
+
+  // Inspect fields = everything that isn't meta
+  const inspectKeys = keys.filter(k => !_vfrIsMetaKey(k));
+
+  // Sort: answered/photo first, missing last (preserving original Q number)
+  const itemsWithIdx = inspectKeys.map((k, qi) => ({
+    k, v: row[k] || '', qi: qi + 1,
+    cls: _vfrClassify(row[k] || '')
+  }));
+  const answered = itemsWithIdx.filter(x => x.cls === 'answered' || x.cls === 'photo');
+  const missing  = itemsWithIdx.filter(x => x.cls === 'missing');
+
+  // Compliance score
+  const total = itemsWithIdx.length;
+  const passN = answered.length;
+  const compPct  = total === 0 ? 100 : Math.round((passN / total) * 100);
+  const compCls  = compPct >= 80 ? 'ok' : compPct >= 50 ? 'warn' : 'bad';
+  const compColor = compCls === 'ok' ? '#2dd17a' : compCls === 'warn' ? '#f0a030' : '#e8394a';
+
+  // Historical averages and recurring issues
+  const avgComp = rows.length > 1
+    ? Math.round(rows.reduce((s, r) => {
+        const ks = Object.keys(r).filter(k => !_vfrIsMetaKey(k));
+        const p  = ks.filter(k => _vfrClassify(r[k] || '') !== 'missing').length;
+        return s + (ks.length ? Math.round((p / ks.length) * 100) : 100);
+      }, 0) / rows.length)
+    : compPct;
+  const trendDiff = compPct - avgComp;
+  const trendTxt  = trendDiff > 0 ? `▲ ${trendDiff}% above avg`
+    : trendDiff < 0 ? `▼ ${Math.abs(trendDiff)}% below avg` : '— at avg';
+  const trendColor = trendDiff > 0 ? 'var(--green)' : trendDiff < 0 ? 'var(--red)' : 'var(--muted)';
+
+  // Recurring missing items (across all submissions)
+  const mc = {};
+  rows.forEach(r =>
+    Object.entries(r).forEach(([k, v]) => {
+      if (!_vfrIsMetaKey(k) && _vfrClassify(v || '') === 'missing')
+        mc[k] = (mc[k] || 0) + 1;
+    })
+  );
+  const freqItems = Object.entries(mc).sort((a, b) => b[1] - a[1]).slice(0, 6);
+
+  // SVG score ring (90x90)
+  const R = 38, CIRC = 2 * Math.PI * R;
+  const ringFill = (compPct / 100) * CIRC;
+
+  // Submission navigator
+  const subOptions = rows.map((r, i) => {
+    const d = (dateKey ? (r[dateKey] || '') : '').split(' ')[0] || `Sub #${i+1}`;
+    const n = nameKey ? (r[nameKey] || 'Unknown') : 'Unknown';
+    return `<option value="${i}" ${i === idx ? 'selected' : ''}>#${i+1} · ${esc(d)} · ${esc(n)}</option>`;
+  }).join('');
+
+  // History rows
+  const histRows = rows.slice().reverse().map((r, ri) => {
+    const realIdx = rows.length - 1 - ri;
+    const d = (dateKey ? (r[dateKey] || '') : '').split(' ')[0] || `Sub #${realIdx+1}`;
+    const n = nameKey ? (r[nameKey] || 'Unknown') : 'Unknown';
+    const ks2 = Object.keys(r).filter(k => !_vfrIsMetaKey(k));
+    const p2  = ks2.filter(k => _vfrClassify(r[k] || '') !== 'missing').length;
+    const cp  = ks2.length ? Math.round((p2 / ks2.length) * 100) : 100;
+    const hc  = cp >= 80 ? 'var(--green)' : cp >= 50 ? 'var(--amber)' : 'var(--red)';
+    const issues = ks2.filter(k => _vfrClassify(r[k] || '') === 'missing').length;
+    return `<div class="sr-hist-row ${realIdx === idx ? 'active' : ''}" onclick="srPickHist(${realIdx})">
+      <div class="sr-hist-dot" style="background:${hc}"></div>
+      <div style="flex:1">
+        <div class="sr-hist-date">${esc(d)}</div>
+        <div class="sr-hist-by">👤 ${esc(n)}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="sr-hist-comp" style="color:${hc}">${cp}%</div>
+        <div class="sr-hist-issues">${issues === 0 ? '✓ clean' : issues + ' missing'}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // ── Build answered items HTML ──────────────────────────────────
+  function buildItem(item, colorScheme) {
+    const { k, v, qi, cls } = item;
+    const isPhoto = cls === 'photo';
+    const iconMap = { ok:'✓', bad:'✗', photo:'📷', dim:'—' };
+
+    let answerHtml;
+    if (isPhoto) {
+      const prevUrl = _prev(v);
+      answerHtml = `<img class="vfr-thumb" src="${esc(prevUrl)}" loading="lazy"
+        onclick="openLightbox('${esc(prevUrl)}','${esc(k)}','${esc(v)}')"
+        onerror="this.outerHTML='<a href=\\'${esc(v)}\\' target=\\'_blank\\' style=\\'color:var(--blue);font-size:10px\\'>Open photo →</a>'"
+        alt="Photo">`;
+    } else if (colorScheme === 'green') {
+      answerHtml = `<span class="vfr-item-answer vfr-ans-green">✓ ${esc(v)}</span>`;
+    } else if (colorScheme === 'red') {
+      answerHtml = `<span class="vfr-item-answer vfr-ans-red">⚠ Not answered — action required</span>`;
+    } else {
+      answerHtml = `<span class="vfr-item-answer vfr-ans-amber">${esc(v)}</span>`;
+    }
+
+    const iconClass  = colorScheme === 'green' ? 'vfr-icon-green'
+      : colorScheme === 'red' ? 'vfr-icon-red' : 'vfr-icon-amber';
+    const iconChar   = colorScheme === 'green' ? '✓' : colorScheme === 'red' ? '✗' : '?';
+    const itemClass  = `vfr-item vfr-item-${colorScheme}`;
+
+    return `<div class="${itemClass}" style="animation:srPanelIn 0.22s ease ${qi * 0.025}s both">
+      <span class="vfr-item-num">Q${qi}</span>
+      <span class="vfr-item-icon ${iconClass}">${iconChar}</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-question">${esc(k)}</div>
+        ${answerHtml}
+      </div>
+    </div>`;
+  }
+
+  const answeredHtml = answered.length === 0
+    ? `<div class="vfr-empty vfr-empty-muted">No answered items in this submission.</div>`
+    : answered.map(item => buildItem(item, item.cls === 'photo' ? 'green' : 'green')).join('');
+
+  const missingHtml = missing.length === 0
+    ? `<div class="vfr-empty vfr-empty-green">🎉 All questions answered — no missing items!</div>`
+    : missing.map(item => buildItem(item, 'red')).join('');
+
+  // ── Recurring issues bar ───────────────────────────────────────
+  const recurringHtml = freqItems.length === 0 ? '' : `
+    <div class="vfr-recurring">
+      <div class="vfr-recurring-head">
+        <span>📉</span> Recurring Missing Items
+        <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:9px;
+          background:var(--red-bg);color:var(--red);border:1px solid var(--red-dim);
+          padding:2px 8px;border-radius:8px;font-weight:700">${freqItems.length} RECURRING</span>
+      </div>
+      ${freqItems.map(([k, v], i) => {
+        const pct  = Math.round((v / rows.length) * 100);
+        const barW = Math.round((v / (freqItems[0][1] || 1)) * 100);
+        const barCol = pct >= 70 ? '#e8394a' : pct >= 40 ? '#f0a030' : '#4a9eff';
+        return `<div class="vfr-freq-row" style="animation-delay:${i*0.05}s">
+          <span class="vfr-freq-rank">${i+1}</span>
+          <span class="vfr-freq-label" title="${esc(k)}">${esc(k.length > 42 ? k.slice(0, 40) + '…' : k)}</span>
+          <div class="vfr-freq-bar-wrap">
+            <div class="vfr-freq-bar" style="width:${barW}%;background:${barCol}"></div>
+          </div>
+          <span class="vfr-freq-count">${v}×</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  // ── Verdict ────────────────────────────────────────────────────
+  const verdictText = compPct >= 80
+    ? `This inspection is in <strong style="color:var(--green)">Good Standing</strong>. ${missing.length === 0 ? 'All questions were answered.' : missing.length + ' item(s) still have no answer recorded.'}`
+    : compPct >= 50
+    ? `This inspection is <strong style="color:var(--amber)">Satisfactory but needs attention</strong>. ${missing.length} unanswered item(s) require follow-up.`
+    : `This inspection shows <strong style="color:var(--red)">Critical Non-Compliance</strong>. ${missing.length} unanswered item(s) — escalate immediately.`;
+  const verdictClass = compPct >= 80 ? 'sv-ok' : compPct >= 50 ? 'sv-warn' : 'sv-bad';
+  const verdictEmoji = compPct >= 80 ? '✅' : compPct >= 50 ? '⚠️' : '🚨';
+
+  const reportId = `vfr-report-${t.id}-${idx}`;
+
+  return `
+  <!-- ── VISUAL FORM REPORT ──────────────────────────────────── -->
+  <div id="${reportId}">
+
+    <!-- HERO -->
+    <div class="vfr-hero">
+      <div class="vfr-hero-bg">${getTrackerSVG(t.name)}</div>
+      <div class="vfr-hero-grid"></div>
+      <div class="vfr-hero-overlay"></div>
+      <div class="vfr-hero-inner">
+        <div class="vfr-hero-icon" style="background:rgba(255,255,255,0.06)">${t.icon}</div>
+        <div class="vfr-hero-text">
+          <div class="vfr-hero-tag">C-TRACKER · Inspection Report</div>
+          <div class="vfr-hero-title">${esc(t.name)}</div>
+          <div class="vfr-hero-meta">
+            <span class="vfr-hero-meta-item">📅 ${esc(fmtDate)}</span>
+            ${doneBy   ? `<span class="vfr-hero-meta-item">👤 ${esc(doneBy)}</span>` : ''}
+            ${location ? `<span class="vfr-hero-meta-item">📍 ${esc(location)}</span>` : ''}
+            <span class="vfr-hero-meta-item">📋 Submission ${idx+1} of ${rows.length}</span>
+          </div>
+        </div>
+        <!-- Score ring -->
+        <div class="vfr-hero-ring">
+          <svg width="88" height="88" viewBox="0 0 88 88">
+            <circle cx="44" cy="44" r="${R}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="6"/>
+            <circle cx="44" cy="44" r="${R}" fill="none" stroke="${compColor}" stroke-width="6"
+              stroke-dasharray="${ringFill.toFixed(1)} ${CIRC.toFixed(1)}"
+              stroke-dashoffset="${(CIRC * 0.25).toFixed(1)}"
+              stroke-linecap="round"
+              transform="rotate(-90 44 44)"
+              style="filter:drop-shadow(0 0 7px ${compColor}88)"/>
+            <text x="44" y="41" text-anchor="middle" dominant-baseline="middle"
+              font-family="JetBrains Mono" font-size="15" fill="${compColor}" font-weight="800">${compPct}%</text>
+            <text x="44" y="56" text-anchor="middle" dominant-baseline="middle"
+              font-family="JetBrains Mono" font-size="7" fill="rgba(255,255,255,0.3)" letter-spacing="1">SCORE</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBMISSION NAVIGATOR -->
+    <div class="sr-section" style="margin-bottom:14px">
+      <div class="sr-sub-nav">
+        <span class="sr-sub-label">Submission</span>
+        <select class="sr-sub-sel" id="srSubSel" onchange="srGoTo(parseInt(this.value))">${subOptions}</select>
+        <button class="sr-sub-btn" onclick="srPrev()">‹</button>
+        <button class="sr-sub-btn" onclick="srNext()">›</button>
+        <button class="sr-hist-btn" onclick="srToggleHist()">🕐 History (${rows.length})</button>
+      </div>
+      <div class="sr-hist-drawer" id="srHistDrawer">${histRows}</div>
+    </div>
+
+    <!-- META CARDS -->
+    <div class="vfr-meta-grid">
+      <div class="vfr-meta-card vfr-mc-red">
+        <div class="vfr-meta-label">📅 Date &amp; Time</div>
+        <div class="vfr-meta-value-mono">${esc(fmtDate.split(' · ')[0] || '—')}</div>
+        ${fmtDate.includes(' · ') ? `<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);margin-top:2px">${esc(fmtDate.split(' · ')[1] || '')}</div>` : ''}
+      </div>
+      <div class="vfr-meta-card vfr-mc-blue">
+        <div class="vfr-meta-label">👤 Inspector</div>
+        <div class="vfr-meta-value">${esc(doneBy || '—')}</div>
+      </div>
+      ${location ? `
+      <div class="vfr-meta-card vfr-mc-amber" style="grid-column:1/-1">
+        <div class="vfr-meta-label">📍 Location / Site</div>
+        <div class="vfr-meta-value">${esc(location)}</div>
+      </div>` : ''}
+    </div>
+
+    <!-- SCORE BAR -->
+    <div class="vfr-score-bar">
+      <span class="vfr-score-label">Compliance Score</span>
+      <div class="vfr-score-track">
+        <div class="vfr-score-fill vfr-score-fill-${compCls}" id="vfrScoreFill"
+          data-pct="${compPct}" style="width:0%"></div>
+      </div>
+      <span class="vfr-score-pct" style="color:${compColor}">${compPct}%</span>
+    </div>
+
+    <!-- ── ANSWERED ITEMS (GREEN FIRST) ──────────────────────── -->
+    <div class="vfr-section-head vfr-sh-green">
+      <span style="font-size:17px">✅</span>
+      <span class="vfr-section-title vfr-st-green">Answered Items</span>
+      <span class="vfr-section-count vfr-count-green">${answered.length} item${answered.length !== 1 ? 's' : ''}</span>
+    </div>
+    <div class="vfr-list vfr-list-green">${answeredHtml}</div>
+
+    <!-- ── MISSING ITEMS (RED AFTER) ─────────────────────────── -->
+    <div class="vfr-section-head vfr-sh-red" style="margin-top:12px">
+      <span style="font-size:17px">❌</span>
+      <span class="vfr-section-title vfr-st-red">Missing / Not Answered</span>
+      <span class="vfr-section-count vfr-count-red">${missing.length} item${missing.length !== 1 ? 's' : ''}</span>
+    </div>
+    <div class="vfr-list vfr-list-red">${missingHtml}</div>
+
+    <!-- VERDICT -->
+    <div style="margin-top:14px;padding:14px 16px;background:var(--surface2);
+      border:1px solid var(--border);border-radius:10px;">
+      <div style="font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:10px">
+        ${verdictText}
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="sr-verdict ${verdictClass}">${verdictEmoji} ${compPct >= 80 ? 'Good Standing' : compPct >= 50 ? 'Action Required' : 'Critical'}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)">
+          ${passN} answered · ${missing.length} missing · avg ${avgComp}%
+        </span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:${trendColor};font-weight:700">${trendTxt}</span>
+        ${t.formUrl ? `<a href="${esc(t.formUrl)}" target="_blank"
+          style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);
+          text-decoration:none;background:var(--blue-bg);border:1px solid var(--blue-dim);
+          padding:5px 12px;border-radius:6px;">▶ New Inspection →</a>` : ''}
+      </div>
+    </div>
+
+    ${recurringHtml}
+
+    <!-- PDF EXPORT BUTTON -->
+    <button class="vfr-export-btn" id="vfrExportBtn"
+      onclick="vfrExportPDF('${t.id}', ${idx})">
+      ⬇ Export this report to PDF
+    </button>
+
+    <!-- FOOTER -->
+    <div class="vfr-footer">
+      <span>C-TRACKER · ${esc(t.name)} · ${rows.length} inspection${rows.length !== 1 ? 's' : ''} on record</span>
+      <span>Generated: ${new Date().toLocaleString()}</span>
+    </div>
+
+  </div><!-- end vfr-report -->
+  `;
+}
+
+// ── PDF EXPORT ────────────────────────────────────────────────────
+async function vfrExportPDF(trackerId, idx) {
+  const btn = document.getElementById('vfrExportBtn');
+  if (!btn) return;
+  btn.innerHTML = '⏳ Generating PDF…';
+  btn.disabled  = true;
+
+  const t    = trackers.find(x => x.id === trackerId);
+  const rows = sheetData[trackerId];
+  if (!t || !rows) { btn.innerHTML = '⬇ Export this report to PDF'; btn.disabled = false; return; }
+
+  // Build a clean print-friendly HTML doc
+  const row    = rows[idx];
+  const keys   = Object.keys(row);
+  const dateKey = keys.find(_vfrIsDateKey) || '';
+  const nameKey = keys.find(_vfrIsNameKey) || '';
+  const locKey  = keys.find(_vfrIsLocKey)  || '';
+
+  const rawDate   = dateKey ? (row[dateKey] || '') : '';
+  const doneBy    = nameKey ? (row[nameKey] || '—') : '—';
+  const location  = locKey  ? (row[locKey]  || '—') : '';
+  const fmtDate   = _vfrFmtDate(rawDate);
+
+  const inspectKeys = keys.filter(k => !_vfrIsMetaKey(k));
+  const items = inspectKeys.map((k, qi) => ({
+    k, v: row[k] || '', qi: qi + 1,
+    cls: _vfrClassify(row[k] || '')
+  }));
+  const answered = items.filter(x => x.cls !== 'missing');
+  const missing  = items.filter(x => x.cls === 'missing');
+  const total    = items.length;
+  const compPct  = total === 0 ? 100 : Math.round((answered.length / total) * 100);
+  const compColor = compPct >= 80 ? '#16a34a' : compPct >= 50 ? '#d97706' : '#dc2626';
+
+  const ansRows = answered.map((x, i) => `
+    <tr style="background:${i % 2 === 0 ? '#f9fafb' : '#fff'}">
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#9ca3af;width:32px">${x.qi}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151;line-height:1.5">${esc(x.k)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;font-weight:600;color:#16a34a">
+        ${x.cls === 'photo' ? '📷 Photo recorded' : '✓ ' + esc(x.v)}
+      </td>
+    </tr>`).join('');
+
+  const missRows = missing.map((x, i) => `
+    <tr style="background:${i % 2 === 0 ? '#fff5f5' : '#fff'}">
+      <td style="padding:8px 12px;border-bottom:1px solid #fecaca;font-size:12px;color:#9ca3af;width:32px">${x.qi}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #fecaca;font-size:12px;color:#374151;line-height:1.5;border-left:3px solid #dc2626">${esc(x.k)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #fecaca;font-size:12px;font-style:italic;color:#dc2626">⚠ Not answered</td>
+    </tr>`).join('');
+
+  const printDoc = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>${esc(t.name)} — Inspection Report #${idx+1}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;color:#111827;background:#fff;padding:28px}
+  h2{font-size:14px;font-weight:700;color:#374151;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #e5e7eb}
+  .no-print{margin-bottom:22px;padding:10px 16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  @media print{.no-print{display:none!important}body{padding:16px}@page{margin:18mm 16mm}}
+</style>
+</head>
+<body>
+
+<div class="no-print">
+  <span style="font-size:13px;color:#1d4ed8">📄 Use <strong>Ctrl+P</strong> (Cmd+P on Mac) → <strong>Save as PDF</strong></span>
+  <button onclick="window.print()" style="padding:8px 18px;background:#1d4ed8;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">🖨 Print / Save PDF</button>
+</div>
+
+<!-- HEADER -->
+<div style="border:2px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:24px">
+  <div style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:22px 28px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:5px">C-TRACKER · Inspection Report</div>
+      <div style="font-size:22px;font-weight:800;color:#fff">${t.icon} ${esc(t.name)}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:5px;font-family:'JetBrains Mono',monospace">Submission ${idx+1} of ${rows.length} · Generated: ${new Date().toLocaleString()}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:34px;font-weight:800;color:${compColor}">${compPct}%</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;margin-top:3px">Compliance</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #e5e7eb">
+    <div style="padding:14px 20px;border-right:1px solid #e5e7eb">
+      <div style="font-size:9px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;color:#9ca3af;letter-spacing:0.08em;margin-bottom:4px">📅 Date</div>
+      <div style="font-size:13px;font-weight:700;color:#111827">${esc(fmtDate.split(' · ')[0] || rawDate)}</div>
+    </div>
+    <div style="padding:14px 20px;border-right:1px solid #e5e7eb">
+      <div style="font-size:9px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;color:#9ca3af;letter-spacing:0.08em;margin-bottom:4px">👤 Inspector</div>
+      <div style="font-size:13px;font-weight:700;color:#111827">${esc(doneBy)}</div>
+    </div>
+    <div style="padding:14px 20px">
+      <div style="font-size:9px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;color:#9ca3af;letter-spacing:0.08em;margin-bottom:4px">${location ? '📍 Location' : '📊 Summary'}</div>
+      <div style="font-size:13px;font-weight:700;color:#111827">${esc(location || `${answered.length} answered, ${missing.length} missing`)}</div>
+    </div>
+  </div>
+</div>
+
+<!-- ANSWERED ITEMS -->
+<div style="margin-bottom:24px">
+  <h2 style="color:#16a34a;border-color:#bbf7d0">✅ Answered Items (${answered.length})</h2>
+  ${answered.length === 0
+    ? `<div style="padding:18px;text-align:center;color:#9ca3af;font-size:13px">No answered items.</div>`
+    : `<table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+        <thead><tr>
+          <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">#</th>
+          <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Question</th>
+          <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Answer</th>
+        </tr></thead>
+        <tbody>${ansRows}</tbody>
+      </table>`}
+</div>
+
+<!-- MISSING ITEMS -->
+<div style="margin-bottom:24px">
+  <h2 style="color:#dc2626;border-color:#fecaca">❌ Missing / Not Answered (${missing.length})</h2>
+  ${missing.length === 0
+    ? `<div style="padding:18px;text-align:center;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;color:#16a34a;font-size:13px">🎉 All questions answered — full compliance!</div>`
+    : `<table style="width:100%;border-collapse:collapse;border:1px solid #fecaca;border-radius:8px;overflow:hidden">
+        <thead><tr>
+          <th style="padding:8px 12px;border-bottom:2px solid #fecaca;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#fff5f5">#</th>
+          <th style="padding:8px 12px;border-bottom:2px solid #fecaca;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#fff5f5">Question Not Answered</th>
+          <th style="padding:8px 12px;border-bottom:2px solid #fecaca;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#fff5f5">Status</th>
+        </tr></thead>
+        <tbody>${missRows}</tbody>
+      </table>`}
+</div>
+
+<div style="margin-top:28px;padding-top:14px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;font-family:'JetBrains Mono',monospace">
+  <span>C-TRACKER · ${esc(t.name)} · ${rows.length} inspection${rows.length !== 1 ? 's' : ''} on record</span>
+  <span>Generated: ${new Date().toLocaleString()}</span>
+</div>
+
+</body></html>`;
+
+  const printWin = window.open('', '_blank');
+  if (!printWin) {
+    // Fallback: html2pdf in-page
+    const el = document.getElementById(`vfr-report-${trackerId}-${idx}`);
+    if (el && window.html2pdf) {
+      window.html2pdf().set({
+        margin: [10, 10, 10, 10],
+        filename: `inspection-${t.name.replace(/\s+/g,'-').toLowerCase()}-${Date.now()}.pdf`,
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      }).from(el).save().then(() => {
+        btn.innerHTML = '✓ PDF saved!';
+        setTimeout(() => { btn.innerHTML = '⬇ Export this report to PDF'; btn.disabled = false; }, 2500);
+      }).catch(() => {
+        btn.innerHTML = '⬇ Export this report to PDF'; btn.disabled = false;
+      });
+    } else {
+      showToast('Please allow popups to export PDF', 'amber');
+      btn.innerHTML = '⬇ Export this report to PDF'; btn.disabled = false;
+    }
+    return;
+  }
+
+  printWin.document.write(printDoc);
+  printWin.document.close();
+  btn.innerHTML = '✓ PDF preview opened';
+  showToast('✓ PDF preview opened — use Ctrl+P to save', 'green');
+  setTimeout(() => { btn.innerHTML = '⬇ Export this report to PDF'; btn.disabled = false; }, 3000);
+}
+
+// ── OVERRIDE buildStructuredReport ───────────────────────────────
+// Route sheet-based (Type A) trackers to the new visual report.
+// Local trackers keep their existing buildLocalTrackerReport() path.
+const _origBuildStructuredReport = window.buildStructuredReport;
+window.buildStructuredReport = function(t, rows, idx) {
+  // Local trackers: use original
+  if (isLocalTracker(t.name)) {
+    return _origBuildStructuredReport(t, rows, idx);
+  }
+  // First Aid already has its own route inside the original function — keep it
+  const tName = t.name.toLowerCase();
+  if (tName.includes('first aid') || tName.includes('firstaid') || tName.includes('first-aid')) {
+    return _origBuildStructuredReport(t, rows, idx);
+  }
+  // All other sheet-based trackers (Fire Extinguisher, Smoke Detector, Office Security, future cards)
+  return buildVisualFormReport(t, rows, idx);
+};
+
+// ── Animate score bar after render ───────────────────────────────
+// Patch _rebuildBody to also animate vfr score fill
+const _origRebuildBody = window._rebuildBody;
+window._rebuildBody = function() {
+  if (typeof _origRebuildBody === 'function') _origRebuildBody();
+  setTimeout(() => {
+    const fill = document.getElementById('vfrScoreFill');
+    if (fill) fill.style.width = (fill.dataset.pct || 0) + '%';
+  }, 120);
+};
+
+// Also animate when openReport first fires
+const _origOpenReport = window.openReport;
+window.openReport = function(id) {
+  _origOpenReport(id);
+  setTimeout(() => {
+    const fill = document.getElementById('vfrScoreFill');
+    if (fill) fill.style.width = (fill.dataset.pct || 0) + '%';
+  }, 200);
+};
+
+console.log('✓ VFR patch loaded — visual form report active for all Type A trackers');
+</script>
 </body></html>
