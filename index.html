@@ -1531,6 +1531,8 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
     <div class="topbar-right">
       <div class="pill-btn pill-live"><span class="pill-dot"></span> LIVE</div>
       <button class="pill-btn" id="themeToggle" onclick="toggleTheme()" style="font-size:13px;padding:4px 10px" title="Toggle light/dark mode">☀️</button>
+<!-- ADD THIS NEW BUTTON -->
+<button class="pill-btn" id="cardStyleToggle" onclick="cycleCardStyle()" title="Cycle Card Style" style="font-size: 16px; padding: 4px 10px;">🔲</button>
       <div class="pill-btn pill-cloud-ok" id="cloudPill" onclick="manualCloudSync()" title="Cloud sync status">☁ Synced</div>
       <button class="pill-btn" onclick="fetchAllSheets()">↻ Sync Data</button>
       <button class="pill-btn" onclick="openFinalReport()">⬡ Report</button>
@@ -3066,6 +3068,52 @@ const LS_KEY = 'ct_v5';
 let trackers=[], apiKey='', sheetData={};
 let scriptUrl = '';
 const charts={};
+// ═══════════════════════════════════════════════════════════════
+// CARD STYLE TOGGLE LOGIC
+// ═══════════════════════════════════════════════════════════════
+const CARD_STYLES = ['default', 'flat', 'rounded', 'bordered'];
+let currentCardStyleIndex = 0;
+
+function applyCardStyle(style) {
+  // This function applies the visual style to the cards
+  let styleEl = document.getElementById('so-card-style');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'so-card-style';
+    document.head.appendChild(styleEl);
+  }
+  const rules = {
+    flat:     `.tracker-card { border-radius:6px !important; box-shadow:none !important; border-bottom-width:3px !important; }`,
+    rounded:  `.tracker-card { border-radius:24px !important; } .tracker-card .card-ill { border-radius:22px 22px 0 0 !important; }`,
+    bordered: `.tracker-card { border-width:2px !important; border-radius:8px !important; box-shadow:none !important; }`
+  };
+  styleEl.textContent = rules[style] || '';
+  // Save the preference to local storage
+  try { localStorage.setItem('ct_card_style', style); } catch(e) {}
+}
+
+function cycleCardStyle() {
+  // Move to the next style in the array, or loop back to the start
+  currentCardStyleIndex = (currentCardStyleIndex + 1) % CARD_STYLES.length;
+  const newStyle = CARD_STYLES[currentCardStyleIndex];
+  applyCardStyle(newStyle);
+  // Provide user feedback
+  showToast(`Card Style: ${newStyle.charAt(0).toUpperCase() + newStyle.slice(1)}`, 'green');
+}
+
+// Load the saved card style on startup
+function loadCardStyle() {
+  try {
+    const savedStyle = localStorage.getItem('ct_card_style');
+    if (savedStyle && CARD_STYLES.includes(savedStyle)) {
+      currentCardStyleIndex = CARD_STYLES.indexOf(savedStyle);
+      applyCardStyle(savedStyle);
+    }
+  } catch(e) {}
+}
+
+// Call this function when the application initializes
+loadCardStyle();
 // ══════════════════════════════════════════════════════════════════
 // CLOUD SYNC ENGINE
 // Read  → GET  ?action=read
@@ -6489,6 +6537,29 @@ function loadTheme() {
     document.getElementById('themeToggle').textContent = '☀️';
   }
 }
+// ═══════════════════════════════════════════════════════════════
+// SCREEN OPTIONS ENGINE
+// ═══════════════════════════════════════════════════════════════
+const SO_DEFAULTS = {
+  accent: '#4a9e35',
+  bg: '#f7f9fc',
+  text: '#1a2332',
+  cardStyle: 'default',
+  density: 'default'
+};
+
+let soState = {...SO_DEFAULTS};
+
+function openScreenOptions(){
+  loadSOState();
+  syncSOUI();
+  document.getElementById('soPanel').classList.add('open');
+  document.getElementById('soBackdrop').classList.add('open');
+}
+function closeScreenOptions(){
+  document.getElementById('soPanel').classList.remove('open');
+  document.getElementById('soBackdrop').classList.remove('open');
+}
 
 // ── Apply a CSS variable change live ──────────────────────────
 function applyAccent(hex){
@@ -6515,6 +6586,12 @@ function applyText(hex){
   document.documentElement.style.setProperty('--text', hex);
   document.documentElement.style.setProperty('--text-dim', hexMix(hex,'#000',0.3));
 }
+function applyCardStyle(style){
+  const cards = document.querySelectorAll('.tracker-card');
+  cards.forEach(c=>{
+    c.classList.remove('cs-flat','cs-rounded','cs-bordered');
+    if(style!=='default') c.classList.add('cs-'+style);
+  });
   // CSS rules for styles
   let styleEl = document.getElementById('so-card-style');
   if(!styleEl){ styleEl=document.createElement('style'); styleEl.id='so-card-style'; document.head.appendChild(styleEl); }
@@ -6587,6 +6664,13 @@ function setTextCustom(inp){
   document.getElementById('soTextHex').textContent = hex;
 }
 function resetText(){ applyText(SO_DEFAULTS.text); soState.text=SO_DEFAULTS.text; document.getElementById('soTextCustom').value=SO_DEFAULTS.text; document.getElementById('soTextHex').textContent=SO_DEFAULTS.text; clearActive('soTextSwatches'); }
+
+function setCardStyle(style, btn){
+  soState.cardStyle = style;
+  applyCardStyle(style);
+  document.querySelectorAll('.so-style-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
 function setDensity(density, btn){
   soState.density = density;
   applyDensity(density);
@@ -6611,6 +6695,7 @@ function applySOState(){
   applyAccent(soState.accent);
   applyBg(soState.bg);
   applyText(soState.text);
+  applyCardStyle(soState.cardStyle);
   applyDensity(soState.density);
 }
 function syncSOUI(){
@@ -6663,7 +6748,12 @@ function hexMix(hex, other, t){
 // ── Card style CSS added to existing cards on re-render ───────
 const _origRenderTrackers = typeof renderTrackers==='function'?renderTrackers:null;
 
+// ── Init ──────────────────────────────────────────────────────
+loadTheme();
+loadCardStyle(); // Add this line
+loadLocalRecords();
 
+tick();setInterval(tick,1000);
 // ══════════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════════
