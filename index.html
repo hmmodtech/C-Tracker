@@ -260,7 +260,7 @@ async function doLogin() {
       // Redirect to your main dashboard page (e.g., index.html)
       setTimeout(() => {
         // Change 'index.html' to the name of your main dashboard file
-        window.location.href = 'index.html'; 
+        window.location.href = 'dashboard.html'; 
       }, 800);
     }
   } catch (e) {
@@ -279,7 +279,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); })
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
     // If a session exists, redirect to the dashboard immediately
-    window.location.href = 'index.html'; // Change to your dashboard file
+    window.location.href = 'dashboard.html'; // Change to your dashboard file
   }
 })();
 </script>
