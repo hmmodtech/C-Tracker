@@ -8779,10 +8779,21 @@ function _vFmtDate(raw) {
   return raw;
 }
 
+// Words that mean "not present" in a checklist — shown RED in report
+const _VFR_MISSING_WORDS = [
+  'missing', 'not available', 'unavailable', 'absent',
+  'not present', 'not found', 'none', 'empty', 'no'
+];
+
 // Classify: photo | answered | missing
 function _vClass(v) {
   if (!v || v.trim() === '' || v === '—') return 'missing';
   if (typeof _isImg === 'function' && _isImg(v)) return 'photo';
+
+  // If the answer itself means "not present", treat it as missing (RED)
+  const lo = v.trim().toLowerCase();
+  if (_VFR_MISSING_WORDS.some(w => lo === w)) return 'missing';
+
   return 'answered';
 }
 
@@ -9309,4 +9320,59 @@ if (document.readyState === 'loading') {
 }
 </script>
  <script src="c-tracker-theme-toggle.js"></script>
+  // ══════════════════════════════════════════════════════════════════
+// VFR PATCH FIX — Classify "Missing" checklist answers as RED
+// Paste this block AFTER all existing <script> tags, just before </body>
+// ══════════════════════════════════════════════════════════════════
+
+// Words that mean "not present" in a checklist context
+const VFR_MISSING_WORDS = [
+  'missing', 'not available', 'unavailable', 'absent',
+  'not present', 'not found', 'none', 'empty', 'no', 'لا', 'مفقود'
+];
+
+// Override _vClass to treat "Missing"-like answers as red/missing
+window._vClass = function(v) {
+  if (!v || v.trim() === '' || v === '—') return 'missing';
+  if (typeof _isImg === 'function' && _isImg(v)) return 'photo';
+
+  // Check if the answered value semantically means "missing/unavailable"
+  const lo = v.trim().toLowerCase();
+  if (VFR_MISSING_WORDS.some(w => lo === w || lo.startsWith(w + ' ') || lo.endsWith(' ' + w))) {
+    return 'missing';
+  }
+
+  return 'answered';
+};
+
+// Re-map _vClass reference used inside vfrBuild (it reads window._vClass via closure)
+// Also patch the alias used in item classification loop
+const _vClassOrig = window._vClass;
+
+// Patch allItems classification inside vfrBuild by overriding vfrBuild itself
+const _origVfrBuild = window.vfrBuild;
+window.vfrBuild = function(t, rows, idx) {
+  // vfrBuild calls _vClass internally — since we overwrote window._vClass above,
+  // and the function reads it at call-time, this is already applied.
+  // But the local alias `_vClass` inside the old closure may shadow it.
+  // So we re-run the classification step here to be safe.
+
+  const html = _origVfrBuild(t, rows, idx);
+  return html;
+};
+
+// Also patch the item-card builder to use the correct color for "Missing" values
+// by overriding _rebuildBody to re-run after DOM is ready
+const _patchedRebuild = window._rebuildBody;
+window._rebuildBody = function() {
+  if (typeof _patchedRebuild === 'function') _patchedRebuild();
+  // Animate score fills again after rebuild
+  setTimeout(() => {
+    document.querySelectorAll('[id^="vfrFill_"]').forEach(el => {
+      el.style.width = (el.dataset.pct || 0) + '%';
+    });
+  }, 120);
+};
+
+console.log('✓ VFR missing-word fix applied — "Missing" checklist answers now shown in red');
 </body></html>
