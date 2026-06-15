@@ -1490,8 +1490,8 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
 <style id="so-card-style"></style><style id="so-density-style"></style></head>
 <body>
 
-<div class="save-toast green" id="saveToast">☁ Saved to cloud ✓</div>
-<div class="mob-sidebar-backdrop" id="mobBackdrop" onclick="closeMobileSidebar()"></div>
+<div class="save-toast green" id="saveToast">✓ Synced 33 rows to Supabase</div>
+<div class="mob-sidebar-backdrop" id="mobBackdrop" onclick="closeMobileSidebar()" style="display: none;"></div>
 
 <!-- SIDEBAR -->
 <div class="sidebar">
@@ -1505,20 +1505,20 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
   <nav class="sidebar-nav">
     <div class="nav-section">Main</div>
     <a class="nav-item active" href="#"><span class="nav-icon">◈</span> Overview</a>
-    <a class="nav-item" href="#" onclick="openManageTrackers();return false"><span class="nav-icon">≡</span> Trackers <span class="nav-badge" id="navCount">13</span></a>
+    <a class="nav-item" href="#" onclick="openManageTrackers();return false"><span class="nav-icon">≡</span> Trackers <span class="nav-badge" id="navCount">14</span></a>
     <a class="nav-item" href="#" onclick="openFinalReport();return false"><span class="nav-icon">◇</span> Reports</a>
     <div class="nav-section">System</div>
     <a class="nav-item" href="#" onclick="openSettings();return false"><span class="nav-icon">◎</span> Settings</a>
     <a class="nav-item" href="#" onclick="manualCloudSync()"><span class="nav-icon">☁</span> Cloud Sync</a>
     <a class="nav-item" href="#" onclick="saveFile()"><span class="nav-icon">↓</span> Save File</a>
-  </nav>
+  <a id="adminNavItem" class="nav-item" href="#"><span class="nav-icon">👥</span> Users</a></nav>
   <div class="sidebar-footer">
     <div class="user-avatar">👤</div>
     <div>
-      <div class="user-name">Field Operator</div>
+      <div class="user-name">Ahmed abu jami</div>
       <div class="user-role" id="cloudStatusSidebar">Cloud synced ✓</div>
     </div>
-  </div>
+  <button id="sbSignOutBtn" style="margin-left: auto; background: none; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); cursor: pointer; font-family: var(--font-mono); font-size: 9px; padding: 3px 7px;">↩ Sign out</button></div>
 </div>
 
 <!-- MAIN -->
@@ -1540,8 +1540,8 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
       <button class="pill-btn" onclick="openSettings()">⚙ Settings</button>
       <button class="pill-btn" onclick="openManageTrackers()">+ Trackers</button>
       <div style="margin-left:8px;border-left:1px solid var(--border);padding-left:14px">
-        <div class="topbar-clock" id="clock">16:39</div>
-        <div class="topbar-date" id="dateDisp">Thursday, June 4, 2026</div>
+        <div class="topbar-clock" id="clock">13:51</div>
+        <div class="topbar-date" id="dateDisp">Sunday, June 14, 2026</div>
       </div>
     </div>
   </div>
@@ -1549,22 +1549,22 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
   <!-- CLOUD STATUS BAR -->
   <div class="cloud-bar">
     <div class="cloud-dot synced" id="cloudDot"></div>
-    <span id="cloudBarText">Saved to cloud ✓</span>
-    <span style="margin-left:auto;color:var(--dim)" id="cloudLastSync">Last sync: 16:36:40</span>
+    <span id="cloudBarText">Cloud config loaded ✓</span>
+    <span style="margin-left:auto;color:var(--dim)" id="cloudLastSync">Last sync: 12:10:52</span>
   </div>
 
   <div class="app">
     <div class="summary">
-      <div class="sum-card c-red"><div class="sum-glow"></div><div class="sum-label">Active Trackers</div><div class="sum-value ok" id="sumTrackers">13</div><div class="sum-sub" id="sumTrackersSub">of 13 configured</div></div>
-      <div class="sum-card c-blue"><div class="sum-glow"></div><div class="sum-label">Total Responses</div><div class="sum-value ok" id="totalResp">53</div><div class="sum-sub">across all trackers</div></div>
-      <div class="sum-card c-amber"><div class="sum-glow"></div><div class="sum-label">Last Inspection</div><div class="sum-value warn" id="lastInspVal" style="font-size:16px;padding-top:6px">6/4/2026</div><div class="sum-sub" id="lastInspSub">most recent check</div></div>
-      <div class="sum-card c-green"><div class="sum-glow"></div><div class="sum-label">Sheets Connected</div><div class="sum-value warn" id="connectedCount">5</div><div class="sum-sub" id="connectedSub">5 of 13 sheets linked</div></div>
+      <div class="sum-card c-red"><div class="sum-glow"></div><div class="sum-label">Active Trackers</div><div class="sum-value ok" id="sumTrackers">14</div><div class="sum-sub" id="sumTrackersSub">of 14 configured</div></div>
+      <div class="sum-card c-blue"><div class="sum-glow"></div><div class="sum-label">Total Responses</div><div class="sum-value ok" id="totalResp">41</div><div class="sum-sub">across all trackers</div></div>
+      <div class="sum-card c-amber"><div class="sum-glow"></div><div class="sum-label">Last Inspection</div><div class="sum-value warn" id="lastInspVal" style="font-size:16px;padding-top:6px">6/14/2026</div><div class="sum-sub" id="lastInspSub">most recent check</div></div>
+      <div class="sum-card c-green"><div class="sum-glow"></div><div class="sum-label">Sheets Connected</div><div class="sum-value warn" id="connectedCount">13</div><div class="sum-sub" id="connectedSub">13 of 14 sheets linked</div></div>
     </div>
 
     <div>
       <div class="section-label"><span class="sl-icon">⚡</span> Inspection Trackers</div>
-      <div class="trackers" id="trackersGrid"><div class="tracker-card" id="tc-trk_1778310836789" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0ms 1 normal both running cardEntry;">
-      <div class="card-top-glow"></div>
+      <div class="trackers" id="trackersGrid"><div class="tracker-card" id="tc-trk_1778310836789" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0ms 1 normal both running cardEntry; transform: perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0px); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s, border-color 0.3s;">
+      <div class="card-top-glow" style="left: 33.6156%; right: 26.3844%;"></div>
       <div class="card-ill" style="position:relative">
         <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><ellipse cx="110" cy="95" rx="100" ry="72" fill="#cc1a2810"></ellipse><rect x="36" y="38" width="148" height="104" rx="16" fill="#cc1a28"></rect><rect x="36" y="38" width="148" height="30" rx="16" fill="#e8394a" opacity=".5"></rect><rect x="36" y="54" width="148" height="14" fill="#e8394a" opacity=".3"></rect><rect x="36" y="38" width="148" height="104" rx="16" fill="none" stroke="#ff6070" stroke-width="1.5" opacity=".5"></rect><rect x="83" y="24" width="54" height="18" rx="9" fill="#1a0305" stroke="#cc1a28" stroke-width="1.5"></rect><rect x="91" y="29" width="38" height="8" rx="4" fill="#2a0810"></rect><rect x="98" y="76" width="24" height="8" rx="3" fill="white" opacity=".95"></rect><rect x="106" y="68" width="8" height="24" rx="3" fill="white" opacity=".95"></rect><rect x="44" y="110" width="18" height="10" rx="3" fill="#bbb"></rect><rect x="47" y="107" width="12" height="5" rx="2" fill="#999"></rect><rect x="158" y="110" width="18" height="10" rx="3" fill="#bbb"></rect><rect x="161" y="107" width="12" height="5" rx="2" fill="#999"></rect><circle cx="92" cy="130" r="4" fill="#2dd17a"></circle><text x="100" y="134" font-size="8" fill="#2dd17a" font-family="monospace">READY</text><animateTransform attributeName="transform" type="translate" values="0,0;0,-1;0,0" dur="4s" repeatCount="indefinite"></animateTransform></svg>
         <span class="card-badge-status badge-ok">ACTIVE</span>
@@ -1574,14 +1574,14 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
       <div class="card-info">
         <div class="card-name"><div class="card-name-dot dot-ok"></div>First Aid</div>
         <div class="card-stats">
-          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">11</div></div>
-          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">6/4/2026</div></div>
+          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">4</div></div>
+          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">6/14/2026</div></div>
         </div>
       </div>
       <div class="card-footer">
-        <div class="card-footer-person">👤 Ajami</div>
-        <div class="comp-bar-track"><div class="comp-bar-fill ok" style="width:84%"></div></div>
-        <div class="card-footer-pct">84%</div>
+        <div class="card-footer-person">👤 Ahmed Abu jami</div>
+        <div class="comp-bar-track"><div class="comp-bar-fill ok" style="width:100%"></div></div>
+        <div class="card-footer-pct">100%</div>
       </div>
       <div class="card-hover-actions">
         <div class="cha-grid">
@@ -1608,7 +1608,7 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
           </button>
         </div>
       </div></div><div class="tracker-card" id="tc-trk_1778311622805" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 80ms 1 normal both running cardEntry; transform: perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0px); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s, border-color 0.3s;">
-      <div class="card-top-glow" style="left: 47.395%; right: 12.605%;"></div>
+      <div class="card-top-glow" style="left: 77.3817%; right: -17.3817%;"></div>
       <div class="card-ill" style="position:relative">
         <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><ellipse cx="110" cy="100" rx="85" ry="60" fill="#cc220014"></ellipse><rect x="88" y="44" width="44" height="90" rx="22" fill="#cc2200"></rect><rect x="88" y="44" width="44" height="90" rx="22" fill="none" stroke="#ff6633" stroke-width="1.2" opacity=".6"></rect><rect x="93" y="28" width="34" height="20" rx="7" fill="#bb1a00" stroke="#ff4400" stroke-width="1"></rect><rect x="84" y="22" width="52" height="9" rx="4" fill="#999" stroke="#bbb" stroke-width="1"></rect><rect x="102" y="14" width="16" height="12" rx="3" fill="#777"></rect><circle cx="110" cy="72" r="10" fill="#1a0500" stroke="#ff6633" stroke-width="1.5"></circle><circle cx="110" cy="72" r="6" fill="#0f0300"></circle><line x1="110" y1="72" x2="113" y2="68" stroke="#2dd17a" stroke-width="1.5" stroke-linecap="round"></line><rect x="88" y="92" width="44" height="20" rx="3" fill="#aa1a00" opacity=".8"></rect><text x="110" y="105" font-size="8" fill="#ffaa88" font-family="monospace" text-anchor="middle" font-weight="bold">FIRE EXT</text><path d="M132 62 Q155 60 160 72 Q164 82 155 86" fill="none" stroke="#555" stroke-width="5" stroke-linecap="round"></path><path d="M132 62 Q155 60 160 72 Q164 82 155 86" fill="none" stroke="#777" stroke-width="2" stroke-linecap="round"></path><rect x="149" y="82" width="12" height="7" rx="3" fill="#555"></rect><rect x="90" y="128" width="40" height="7" rx="3" fill="#881500"></rect><circle cx="96" cy="146" r="4" fill="#2dd17a"></circle><text x="104" y="150" font-size="8" fill="#2dd17a" font-family="monospace">CHARGED</text><animateTransform attributeName="transform" type="translate" values="0,0;0,-1;0,0" dur="3.5s" repeatCount="indefinite"></animateTransform></svg>
         <span class="card-badge-status badge-ok">ACTIVE</span>
@@ -1618,14 +1618,14 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
       <div class="card-info">
         <div class="card-name"><div class="card-name-dot dot-warn"></div>Fire Extinguisher Tracker</div>
         <div class="card-stats">
-          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">32</div></div>
-          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">5/4/2026</div></div>
+          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">15</div></div>
+          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">6/14/2026</div></div>
         </div>
       </div>
       <div class="card-footer">
         <div class="card-footer-person">👤 —</div>
-        <div class="comp-bar-track"><div class="comp-bar-fill warn" style="width:50%"></div></div>
-        <div class="card-footer-pct">50%</div>
+        <div class="comp-bar-track"><div class="comp-bar-fill warn" style="width:64%"></div></div>
+        <div class="card-footer-pct">64%</div>
       </div>
       <div class="card-hover-actions">
         <div class="cha-grid">
@@ -1652,7 +1652,7 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
           </button>
         </div>
       </div></div><div class="tracker-card" id="tc-trk_1778319778478" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 160ms 1 normal both running cardEntry; transform: perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0px); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s, border-color 0.3s;">
-      <div class="card-top-glow" style="left: 11.9328%; right: 48.0672%;"></div>
+      <div class="card-top-glow" style="left: 28.7412%; right: 31.2588%;"></div>
       <div class="card-ill" style="position:relative">
         <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><circle cx="110" cy="85" r="64" fill="rgba(74,158,53,0.06)" stroke="rgba(74,158,53,0.15)" stroke-width="1.5"></circle><circle cx="110" cy="85" r="50" fill="rgba(74,158,53,0.04)" stroke="rgba(74,158,53,0.12)" stroke-width="1"></circle><rect x="84" y="68" width="5" height="34" rx="2.5" fill="rgba(74,158,53,0.08)"></rect><rect x="94" y="64" width="5" height="42" rx="2.5" fill="rgba(74,158,53,0.08)"></rect><rect x="104" y="62" width="5" height="46" rx="2.5" fill="rgba(74,158,53,0.08)"></rect><rect x="114" y="62" width="5" height="46" rx="2.5" fill="rgba(74,158,53,0.08)"></rect><rect x="124" y="64" width="5" height="42" rx="2.5" fill="rgba(74,158,53,0.08)"></rect><rect x="134" y="68" width="5" height="34" rx="2.5" fill="rgba(74,158,53,0.08)"></rect><circle cx="110" cy="85" r="14" fill="rgba(74,158,53,0.03)" stroke="rgba(74,158,53,0.12)" stroke-width="1"></circle><circle cx="110" cy="85" r="8" fill="rgba(74,158,53,0.05)" stroke="#4a9e35" stroke-width="1.5"></circle><circle cx="110" cy="85" r="3.5" fill="#4a9e35"></circle><path d="M72 48 Q67 38 74 30 Q80 22 76 14" fill="none" stroke="#9aa0b4" stroke-width="2" stroke-linecap="round" opacity=".5"></path><path d="M86 42 Q81 32 88 24" fill="none" stroke="#9aa0b4" stroke-width="1.5" stroke-linecap="round" opacity=".35"></path><circle cx="110" cy="130" r="4.5" fill="#f0a030"></circle><text x="118" y="134" font-size="8" fill="#f0a030" font-family="monospace">MONITORING</text><animate attributeName="opacity" values="1;.88;1" dur="3s" repeatCount="indefinite"></animate></svg>
         <span class="card-badge-status badge-ok">ACTIVE</span>
@@ -1662,14 +1662,14 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
       <div class="card-info">
         <div class="card-name"><div class="card-name-dot dot-warn"></div>Smoke Detector Tracker</div>
         <div class="card-stats">
-          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">7</div></div>
-          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">6/4/2026</div></div>
+          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">6</div></div>
+          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">6/14/2026</div></div>
         </div>
       </div>
       <div class="card-footer">
-        <div class="card-footer-person">👤 Khalil</div>
-        <div class="comp-bar-track"><div class="comp-bar-fill warn" style="width:67%"></div></div>
-        <div class="card-footer-pct">67%</div>
+        <div class="card-footer-person">👤 Ahmed Abu Jami</div>
+        <div class="comp-bar-track"><div class="comp-bar-fill warn" style="width:56%"></div></div>
+        <div class="card-footer-pct">56%</div>
       </div>
       <div class="card-hover-actions">
         <div class="cha-grid">
@@ -1695,8 +1695,8 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
             <span class="cha-label" style="color:var(--red)">Remove Tracker</span>
           </button>
         </div>
-      </div></div><div class="tracker-card" id="tc-trk_1778417659188" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 240ms 1 normal both running cardEntry;">
-      <div class="card-top-glow"></div>
+      </div></div><div class="tracker-card" id="tc-trk_1778417659188" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 240ms 1 normal both running cardEntry; transform: perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0px); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s, border-color 0.3s;">
+      <div class="card-top-glow" style="left: 38.8452%; right: 21.1548%;"></div>
       <div class="card-ill" style="position:relative">
         <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><circle cx="110" cy="80" r="55" fill="none" stroke="rgba(74,158,53,0.12)" stroke-width="1.5" stroke-dasharray="6 4"></circle><text x="110" y="88" font-size="36" text-anchor="middle">📋</text></svg>
         <span class="card-badge-status badge-ok">ACTIVE</span>
@@ -1706,14 +1706,14 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
       <div class="card-info">
         <div class="card-name"><div class="card-name-dot dot-ok"></div>Office Security Check</div>
         <div class="card-stats">
-          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">2</div></div>
-          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">6/4/2026</div></div>
+          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">5</div></div>
+          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">6/8/2026</div></div>
         </div>
       </div>
       <div class="card-footer">
         <div class="card-footer-person">👤 —</div>
-        <div class="comp-bar-track"><div class="comp-bar-fill ok" style="width:94%"></div></div>
-        <div class="card-footer-pct">94%</div>
+        <div class="comp-bar-track"><div class="comp-bar-fill ok" style="width:98%"></div></div>
+        <div class="card-footer-pct">98%</div>
       </div>
       <div class="card-hover-actions">
         <div class="cha-grid">
@@ -1739,8 +1739,52 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
             <span class="cha-label" style="color:var(--red)">Remove Tracker</span>
           </button>
         </div>
-      </div></div><div class="tracker-card" id="tc-trk_1778319797012" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 320ms 1 normal both running cardEntry;">
+      </div></div><div class="tracker-card" id="tc-trk_1780745416876" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 320ms 1 normal both running cardEntry;">
       <div class="card-top-glow"></div>
+      <div class="card-ill" style="position:relative">
+        <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><circle cx="110" cy="80" r="55" fill="none" stroke="rgba(74,158,53,0.12)" stroke-width="1.5" stroke-dasharray="6 4"></circle><text x="110" y="88" font-size="36" text-anchor="middle">📋</text></svg>
+        <span class="card-badge-status badge-ok">ACTIVE</span>
+        <span class="card-badge-link badge-linked">● LINKED</span>
+      </div>
+      <div class="card-glass-divider"></div>
+      <div class="card-info">
+        <div class="card-name"><div class="card-name-dot dot-ok"></div>ACF Warehouse Check</div>
+        <div class="card-stats">
+          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">3</div></div>
+          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">6/14/2026</div></div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="card-footer-person">👤 Ahmed Abu Jami</div>
+        <div class="comp-bar-track"><div class="comp-bar-fill ok" style="width:100%"></div></div>
+        <div class="card-footer-pct">100%</div>
+      </div>
+      <div class="card-hover-actions">
+        <div class="cha-grid">
+          <a class="cha-btn cha-start" href="https://docs.google.com/forms/d/e/1FAIpQLSdYWnYajFNhAe7_PZT4Kb4XoaV2kJ_a3G5zBeQb56IVfEnTpA/viewform?usp=dialog" target="_blank">
+                   <span class="cha-icon">▶</span>
+                   <span class="cha-label">Start Check</span>
+                   <div class="cha-ripple"></div>
+                 </a>
+          <button class="cha-btn cha-status" onclick="openStatus('trk_1780745416876')">
+            <span class="cha-icon">◎</span>
+            <span class="cha-label">Status</span>
+          </button>
+          <button class="cha-btn cha-report" onclick="openReport('trk_1780745416876')">
+            <span class="cha-icon">↗</span>
+            <span class="cha-label">Report</span>
+          </button>
+          <button class="cha-btn cha-edit" onclick="openEditTracker('trk_1780745416876')">
+            <span class="cha-icon">✏</span>
+            <span class="cha-label">Edit</span>
+          </button>
+          <button class="cha-btn" style="background:rgba(232,57,74,0.12)!important;border-color:rgba(232,57,74,0.28)!important;grid-column:1/-1" onclick="confirmDelete('trk_1780745416876')">
+            <span class="cha-icon" style="color:var(--red)">🗑</span>
+            <span class="cha-label" style="color:var(--red)">Remove Tracker</span>
+          </button>
+        </div>
+      </div></div><div class="tracker-card" id="tc-trk_1778319797012" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 400ms 1 normal both running cardEntry; transform: perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0px); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s, border-color 0.3s;">
+      <div class="card-top-glow" style="left: 39.4495%; right: 20.5505%;"></div>
       <div class="card-ill" style="position:relative">
         <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><line x1="110" y1="135" x2="110" y2="55" stroke="#2dd17a" stroke-width="3" stroke-linecap="round"></line><polygon points="110,53 103,70 117,70" fill="#2dd17a"></polygon><path d="M86 84 Q110 60 134 84" fill="none" stroke="#2dd17a" stroke-width="2" opacity=".8"></path><path d="M70 72 Q110 37 150 72" fill="none" stroke="#2dd17a" stroke-width="1.5" opacity=".5"></path><path d="M55 60 Q110 14 165 60" fill="none" stroke="#2dd17a" stroke-width="1" opacity=".3"></path><rect x="26" y="90" width="38" height="23" rx="7" fill="#0d3320" stroke="#2dd17a" stroke-width="1"></rect><rect x="28" y="95" width="26" height="3" rx="1.5" fill="#2dd17a" opacity=".6"></rect><rect x="28" y="101" width="18" height="3" rx="1.5" fill="#2dd17a" opacity=".4"></rect><polygon points="34,113 26,120 42,113" fill="#0d3320"></polygon><rect x="155" y="80" width="36" height="22" rx="7" fill="#0d3320" stroke="#2dd17a" stroke-width="1"></rect><rect x="157" y="85" width="24" height="3" rx="1.5" fill="#2dd17a" opacity=".6"></rect><rect x="157" y="91" width="16" height="3" rx="1.5" fill="#2dd17a" opacity=".4"></rect><polygon points="177,102 187,108 161,102" fill="#0d3320"></polygon><rect x="55" y="112" width="32" height="20" rx="7" fill="#0d3320" stroke="#2dd17a" stroke-width="1"></rect><rect x="57" y="117" width="20" height="3" rx="1.5" fill="#2dd17a" opacity=".5"></rect><text x="110" y="155" font-size="8" fill="#2dd17a" font-family="monospace" text-anchor="middle">BULK SMS</text><animate attributeName="opacity" values="1;.85;1" dur="2s" repeatCount="indefinite"></animate></svg>
         <span class="card-badge-status badge-ok">ACTIVE</span>
@@ -1751,11 +1795,11 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
         <div class="card-name"><div class="card-name-dot dot-ok"></div>Bulk SMS Tracker</div>
         <div class="card-stats">
           <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">1</div></div>
-          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">2026-06-04</div></div>
+          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">2026-06-14</div></div>
         </div>
       </div>
       <div class="card-footer">
-        <div class="card-footer-person">👤 khjg</div>
+        <div class="card-footer-person">👤 Ahmed Abu Jami</div>
         <div class="comp-bar-track"><div class="comp-bar-fill ok" style="width:100%"></div></div>
         <div class="card-footer-pct">100%</div>
       </div>
@@ -1783,25 +1827,25 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
             <span class="cha-label" style="color:var(--red)">Remove Tracker</span>
           </button>
         </div>
-      </div></div><div class="tracker-card" id="tc-trk_1778319804525" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 400ms 1 normal both running cardEntry;">
-      <div class="card-top-glow"></div>
+      </div></div><div class="tracker-card" id="tc-trk_1778319804525" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 480ms 1 normal both running cardEntry; transform: perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0px); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s, border-color 0.3s;">
+      <div class="card-top-glow" style="left: 28.0698%; right: 31.9302%;"></div>
       <div class="card-ill" style="position:relative">
         <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><ellipse cx="110" cy="90" rx="85" ry="65" fill="#88339910"></ellipse><ellipse cx="110" cy="90" rx="72" ry="26" fill="none" stroke="#9d6fff" stroke-width="1" opacity=".4"></ellipse><ellipse cx="110" cy="90" rx="52" ry="52" fill="none" stroke="#9d6fff" stroke-width=".8" opacity=".25" transform="rotate(55 110 90)"></ellipse><polygon points="78,66 88,44 98,60 110,38 122,60 132,44 142,66" fill="#c8940a"></polygon><polygon points="78,66 88,44 98,60 110,38 122,60 132,44 142,66" fill="#ffdd44" opacity=".7"></polygon><rect x="78" y="64" width="64" height="9" rx="2" fill="#aa7800"></rect><path d="M68 76 L68 108 Q68 128 110 138 Q152 128 152 108 L152 76 Z" fill="#0e0620" stroke="#9d6fff" stroke-width="1.5"></path><polygon points="110,90 114,103 128,103 117,110 121,123 110,115 99,123 103,110 92,103 106,103" fill="#ffdd44" opacity=".9"></polygon><text x="110" y="152" font-size="8" fill="#9d6fff" font-family="monospace" text-anchor="middle">MASTER CONTROL</text><animateTransform attributeName="transform" type="rotate" values="0 110 90;1.5 110 90;0 110 90;-1.5 110 90;0 110 90" dur="6s" repeatCount="indefinite"></animateTransform></svg>
-        <span class="card-badge-status badge-pending">NO DATA</span>
+        <span class="card-badge-status badge-ok">ACTIVE</span>
         <span class="card-badge-link badge-linked">● LOCAL</span>
       </div>
       <div class="card-glass-divider"></div>
       <div class="card-info">
-        <div class="card-name"><div class="card-name-dot dot-none"></div>Master Tracker</div>
+        <div class="card-name"><div class="card-name-dot dot-ok"></div>Master Tracker</div>
         <div class="card-stats">
-          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val na">—</div></div>
-          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val na" style="font-size:10px;padding-top:2px">—</div></div>
+          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">1</div></div>
+          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">2026-06-14</div></div>
         </div>
       </div>
       <div class="card-footer">
-        <div class="card-footer-person">👤 —</div>
-        <div class="comp-bar-track"><div class="comp-bar-fill na" style="width:0%"></div></div>
-        <div class="card-footer-pct">—</div>
+        <div class="card-footer-person">👤 Ahmed Abu Jami</div>
+        <div class="comp-bar-track"><div class="comp-bar-fill ok" style="width:100%"></div></div>
+        <div class="card-footer-pct">100%</div>
       </div>
       <div class="card-hover-actions">
         <div class="cha-grid">
@@ -1827,8 +1871,8 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
             <span class="cha-label" style="color:var(--red)">Remove Tracker</span>
           </button>
         </div>
-      </div></div><div class="tracker-card" id="tc-trk_1778319812223" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 480ms 1 normal both running cardEntry; transform: perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0px); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s, border-color 0.3s;">
-      <div class="card-top-glow" style="left: -3.52941%; right: 63.5294%;"></div>
+      </div></div><div class="tracker-card" id="tc-trk_1778319812223" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 560ms 1 normal both running cardEntry; transform: perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0px); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s, border-color 0.3s;">
+      <div class="card-top-glow" style="left: -13.1857%; right: 73.1857%;"></div>
       <div class="card-ill" style="position:relative">
         <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><rect x="50" y="28" width="120" height="112" rx="10" fill="#0e2040" stroke="#2a5a8a" stroke-width="1.5"></rect><rect x="80" y="18" width="60" height="18" rx="6" fill="#0a1e38" stroke="#2a5a8a" stroke-width="1.2"></rect><rect x="92" y="22" width="36" height="9" rx="3" fill="#060e1c"></rect><circle cx="66" cy="55" r="6" fill="#071a10" stroke="#2dd17a" stroke-width="1.5"></circle><polyline points="63,55 66,58 71,52" fill="none" stroke="#2dd17a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></polyline><rect x="77" y="51" width="80" height="4" rx="2" fill="#2a5a8a"></rect><rect x="77" y="57" width="55" height="3" rx="1.5" fill="#1a3a5c"></rect><circle cx="66" cy="76" r="6" fill="#071a10" stroke="#2dd17a" stroke-width="1.5"></circle><polyline points="63,76 66,79 71,73" fill="none" stroke="#2dd17a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></polyline><rect x="77" y="72" width="68" height="4" rx="2" fill="#2a5a8a"></rect><rect x="77" y="78" width="46" height="3" rx="1.5" fill="#1a3a5c"></rect><circle cx="66" cy="97" r="6" fill="#1a0f04" stroke="#f0a030" stroke-width="1.5"></circle><text x="66" y="101" font-size="9" fill="#f0a030" text-anchor="middle" font-weight="bold">!</text><rect x="77" y="93" width="60" height="4" rx="2" fill="#2a5a8a"></rect><rect x="77" y="99" width="40" height="3" rx="1.5" fill="#1a3a5c"></rect><circle cx="66" cy="118" r="6" fill="#0a0c0e" stroke="#363a4a" stroke-width="1"></circle><rect x="77" y="114" width="72" height="4" rx="2" fill="#1a2a3a"></rect><rect x="50" y="130" width="120" height="9" rx="4.5" fill="#0a1e38"></rect><rect x="50" y="130" width="82" height="9" rx="4.5" fill="#4a9e35" opacity=".8"></rect><text x="110" y="152" font-size="8" fill="#4a9e35" font-family="monospace" text-anchor="middle">SCORE: 69%</text></svg>
         <span class="card-badge-status badge-pending">NO DATA</span>
@@ -1871,25 +1915,25 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
             <span class="cha-label" style="color:var(--red)">Remove Tracker</span>
           </button>
         </div>
-      </div></div><div class="tracker-card" id="tc-trk_1778319822122" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 560ms 1 normal both running cardEntry;">
+      </div></div><div class="tracker-card" id="tc-trk_1778319822122" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 640ms 1 normal both running cardEntry;">
       <div class="card-top-glow"></div>
       <div class="card-ill" style="position:relative">
         <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><circle cx="110" cy="78" r="66" fill="none" stroke="#00cc44" stroke-width=".5" opacity=".2"></circle><circle cx="110" cy="78" r="50" fill="none" stroke="#00cc44" stroke-width=".6" opacity=".3"></circle><circle cx="110" cy="78" r="34" fill="none" stroke="#00cc44" stroke-width=".8" opacity=".4"></circle><rect x="76" y="32" width="68" height="98" rx="18" fill="#0e1e0e" stroke="#2dd17a" stroke-width="1.5"></rect><rect x="84" y="44" width="52" height="66" rx="8" fill="#000a04" stroke="#1a4a28" stroke-width="1"></rect><line x1="84" y1="64" x2="136" y2="64" stroke="#1a3a20" stroke-width="1"></line><line x1="84" y1="78" x2="136" y2="78" stroke="#1a3a20" stroke-width="1"></line><line x1="84" y1="92" x2="136" y2="92" stroke="#1a3a20" stroke-width="1"></line><line x1="100" y1="44" x2="100" y2="110" stroke="#1a3a20" stroke-width="1"></line><line x1="116" y1="44" x2="116" y2="110" stroke="#1a3a20" stroke-width="1"></line><path d="M88 104 Q94 91 104 84 Q114 77 120 64" fill="none" stroke="#00cc44" stroke-width="2" stroke-linecap="round"></path><circle cx="120" cy="62" r="4.5" fill="#00cc44"></circle><circle cx="120" cy="62" r="2" fill="#fff"></circle><rect x="70" y="52" width="6" height="10" rx="3" fill="#1a2a1a" stroke="#2dd17a" stroke-width=".8"></rect><rect x="70" y="70" width="6" height="10" rx="3" fill="#1a2a1a" stroke="#2dd17a" stroke-width=".8"></rect><rect x="144" y="62" width="6" height="10" rx="3" fill="#1a2a1a" stroke="#2dd17a" stroke-width=".8"></rect><rect x="84" y="126" width="52" height="18" rx="6" fill="#0a150a" stroke="#1a3a20" stroke-width="1"></rect><text x="110" y="153" font-size="8" fill="#2dd17a" font-family="monospace" text-anchor="middle">GPS ACTIVE</text><animate attributeName="opacity" values="1;.9;1" dur="2s" repeatCount="indefinite"></animate></svg>
-        <span class="card-badge-status badge-pending">NO DATA</span>
+        <span class="card-badge-status badge-ok">ACTIVE</span>
         <span class="card-badge-link badge-linked">● LOCAL</span>
       </div>
       <div class="card-glass-divider"></div>
       <div class="card-info">
-        <div class="card-name"><div class="card-name-dot dot-none"></div>Garmin Tracker</div>
+        <div class="card-name"><div class="card-name-dot dot-ok"></div>Garmin Tracker</div>
         <div class="card-stats">
-          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val na">—</div></div>
-          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val na" style="font-size:10px;padding-top:2px">—</div></div>
+          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">1</div></div>
+          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">2026-06-14</div></div>
         </div>
       </div>
       <div class="card-footer">
-        <div class="card-footer-person">👤 —</div>
-        <div class="comp-bar-track"><div class="comp-bar-fill na" style="width:0%"></div></div>
-        <div class="card-footer-pct">—</div>
+        <div class="card-footer-person">👤 Ahmed Abu Jami</div>
+        <div class="comp-bar-track"><div class="comp-bar-fill ok" style="width:100%"></div></div>
+        <div class="card-footer-pct">100%</div>
       </div>
       <div class="card-hover-actions">
         <div class="cha-grid">
@@ -1915,25 +1959,25 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
             <span class="cha-label" style="color:var(--red)">Remove Tracker</span>
           </button>
         </div>
-      </div></div><div class="tracker-card" id="tc-trk_1778319829115" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 640ms 1 normal both running cardEntry;">
+      </div></div><div class="tracker-card" id="tc-trk_1778319829115" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 720ms 1 normal both running cardEntry; transform: perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0px); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s, border-color 0.3s;">
       <div class="card-top-glow"></div>
       <div class="card-ill" style="position:relative">
         <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><circle cx="110" cy="32" r="13" fill="#1a0a28" stroke="#9d6fff" stroke-width="2"></circle><text x="110" y="36" font-size="9" fill="#cc99ff" text-anchor="middle" font-weight="bold">HQ</text><line x1="110" y1="45" x2="58" y2="72" stroke="#9d6fff" stroke-width="1.5" opacity=".7"></line><line x1="110" y1="45" x2="110" y2="72" stroke="#9d6fff" stroke-width="1.5" opacity=".7"></line><line x1="110" y1="45" x2="162" y2="72" stroke="#9d6fff" stroke-width="1.5" opacity=".7"></line><circle cx="58" cy="80" r="10" fill="#150a28" stroke="#9d6fff" stroke-width="1.5"></circle><text x="58" y="84" font-size="7.5" fill="#cc99ff" text-anchor="middle">OPS</text><circle cx="110" cy="80" r="10" fill="#150a28" stroke="#9d6fff" stroke-width="1.5"></circle><text x="110" y="84" font-size="7.5" fill="#cc99ff" text-anchor="middle">LOG</text><circle cx="162" cy="80" r="10" fill="#150a28" stroke="#9d6fff" stroke-width="1.5"></circle><text x="162" y="84" font-size="7.5" fill="#cc99ff" text-anchor="middle">MED</text><line x1="58" y1="90" x2="34" y2="112" stroke="#6633cc" stroke-width="1" opacity=".6"></line><line x1="58" y1="90" x2="72" y2="112" stroke="#6633cc" stroke-width="1" opacity=".6"></line><line x1="110" y1="90" x2="100" y2="112" stroke="#6633cc" stroke-width="1" opacity=".6"></line><line x1="110" y1="90" x2="120" y2="112" stroke="#6633cc" stroke-width="1" opacity=".6"></line><line x1="162" y1="90" x2="148" y2="112" stroke="#6633cc" stroke-width="1" opacity=".6"></line><line x1="162" y1="90" x2="176" y2="112" stroke="#6633cc" stroke-width="1" opacity=".6"></line><circle cx="34" cy="119" r="7" fill="#0f0620" stroke="#6633cc" stroke-width="1.2"></circle><circle cx="72" cy="119" r="7" fill="#0f0620" stroke="#6633cc" stroke-width="1.2"></circle><circle cx="100" cy="119" r="7" fill="#0f0620" stroke="#6633cc" stroke-width="1.2"></circle><circle cx="120" cy="119" r="7" fill="#0f0620" stroke="#6633cc" stroke-width="1.2"></circle><circle cx="148" cy="119" r="7" fill="#0f0620" stroke="#6633cc" stroke-width="1.2"></circle><circle cx="176" cy="119" r="7" fill="#0f0620" stroke="#6633cc" stroke-width="1.2"></circle><text x="110" y="152" font-size="8" fill="#9d6fff" font-family="monospace" text-anchor="middle">COMM TREE</text><animate attributeName="opacity" values="1;.85;1" dur="3s" repeatCount="indefinite"></animate></svg>
-        <span class="card-badge-status badge-pending">NO DATA</span>
+        <span class="card-badge-status badge-ok">ACTIVE</span>
         <span class="card-badge-link badge-linked">● LOCAL</span>
       </div>
       <div class="card-glass-divider"></div>
       <div class="card-info">
-        <div class="card-name"><div class="card-name-dot dot-none"></div>Communication Tree Tracker</div>
+        <div class="card-name"><div class="card-name-dot dot-warn"></div>Communication Tree Tracker</div>
         <div class="card-stats">
-          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val na">—</div></div>
-          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val na" style="font-size:10px;padding-top:2px">—</div></div>
+          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">1</div></div>
+          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">2026-06-14</div></div>
         </div>
       </div>
       <div class="card-footer">
-        <div class="card-footer-person">👤 —</div>
-        <div class="comp-bar-track"><div class="comp-bar-fill na" style="width:0%"></div></div>
-        <div class="card-footer-pct">—</div>
+        <div class="card-footer-person">👤 Ahmed Abu Jami</div>
+        <div class="comp-bar-track"><div class="comp-bar-fill warn" style="width:67%"></div></div>
+        <div class="card-footer-pct">67%</div>
       </div>
       <div class="card-hover-actions">
         <div class="cha-grid">
@@ -1959,25 +2003,25 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
             <span class="cha-label" style="color:var(--red)">Remove Tracker</span>
           </button>
         </div>
-      </div></div><div class="tracker-card" id="tc-trk_1778319836978" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 720ms 1 normal both running cardEntry;">
+      </div></div><div class="tracker-card" id="tc-trk_1778319836978" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 800ms 1 normal both running cardEntry;">
       <div class="card-top-glow"></div>
       <div class="card-ill" style="position:relative">
         <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><rect x="24" y="20" width="172" height="118" rx="10" fill="#0a2040" stroke="#1a4a7a" stroke-width="1.5"></rect><line x1="24" y1="52" x2="196" y2="52" stroke="#0a2a4a" stroke-width="1"></line><line x1="24" y1="84" x2="196" y2="84" stroke="#0a2a4a" stroke-width="1"></line><line x1="24" y1="112" x2="196" y2="112" stroke="#0a2a4a" stroke-width="1"></line><line x1="68" y1="20" x2="68" y2="138" stroke="#0a2a4a" stroke-width="1"></line><line x1="110" y1="20" x2="110" y2="138" stroke="#0a2a4a" stroke-width="1"></line><line x1="152" y1="20" x2="152" y2="138" stroke="#0a2a4a" stroke-width="1"></line><ellipse cx="72" cy="68" rx="26" ry="16" fill="#0a3020" opacity=".7"></ellipse><ellipse cx="155" cy="100" rx="20" ry="12" fill="#0a3020" opacity=".5"></ellipse><path d="M40 130 Q60 108 80 94 Q100 80 122 70 Q144 60 172 44" fill="none" stroke="#4a9e35" stroke-width="2.5" stroke-linecap="round"></path><path d="M40 130 Q60 108 80 94 Q100 80 122 70 Q144 60 172 44" fill="none" stroke="#88ccff" stroke-width="1" stroke-linecap="round" stroke-dasharray="4 3"></path><circle cx="40" cy="130" r="5.5" fill="#e8394a"></circle><circle cx="40" cy="130" r="2.5" fill="#fff"></circle><circle cx="172" cy="44" r="5.5" fill="#2dd17a"></circle><circle cx="172" cy="44" r="2.5" fill="#fff"></circle><circle cx="80" cy="94" r="3.5" fill="#f0a030"></circle><circle cx="122" cy="70" r="3.5" fill="#f0a030"></circle><circle cx="177" cy="122" r="13" fill="#040e1e" stroke="#1a4a7a" stroke-width="1"></circle><text x="177" y="117" font-size="7" fill="#4a9e35" text-anchor="middle" font-weight="bold">N</text><text x="177" y="134" font-size="6" fill="#5c6278" text-anchor="middle">S</text><line x1="177" y1="119" x2="177" y2="124" stroke="#4a9e35" stroke-width="1.5"></line><text x="110" y="153" font-size="8" fill="#4a9e35" font-family="monospace" text-anchor="middle">AREA MAPPING</text></svg>
-        <span class="card-badge-status badge-pending">NO DATA</span>
+        <span class="card-badge-status badge-ok">ACTIVE</span>
         <span class="card-badge-link badge-linked">● LOCAL</span>
       </div>
       <div class="card-glass-divider"></div>
       <div class="card-info">
-        <div class="card-name"><div class="card-name-dot dot-none"></div>Maps Tracker</div>
+        <div class="card-name"><div class="card-name-dot dot-ok"></div>Maps Tracker</div>
         <div class="card-stats">
-          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val na">—</div></div>
-          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val na" style="font-size:10px;padding-top:2px">—</div></div>
+          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">1</div></div>
+          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">2026-06-14</div></div>
         </div>
       </div>
       <div class="card-footer">
-        <div class="card-footer-person">👤 —</div>
-        <div class="comp-bar-track"><div class="comp-bar-fill na" style="width:0%"></div></div>
-        <div class="card-footer-pct">—</div>
+        <div class="card-footer-person">👤 Ahmed Abu jami</div>
+        <div class="comp-bar-track"><div class="comp-bar-fill ok" style="width:100%"></div></div>
+        <div class="card-footer-pct">100%</div>
       </div>
       <div class="card-hover-actions">
         <div class="cha-grid">
@@ -2003,25 +2047,25 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
             <span class="cha-label" style="color:var(--red)">Remove Tracker</span>
           </button>
         </div>
-      </div></div><div class="tracker-card" id="tc-trk_1778319844131" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 800ms 1 normal both running cardEntry;">
+      </div></div><div class="tracker-card" id="tc-trk_1778319844131" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 880ms 1 normal both running cardEntry;">
       <div class="card-top-glow"></div>
       <div class="card-ill" style="position:relative">
         <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><text x="110" y="28" font-size="20" font-family="serif" fill="#4a9e35" text-anchor="middle" font-weight="bold" opacity=".9">Rx</text><rect x="100" y="30" width="20" height="7" rx="3" fill="#4a9e35" opacity=".9"></rect><rect x="106" y="23" width="8" height="20" rx="3" fill="#4a9e35" opacity=".9"></rect><rect x="35" y="58" width="150" height="80" rx="10" fill="#0e2a48" stroke="#2a5a8a" stroke-width="1.5"></rect><line x1="35" y1="86" x2="185" y2="86" stroke="#2a5a8a" stroke-width="1.2"></line><line x1="35" y1="110" x2="185" y2="110" stroke="#2a5a8a" stroke-width="1.2"></line><rect x="43" y="64" width="12" height="18" rx="4" fill="#224"></rect><rect x="59" y="66" width="11" height="16" rx="3" fill="#142"></rect><rect x="75" y="63" width="14" height="19" rx="4" fill="#321"></rect><rect x="93" y="65" width="16" height="17" rx="3" fill="#213"></rect><rect x="113" y="64" width="12" height="18" rx="4" fill="#224"></rect><rect x="130" y="66" width="9" height="16" rx="5" fill="#123"></rect><rect x="44" y="91" width="40" height="14" rx="4" fill="#221800" stroke="#aa6600" stroke-width=".8"></rect><circle cx="54" cy="98" r="4" fill="#ffcc44"></circle><circle cx="64" cy="98" r="4" fill="#ffcc44"></circle><circle cx="74" cy="98" r="4" fill="#ffcc44"></circle><rect x="92" y="91" width="40" height="14" rx="4" fill="#1a0018" stroke="#aa0066" stroke-width=".8"></rect><circle cx="102" cy="98" r="4" fill="#ff6699"></circle><circle cx="112" cy="98" r="4" fill="#ff6699"></circle><circle cx="122" cy="98" r="4" fill="#ff6699"></circle><rect x="140" y="91" width="34" height="7" rx="3.5" fill="#1a3050" stroke="#4a9e35" stroke-width=".8"></rect><rect x="42" y="115" width="10" height="16" rx="5" fill="#2a0a0a"></rect><rect x="57" y="115" width="10" height="16" rx="5" fill="#0a1a2a"></rect><rect x="72" y="115" width="10" height="16" rx="5" fill="#0a2a0a"></rect><rect x="87" y="115" width="10" height="16" rx="5" fill="#2a1a00"></rect><rect x="102" y="113" width="24" height="18" rx="3" fill="#1a0a28"></rect><rect x="130" y="113" width="24" height="18" rx="3" fill="#001a28"></rect><text x="110" y="153" font-size="8" fill="#4a9e35" font-family="monospace" text-anchor="middle">PHARMACY</text></svg>
-        <span class="card-badge-status badge-pending">NO DATA</span>
+        <span class="card-badge-status badge-ok">ACTIVE</span>
         <span class="card-badge-link badge-linked">● LOCAL</span>
       </div>
       <div class="card-glass-divider"></div>
       <div class="card-info">
-        <div class="card-name"><div class="card-name-dot dot-none"></div>Pharmacy Tracker</div>
+        <div class="card-name"><div class="card-name-dot dot-warn"></div>Pharmacy Tracker</div>
         <div class="card-stats">
-          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val na">—</div></div>
-          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val na" style="font-size:10px;padding-top:2px">—</div></div>
+          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">1</div></div>
+          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">2026-06-14</div></div>
         </div>
       </div>
       <div class="card-footer">
-        <div class="card-footer-person">👤 —</div>
-        <div class="comp-bar-track"><div class="comp-bar-fill na" style="width:0%"></div></div>
-        <div class="card-footer-pct">—</div>
+        <div class="card-footer-person">👤 Ahmed Abu Jami</div>
+        <div class="comp-bar-track"><div class="comp-bar-fill warn" style="width:50%"></div></div>
+        <div class="card-footer-pct">50%</div>
       </div>
       <div class="card-hover-actions">
         <div class="cha-grid">
@@ -2047,25 +2091,25 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
             <span class="cha-label" style="color:var(--red)">Remove Tracker</span>
           </button>
         </div>
-      </div></div><div class="tracker-card" id="tc-trk_1778319854787" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 880ms 1 normal both running cardEntry;">
+      </div></div><div class="tracker-card" id="tc-trk_1778319854787" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 960ms 1 normal both running cardEntry;">
       <div class="card-top-glow"></div>
       <div class="card-ill" style="position:relative">
         <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><circle cx="110" cy="36" r="13" fill="#1a2a3a" stroke="#4a9e35" stroke-width="1.5"></circle><circle cx="110" cy="32" r="5" fill="#4a9e35" opacity=".8"></circle><path d="M101 46 Q110 42 119 46" fill="none" stroke="#4a9e35" stroke-width="2" stroke-linecap="round"></path><line x1="110" y1="49" x2="62" y2="72" stroke="#4a9e35" stroke-width="1" opacity=".5"></line><line x1="110" y1="49" x2="110" y2="72" stroke="#4a9e35" stroke-width="1" opacity=".5"></line><line x1="110" y1="49" x2="158" y2="72" stroke="#4a9e35" stroke-width="1" opacity=".5"></line><circle cx="62" cy="80" r="10" fill="#1a2a3a" stroke="#00c8d4" stroke-width="1.5"></circle><circle cx="62" cy="76" r="4" fill="#00c8d4" opacity=".8"></circle><path d="M54 88 Q62 85 70 88" fill="none" stroke="#00c8d4" stroke-width="1.5" stroke-linecap="round"></path><circle cx="110" cy="80" r="10" fill="#1a2a3a" stroke="#00c8d4" stroke-width="1.5"></circle><circle cx="110" cy="76" r="4" fill="#00c8d4" opacity=".8"></circle><path d="M102 88 Q110 85 118 88" fill="none" stroke="#00c8d4" stroke-width="1.5" stroke-linecap="round"></path><circle cx="158" cy="80" r="10" fill="#1a2a3a" stroke="#00c8d4" stroke-width="1.5"></circle><circle cx="158" cy="76" r="4" fill="#00c8d4" opacity=".8"></circle><path d="M150 88 Q158 85 166 88" fill="none" stroke="#00c8d4" stroke-width="1.5" stroke-linecap="round"></path><rect x="30" y="102" width="42" height="26" rx="6" fill="#0e1e30" stroke="#1a3a5a" stroke-width="1"></rect><circle cx="41" cy="112" r="5.5" fill="#1a3a5a"></circle><rect x="49" y="108" width="18" height="3" rx="1.5" fill="#4a9e35" opacity=".6"></rect><rect x="49" y="114" width="12" height="2" rx="1" fill="#2a4a6a" opacity=".5"></rect><rect x="89" y="102" width="42" height="26" rx="6" fill="#0e1e30" stroke="#1a3a5a" stroke-width="1"></rect><circle cx="100" cy="112" r="5.5" fill="#1a3a5a"></circle><rect x="108" y="108" width="18" height="3" rx="1.5" fill="#4a9e35" opacity=".6"></rect><rect x="108" y="114" width="12" height="2" rx="1" fill="#2a4a6a" opacity=".5"></rect><rect x="148" y="102" width="42" height="26" rx="6" fill="#0e1e30" stroke="#1a3a5a" stroke-width="1"></rect><circle cx="159" cy="112" r="5.5" fill="#1a3a5a"></circle><rect x="167" y="108" width="18" height="3" rx="1.5" fill="#4a9e35" opacity=".6"></rect><rect x="167" y="114" width="12" height="2" rx="1" fill="#2a4a6a" opacity=".5"></rect><text x="110" y="152" font-size="8" fill="#00c8d4" font-family="monospace" text-anchor="middle">HR CONTACTS</text></svg>
-        <span class="card-badge-status badge-pending">NO DATA</span>
+        <span class="card-badge-status badge-ok">ACTIVE</span>
         <span class="card-badge-link badge-linked">● LOCAL</span>
       </div>
       <div class="card-glass-divider"></div>
       <div class="card-info">
-        <div class="card-name"><div class="card-name-dot dot-none"></div>HR Contact Tracker</div>
+        <div class="card-name"><div class="card-name-dot dot-ok"></div>HR Contact Tracker</div>
         <div class="card-stats">
-          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val na">—</div></div>
-          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val na" style="font-size:10px;padding-top:2px">—</div></div>
+          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">1</div></div>
+          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">2026-06-14</div></div>
         </div>
       </div>
       <div class="card-footer">
-        <div class="card-footer-person">👤 —</div>
-        <div class="comp-bar-track"><div class="comp-bar-fill na" style="width:0%"></div></div>
-        <div class="card-footer-pct">—</div>
+        <div class="card-footer-person">👤 Ahmed Abu Jami</div>
+        <div class="comp-bar-track"><div class="comp-bar-fill ok" style="width:100%"></div></div>
+        <div class="card-footer-pct">100%</div>
       </div>
       <div class="card-hover-actions">
         <div class="cha-grid">
@@ -2091,25 +2135,25 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
             <span class="cha-label" style="color:var(--red)">Remove Tracker</span>
           </button>
         </div>
-      </div></div><div class="tracker-card" id="tc-trk_1778319863148" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 960ms 1 normal both running cardEntry;">
+      </div></div><div class="tracker-card" id="tc-trk_1778319863148" style="animation: 0.5s cubic-bezier(0.22, 1, 0.36, 1) 1040ms 1 normal both running cardEntry;">
       <div class="card-top-glow"></div>
       <div class="card-ill" style="position:relative">
         <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><rect x="44" y="22" width="132" height="118" rx="8" fill="#1e1808" stroke="#6a5020" stroke-width="1.5"></rect><rect x="44" y="22" width="20" height="118" rx="6" fill="#14100a" stroke="#6a5020" stroke-width="1"></rect><rect x="168" y="24" width="5" height="114" rx="2.5" fill="#e8dcc0" opacity=".12"></rect><rect x="70" y="36" width="90" height="2.5" rx="1.2" fill="#f0a030" opacity=".7"></rect><rect x="70" y="46" width="90" height="2.5" rx="1.2" fill="#6a5020" opacity=".5"></rect><rect x="70" y="46" width="50" height="2.5" rx="1.2" fill="#f0a030" opacity=".6"></rect><rect x="70" y="56" width="90" height="2.5" rx="1.2" fill="#6a5020" opacity=".5"></rect><rect x="70" y="56" width="76" height="2.5" rx="1.2" fill="#f0a030" opacity=".65"></rect><rect x="70" y="66" width="90" height="2.5" rx="1.2" fill="#6a5020" opacity=".5"></rect><rect x="70" y="66" width="42" height="2.5" rx="1.2" fill="#f0a030" opacity=".5"></rect><rect x="70" y="76" width="90" height="2.5" rx="1.2" fill="#6a5020" opacity=".5"></rect><rect x="70" y="76" width="62" height="2.5" rx="1.2" fill="#f0a030" opacity=".6"></rect><rect x="70" y="86" width="90" height="2.5" rx="1.2" fill="#6a5020" opacity=".5"></rect><rect x="70" y="86" width="48" height="2.5" rx="1.2" fill="#f0a030" opacity=".55"></rect><rect x="70" y="96" width="90" height="2.5" rx="1.2" fill="#6a5020" opacity=".5"></rect><rect x="70" y="96" width="70" height="2.5" rx="1.2" fill="#f0a030" opacity=".62"></rect><rect x="70" y="106" width="90" height="2.5" rx="1.2" fill="#6a5020" opacity=".5"></rect><rect x="70" y="106" width="28" height="2.5" rx="1.2" fill="#f0a030" opacity=".4"></rect><path d="M148 112 Q152 104 156 118" fill="none" stroke="#c8a040" stroke-width="4" stroke-linecap="round"></path><rect x="153" y="116" width="4" height="6" rx="1" fill="#888"></rect><rect x="120" y="42" width="26" height="20" rx="3" fill="none" stroke="#e8394a" stroke-width="1.5" opacity=".7" transform="rotate(-8 120 42)"></rect><text x="133" y="55" font-size="7" fill="#e8394a" text-anchor="middle" opacity=".7" transform="rotate(-8 133 55)" font-weight="bold">LOG</text><circle cx="92" cy="140" r="4" fill="#f0a030"></circle><text x="100" y="144" font-size="8" fill="#f0a030" font-family="monospace">FIELD LOG</text><animateTransform attributeName="transform" type="translate" values="0,0;0,-1;0,0" dur="5s" repeatCount="indefinite"></animateTransform></svg>
-        <span class="card-badge-status badge-pending">NO DATA</span>
+        <span class="card-badge-status badge-ok">ACTIVE</span>
         <span class="card-badge-link badge-linked">● LOCAL</span>
       </div>
       <div class="card-glass-divider"></div>
       <div class="card-info">
-        <div class="card-name"><div class="card-name-dot dot-none"></div>LOG Tracker</div>
+        <div class="card-name"><div class="card-name-dot dot-ok"></div>LOG Tracker</div>
         <div class="card-stats">
-          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val na">—</div></div>
-          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val na" style="font-size:10px;padding-top:2px">—</div></div>
+          <div class="cs-item"><div class="cs-label">Inspections</div><div class="cs-val ok">1</div></div>
+          <div class="cs-item"><div class="cs-label">Last Check</div><div class="cs-val " style="font-size:10px;padding-top:2px">2026-06-14</div></div>
         </div>
       </div>
       <div class="card-footer">
-        <div class="card-footer-person">👤 —</div>
-        <div class="comp-bar-track"><div class="comp-bar-fill na" style="width:0%"></div></div>
-        <div class="card-footer-pct">—</div>
+        <div class="card-footer-person">👤 Ahmed Abu Jami</div>
+        <div class="comp-bar-track"><div class="comp-bar-fill ok" style="width:100%"></div></div>
+        <div class="card-footer-pct">100%</div>
       </div>
       <div class="card-hover-actions">
         <div class="cha-grid">
@@ -2145,7 +2189,7 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
           <div class="final-icon">📋</div>
           <div>
             <div class="final-title">Management Report — All Trackers</div>
-            <div class="final-sub" id="finalSubText">Clickable tracker cards + visual analytics · 13 trackers</div>
+            <div class="final-sub" id="finalSubText">Clickable tracker cards + visual analytics · 14 trackers</div>
           </div>
         </div>
         <div class="final-arrow">→</div>
@@ -2154,8 +2198,8 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
 
     <div class="footer">
       <div>
-        <div class="footer-text" id="footerText">C-TRACKER · Central Tracker Dashboard · v5 · 13 trackers</div>
-        <div id="savedAt" style="font-family:var(--font-mono);font-size:10px;color:var(--green);margin-top:3px">☁ Cloud saved at 16:36:40</div>
+        <div class="footer-text" id="footerText">C-TRACKER · Central Tracker Dashboard · v5 · 14 trackers</div>
+        <div id="savedAt" style="font-family:var(--font-mono);font-size:10px;color:var(--green);margin-top:3px">☁ Cloud saved at 12:10:52</div>
       </div>
       <div class="footer-links">
         <button class="footer-link" onclick="saveFile()">↓ Save File</button>
@@ -2172,777 +2216,300 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
   <div class="modal"><div class="modal-head"><div class="modal-head-left"><span id="statusIcon"></span><span class="modal-title" id="statusTitle">Status</span></div><button class="modal-close" onclick="closeModal('statusOverlay')">✕</button></div><div class="modal-body" id="statusBody"></div><div class="modal-foot"><button class="btn" onclick="closeModal('statusOverlay')">Close</button></div></div>
 </div>
 <div class="overlay" id="reportOverlay">
-  <div class="modal wide"><div class="modal-head"><div class="modal-head-left"><span id="reportIcon">🧯</span><span class="modal-title" id="reportTitle">Fire Extinguisher Tracker — Inspection Report</span></div><button class="modal-close" onclick="closeModal('reportOverlay')">✕</button></div><div class="modal-body" id="reportBody">
-    <!-- ═══ CINEMATIC BANNER ═══════════════════════════════════════ -->
-    <div class="sr-banner">
-      <div class="sr-banner-bg"><svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><ellipse cx="110" cy="100" rx="85" ry="60" fill="#cc220014"></ellipse><rect x="88" y="44" width="44" height="90" rx="22" fill="#cc2200"></rect><rect x="88" y="44" width="44" height="90" rx="22" fill="none" stroke="#ff6633" stroke-width="1.2" opacity=".6"></rect><rect x="93" y="28" width="34" height="20" rx="7" fill="#bb1a00" stroke="#ff4400" stroke-width="1"></rect><rect x="84" y="22" width="52" height="9" rx="4" fill="#999" stroke="#bbb" stroke-width="1"></rect><rect x="102" y="14" width="16" height="12" rx="3" fill="#777"></rect><circle cx="110" cy="72" r="10" fill="#1a0500" stroke="#ff6633" stroke-width="1.5"></circle><circle cx="110" cy="72" r="6" fill="#0f0300"></circle><line x1="110" y1="72" x2="113" y2="68" stroke="#2dd17a" stroke-width="1.5" stroke-linecap="round"></line><rect x="88" y="92" width="44" height="20" rx="3" fill="#aa1a00" opacity=".8"></rect><text x="110" y="105" font-size="8" fill="#ffaa88" font-family="monospace" text-anchor="middle" font-weight="bold">FIRE EXT</text><path d="M132 62 Q155 60 160 72 Q164 82 155 86" fill="none" stroke="#555" stroke-width="5" stroke-linecap="round"></path><path d="M132 62 Q155 60 160 72 Q164 82 155 86" fill="none" stroke="#777" stroke-width="2" stroke-linecap="round"></path><rect x="149" y="82" width="12" height="7" rx="3" fill="#555"></rect><rect x="90" y="128" width="40" height="7" rx="3" fill="#881500"></rect><circle cx="96" cy="146" r="4" fill="#2dd17a"></circle><text x="104" y="150" font-size="8" fill="#2dd17a" font-family="monospace">CHARGED</text><animateTransform attributeName="transform" type="translate" values="0,0;0,-1;0,0" dur="3.5s" repeatCount="indefinite"></animateTransform></svg></div>
-      <div class="sr-banner-gradient"></div>
-      <div class="sr-banner-texture"></div>
-      <div class="sr-banner-inner">
-        <div class="sr-banner-icon"><svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><ellipse cx="110" cy="100" rx="85" ry="60" fill="#cc220014"></ellipse><rect x="88" y="44" width="44" height="90" rx="22" fill="#cc2200"></rect><rect x="88" y="44" width="44" height="90" rx="22" fill="none" stroke="#ff6633" stroke-width="1.2" opacity=".6"></rect><rect x="93" y="28" width="34" height="20" rx="7" fill="#bb1a00" stroke="#ff4400" stroke-width="1"></rect><rect x="84" y="22" width="52" height="9" rx="4" fill="#999" stroke="#bbb" stroke-width="1"></rect><rect x="102" y="14" width="16" height="12" rx="3" fill="#777"></rect><circle cx="110" cy="72" r="10" fill="#1a0500" stroke="#ff6633" stroke-width="1.5"></circle><circle cx="110" cy="72" r="6" fill="#0f0300"></circle><line x1="110" y1="72" x2="113" y2="68" stroke="#2dd17a" stroke-width="1.5" stroke-linecap="round"></line><rect x="88" y="92" width="44" height="20" rx="3" fill="#aa1a00" opacity=".8"></rect><text x="110" y="105" font-size="8" fill="#ffaa88" font-family="monospace" text-anchor="middle" font-weight="bold">FIRE EXT</text><path d="M132 62 Q155 60 160 72 Q164 82 155 86" fill="none" stroke="#555" stroke-width="5" stroke-linecap="round"></path><path d="M132 62 Q155 60 160 72 Q164 82 155 86" fill="none" stroke="#777" stroke-width="2" stroke-linecap="round"></path><rect x="149" y="82" width="12" height="7" rx="3" fill="#555"></rect><rect x="90" y="128" width="40" height="7" rx="3" fill="#881500"></rect><circle cx="96" cy="146" r="4" fill="#2dd17a"></circle><text x="104" y="150" font-size="8" fill="#2dd17a" font-family="monospace">CHARGED</text><animateTransform attributeName="transform" type="translate" values="0,0;0,-1;0,0" dur="3.5s" repeatCount="indefinite"></animateTransform></svg></div>
-        <div class="sr-banner-text">
-          <div class="sr-banner-tag">C-TRACKER · Inspection Report</div>
-          <div class="sr-banner-title">Fire Extinguisher Tracker</div>
-          <div class="sr-banner-meta">
-            <span class="sr-banner-meta-item"><span class="sr-banner-meta-icon">📅</span>5/4/2026 13:48:12</span>
-            <span class="sr-banner-meta-item"><span class="sr-banner-meta-icon">👤</span>Unknown</span>
-            
-            <span class="sr-banner-meta-item"><span class="sr-banner-meta-icon">📋</span>Submission 32 of 32</span>
-          </div>
-          <div class="sr-banner-pills">
-            <span class="sr-banner-pill sbp-bad">🚨 Critical — Immediate</span>
-            <span class="sr-banner-pill sbp-blue">📊 14 Items Checked</span>
-            
-            
-            <span class="sr-banner-pill sbp-neutral" style="color:var(--red)">▼ 98% below avg</span>
+  <div class="modal wide"><div class="modal-head"><div class="modal-head-left"><span id="reportIcon">🚨</span><span class="modal-title" id="reportTitle">First Aid — Inspection Report</span></div><button class="modal-close" onclick="closeModal('reportOverlay')">✕</button></div><div class="modal-body" id="reportBody"><div class="vfr-wrap" id="vfr_trk_1778310836789_3">
+
+    <!-- HERO BANNER -->
+    <div class="vfr-hero">
+      <div class="vfr-hero-bg"><svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="160" fill="none"></rect><ellipse cx="110" cy="95" rx="100" ry="72" fill="#cc1a2810"></ellipse><rect x="36" y="38" width="148" height="104" rx="16" fill="#cc1a28"></rect><rect x="36" y="38" width="148" height="30" rx="16" fill="#e8394a" opacity=".5"></rect><rect x="36" y="54" width="148" height="14" fill="#e8394a" opacity=".3"></rect><rect x="36" y="38" width="148" height="104" rx="16" fill="none" stroke="#ff6070" stroke-width="1.5" opacity=".5"></rect><rect x="83" y="24" width="54" height="18" rx="9" fill="#1a0305" stroke="#cc1a28" stroke-width="1.5"></rect><rect x="91" y="29" width="38" height="8" rx="4" fill="#2a0810"></rect><rect x="98" y="76" width="24" height="8" rx="3" fill="white" opacity=".95"></rect><rect x="106" y="68" width="8" height="24" rx="3" fill="white" opacity=".95"></rect><rect x="44" y="110" width="18" height="10" rx="3" fill="#bbb"></rect><rect x="47" y="107" width="12" height="5" rx="2" fill="#999"></rect><rect x="158" y="110" width="18" height="10" rx="3" fill="#bbb"></rect><rect x="161" y="107" width="12" height="5" rx="2" fill="#999"></rect><circle cx="92" cy="130" r="4" fill="#2dd17a"></circle><text x="100" y="134" font-size="8" fill="#2dd17a" font-family="monospace">READY</text><animateTransform attributeName="transform" type="translate" values="0,0;0,-1;0,0" dur="4s" repeatCount="indefinite"></animateTransform></svg></div>
+      <div class="vfr-hero-grid"></div>
+      <div class="vfr-hero-fade"></div>
+      <div class="vfr-hero-inner">
+        <div class="vfr-hero-icon">🚨</div>
+        <div class="vfr-hero-text">
+          <div class="vfr-hero-tag">C-TRACKER · Inspection Report</div>
+          <div class="vfr-hero-title">First Aid</div>
+          <div class="vfr-hero-meta">
+            <span>📅 Sun, 14 Jun 2026</span>
+            <span>11:26</span>
+            <span>👤 Ahmed Abu jami</span>
+            <span>📍 Guards Desk</span>
+            <span>📋 4 / 4</span>
           </div>
         </div>
-        <div class="sr-banner-score">
-          <svg class="sr-score-ring" width="90" height="90" viewBox="0 0 90 90">
-            <circle class="sr-score-ring-track" cx="45" cy="45" r="36"></circle>
-            <circle class="sr-score-ring-fill bad" cx="45" cy="45" r="36" stroke-dasharray="0.0 226.2" stroke-dashoffset="56.5" transform="rotate(-90 45 45)" style="transform-origin:center;transform:rotate(-90deg)"></circle>
-            <text class="sr-score-center-val" x="45" y="43" fill="#e8394a">0%</text>
-            <text class="sr-score-center-label" x="45" y="56" fill="rgba(255,255,255,0.35)">SCORE</text>
+        <!-- score ring -->
+        <div class="vfr-hero-ring">
+          <svg width="84" height="84" viewBox="0 0 84 84">
+            <circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="6"></circle>
+            <circle cx="42" cy="42" r="36" fill="none" stroke="#2dd17a" stroke-width="6" stroke-dasharray="226.2 226.2" stroke-dashoffset="56.5" stroke-linecap="round" transform="rotate(-90 42 42)" style="filter:drop-shadow(0 0 6px #2dd17a88)"></circle>
+            <text x="42" y="40" text-anchor="middle" dominant-baseline="middle" font-family="JetBrains Mono" font-size="14" fill="#2dd17a" font-weight="800">100%</text>
+            <text x="42" y="54" text-anchor="middle" dominant-baseline="middle" font-family="JetBrains Mono" font-size="7" fill="rgba(255,255,255,.28)" letter-spacing="1">SCORE</text>
           </svg>
         </div>
       </div>
     </div>
 
-    <!-- ═══ TAB BAR ═══════════════════════════════════════════════ -->
-    <div class="sr-tabs-bar">
-      <button class="sr-tab active" onclick="srSwitchTab(this,'sr-tab-overview')">📊 Overview</button>
-      <button class="sr-tab" onclick="srSwitchTab(this,'sr-tab-latest')">🔍 Inspection Results</button>
-      <button class="sr-tab" onclick="srSwitchTab(this,'sr-tab-issues')">
-        ⚠ Issues
-        
-      </button>
-      <button class="sr-tab" onclick="srSwitchTab(this,'sr-tab-charts');srDrawCharts()">📈 Charts</button>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TAB: OVERVIEW                                               -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <div id="sr-tab-overview" class="sr-tab-panel active">
-
-      <!-- Submission Navigator -->
-      <div class="sr-section" style="margin-bottom:14px">
-        <div class="sr-sub-nav">
-          <span class="sr-sub-label">Viewing</span>
-          <select class="sr-sub-sel" id="srSubSel" onchange="srGoTo(parseInt(this.value))">
-            <option value="0">#1 · 4/13/2026 · Unknown</option><option value="1">#2 · 4/13/2026 · Unknown</option><option value="2">#3 · 4/13/2026 · Unknown</option><option value="3">#4 · 4/13/2026 · Unknown</option><option value="4">#5 · 4/13/2026 · Unknown</option><option value="5">#6 · 4/13/2026 · Unknown</option><option value="6">#7 · 4/13/2026 · Unknown</option><option value="7">#8 · 4/13/2026 · Unknown</option><option value="8">#9 · 4/13/2026 · Unknown</option><option value="9">#10 · 4/13/2026 · Unknown</option><option value="10">#11 · 4/13/2026 · Unknown</option><option value="11">#12 · 4/13/2026 · Unknown</option><option value="12">#13 · 4/13/2026 · Unknown</option><option value="13">#14 · 4/13/2026 · Unknown</option><option value="14">#15 · 4/13/2026 · Unknown</option><option value="15">#16 · 4/13/2026 · Unknown</option><option value="16">#17 · 4/13/2026 · Unknown</option><option value="17">#18 · 5/3/2026 · Unknown</option><option value="18">#19 · 5/3/2026 · Unknown</option><option value="19">#20 · 5/3/2026 · Unknown</option><option value="20">#21 · 5/3/2026 · Unknown</option><option value="21">#22 · 5/3/2026 · Unknown</option><option value="22">#23 · 5/3/2026 · Unknown</option><option value="23">#24 · 5/3/2026 · Unknown</option><option value="24">#25 · 5/3/2026 · Unknown</option><option value="25">#26 · 5/4/2026 · Unknown</option><option value="26">#27 · 5/4/2026 · Unknown</option><option value="27">#28 · 5/4/2026 · Unknown</option><option value="28">#29 · 5/4/2026 · Unknown</option><option value="29">#30 · 5/4/2026 · Unknown</option><option value="30">#31 · 5/4/2026 · Unknown</option><option value="31" selected="">#32 · 5/4/2026 · Unknown</option>
-          </select>
-          <button class="sr-sub-btn" onclick="srPrev()" title="Previous submission">‹</button>
-          <button class="sr-sub-btn" onclick="srNext()" title="Next submission">›</button>
-          <button class="sr-hist-btn" onclick="srToggleHist()">🕐 All Submissions (32)</button>
-        </div>
-        <div class="sr-hist-drawer" id="srHistDrawer"><div class="sr-hist-row active" onclick="srPickHist(31)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
+    <!-- SUBMISSION NAVIGATOR -->
+    <div class="sr-section" style="margin-bottom:13px">
+      <div class="sr-sub-nav">
+        <span class="sr-sub-label">Submission</span>
+        <select class="sr-sub-sel" id="srSubSel" onchange="srGoTo(parseInt(this.value))"><option value="0">#1 · 6/14/2026 · Ahmed Abu jami</option><option value="1">#2 · 6/14/2026 · Ahmed Abu jami</option><option value="2">#3 · 6/14/2026 · Ahmed Abu Jami</option><option value="3" selected="">#4 · 6/14/2026 · Ahmed Abu jami</option></select>
+        <button class="sr-sub-btn" onclick="srPrev()">‹</button>
+        <button class="sr-sub-btn" onclick="srNext()">›</button>
+        <button class="sr-hist-btn" onclick="srToggleHist()">🕐 History (4)</button>
+      </div>
+      <div class="sr-hist-drawer" id="srHistDrawer"><div class="sr-hist-row active" onclick="srPickHist(3)">
+      <div class="sr-hist-dot" style="background:var(--green)"></div>
       <div style="flex:1">
-        <div class="sr-hist-date">5/4/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
+        <div class="sr-hist-date">6/14/2026</div>
+        <div class="sr-hist-by">👤 Ahmed Abu jami</div>
       </div>
       <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(30)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">5/4/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(29)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">5/4/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(28)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">5/4/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(27)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">5/4/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(26)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">5/4/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(25)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">5/4/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(24)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">5/3/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(23)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">5/3/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(22)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">5/3/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(21)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">5/3/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(20)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">5/3/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(19)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">5/3/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(18)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">5/3/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(17)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">5/3/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(16)">
-      <div class="sr-hist-dot" style="background:var(--amber);box-shadow:0 0 6px var(--amber)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--amber)">50%</div>
-        <div class="sr-hist-issues">1 issue</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(15)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(14)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(13)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(12)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(11)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(10)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(9)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(8)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(7)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(6)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(5)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(4)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
-      </div>
-    </div><div class="sr-hist-row " onclick="srPickHist(3)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
-      <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
+        <div class="sr-hist-comp" style="color:var(--green)">89%</div>
+        <div class="sr-hist-issues">2 missing</div>
       </div>
     </div><div class="sr-hist-row " onclick="srPickHist(2)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
+      <div class="sr-hist-dot" style="background:var(--green)"></div>
       <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
+        <div class="sr-hist-date">6/14/2026</div>
+        <div class="sr-hist-by">👤 Ahmed Abu Jami</div>
       </div>
       <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
+        <div class="sr-hist-comp" style="color:var(--green)">89%</div>
+        <div class="sr-hist-issues">2 missing</div>
       </div>
     </div><div class="sr-hist-row " onclick="srPickHist(1)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
+      <div class="sr-hist-dot" style="background:var(--green)"></div>
       <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
+        <div class="sr-hist-date">6/14/2026</div>
+        <div class="sr-hist-by">👤 Ahmed Abu jami</div>
       </div>
       <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
+        <div class="sr-hist-comp" style="color:var(--green)">89%</div>
+        <div class="sr-hist-issues">2 missing</div>
       </div>
     </div><div class="sr-hist-row " onclick="srPickHist(0)">
-      <div class="sr-hist-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)88"></div>
+      <div class="sr-hist-dot" style="background:var(--green)"></div>
       <div style="flex:1">
-        <div class="sr-hist-date">4/13/2026</div>
-        <div class="sr-hist-by">👤 Unknown</div>
+        <div class="sr-hist-date">6/14/2026</div>
+        <div class="sr-hist-by">👤 Ahmed Abu jami</div>
       </div>
       <div style="text-align:right">
-        <div class="sr-hist-comp" style="color:var(--green)">100%</div>
-        <div class="sr-hist-issues">✓ clean</div>
+        <div class="sr-hist-comp" style="color:var(--green)">89%</div>
+        <div class="sr-hist-issues">2 missing</div>
       </div>
     </div></div>
-      </div>
-
-      <!-- Section 1: Executive Summary -->
-      <div class="sr-section">
-        <div class="sr-section-head">
-          <div class="sr-section-num sn-blue">1</div>
-          <div class="sr-section-title-text">
-            <div class="sr-section-title-main">Executive Summary</div>
-            <div class="sr-section-title-sub">Compliance snapshot for this inspection — 5/4/2026 13:48:12</div>
-          </div>
-        </div>
-        <div class="sr-section-body">
-          <div class="sr-kpi-grid">
-            <div class="sr-kpi kpi-blue">
-              <span class="sr-kpi-icon">📋</span>
-              <div class="sr-kpi-val blue">14</div>
-              <div class="sr-kpi-label">Items Checked</div>
-            </div>
-            <div class="sr-kpi kpi-green">
-              <span class="sr-kpi-icon">✅</span>
-              <div class="sr-kpi-val green">0</div>
-              <div class="sr-kpi-label">Passed</div>
-            </div>
-            <div class="sr-kpi kpi-red">
-              <span class="sr-kpi-icon">❌</span>
-              <div class="sr-kpi-val red">0</div>
-              <div class="sr-kpi-label">Failed</div>
-            </div>
-            <div class="sr-kpi kpi-amber">
-              <span class="sr-kpi-icon">◎</span>
-              <div class="sr-kpi-val amber">0</div>
-              <div class="sr-kpi-label">Observations</div>
-            </div>
-          </div>
-          <div class="sr-comp-row">
-            <span class="sr-comp-label">Compliance Score</span>
-            <div class="sr-comp-track">
-              <div class="sr-comp-fill bad" id="srCompFill" data-pct="0" style="width:0%"></div>
-            </div>
-            <span class="sr-comp-pct bad">0%</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:10px;font-family:var(--font-mono);font-size:10px;color:var(--muted)">
-            <span>Historical average: <strong style="color:var(--text-dim)">98%</strong></span>
-            <span style="color:var(--red);font-weight:500">▼ 98% below avg</span>
-            <span style="margin-left:auto">32 total inspections on record</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Auditor's Conclusion -->
-      <div class="sr-section">
-        <div class="sr-section-head">
-          <div class="sr-section-num sn-red">4</div>
-          <div class="sr-section-title-text">
-            <div class="sr-section-title-main">Auditor's Conclusion</div>
-            <div class="sr-section-title-sub">Automated assessment based on form responses</div>
-          </div>
-        </div>
-        <div class="sr-section-body">
-          <div class="sr-conclusion">This inspection shows <strong style="color:var(--red)">Critical Non-Compliance</strong>. 0 failure(s) identified — immediate investigation and rectification is required. Escalate to supervisor.</div>
-          <div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <span class="sr-verdict sv-bad">🚨 Critical — Immediate</span>
-            <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">
-              0 passed · 0 failed · 0 observations · 14 pending
-            </span>
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLScWbDMLXPm3lwQHoFDXYppZ5xGh143SNJPNHJZ11n1ZjEwLMw/viewform?usp=dialog" target="_blank" style="margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--blue);text-decoration:none;background:var(--blue-bg);border:1px solid var(--blue-dim);padding:5px 12px;border-radius:6px;">▶ New Inspection →</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent Submissions -->
-      <div class="sr-section">
-        <div class="sr-section-head">
-          <div class="sr-section-num sn-blue" style="font-size:13px">📅</div>
-          <div class="sr-section-title-text">
-            <div class="sr-section-title-main">Recent Submission History</div>
-            <div class="sr-section-title-sub">32 total inspections · Click any row to view that submission</div>
-          </div>
-        </div>
-        <div class="sr-section-body" style="padding:0">
-          <div class="sr-sub-row-v2" onclick="srGoTo(31)" style="background:rgba(45,209,122,0.06);border-left:3px solid var(--green)">
-              <div class="sr-sub-avatar-v2" style="background:linear-gradient(135deg,var(--green-bg),var(--surface3));border-color:var(--green-dim)">
-                U
-              </div>
-              <div class="sr-sub-info-v2">
-                <div class="sr-sub-name-v2">Unknown</div>
-                <div class="sr-sub-date-v2">5/4/2026 13:48:12</div>
-              </div>
-              <div style="flex-shrink:0;text-align:right">
-                <div class="sr-sub-comp-v2" style="color:var(--green)">100%</div>
-                <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:2px">
-                  <span style="color:var(--green)">✓ clean</span>
-                </div>
-              </div>
-            </div><div class="sr-sub-row-v2" onclick="srGoTo(30)" style="">
-              <div class="sr-sub-avatar-v2" style="background:linear-gradient(135deg,var(--green-bg),var(--surface3));border-color:var(--green-dim)">
-                U
-              </div>
-              <div class="sr-sub-info-v2">
-                <div class="sr-sub-name-v2">Unknown</div>
-                <div class="sr-sub-date-v2">5/4/2026 13:31:22</div>
-              </div>
-              <div style="flex-shrink:0;text-align:right">
-                <div class="sr-sub-comp-v2" style="color:var(--green)">100%</div>
-                <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:2px">
-                  <span style="color:var(--green)">✓ clean</span>
-                </div>
-              </div>
-            </div><div class="sr-sub-row-v2" onclick="srGoTo(29)" style="">
-              <div class="sr-sub-avatar-v2" style="background:linear-gradient(135deg,var(--green-bg),var(--surface3));border-color:var(--green-dim)">
-                U
-              </div>
-              <div class="sr-sub-info-v2">
-                <div class="sr-sub-name-v2">Unknown</div>
-                <div class="sr-sub-date-v2">5/4/2026 13:30:31</div>
-              </div>
-              <div style="flex-shrink:0;text-align:right">
-                <div class="sr-sub-comp-v2" style="color:var(--green)">100%</div>
-                <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:2px">
-                  <span style="color:var(--green)">✓ clean</span>
-                </div>
-              </div>
-            </div><div class="sr-sub-row-v2" onclick="srGoTo(28)" style="">
-              <div class="sr-sub-avatar-v2" style="background:linear-gradient(135deg,var(--green-bg),var(--surface3));border-color:var(--green-dim)">
-                U
-              </div>
-              <div class="sr-sub-info-v2">
-                <div class="sr-sub-name-v2">Unknown</div>
-                <div class="sr-sub-date-v2">5/4/2026 13:29:54</div>
-              </div>
-              <div style="flex-shrink:0;text-align:right">
-                <div class="sr-sub-comp-v2" style="color:var(--green)">100%</div>
-                <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:2px">
-                  <span style="color:var(--green)">✓ clean</span>
-                </div>
-              </div>
-            </div><div class="sr-sub-row-v2" onclick="srGoTo(27)" style="">
-              <div class="sr-sub-avatar-v2" style="background:linear-gradient(135deg,var(--green-bg),var(--surface3));border-color:var(--green-dim)">
-                U
-              </div>
-              <div class="sr-sub-info-v2">
-                <div class="sr-sub-name-v2">Unknown</div>
-                <div class="sr-sub-date-v2">5/4/2026 13:28:41</div>
-              </div>
-              <div style="flex-shrink:0;text-align:right">
-                <div class="sr-sub-comp-v2" style="color:var(--green)">100%</div>
-                <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:2px">
-                  <span style="color:var(--green)">✓ clean</span>
-                </div>
-              </div>
-            </div><div class="sr-sub-row-v2" onclick="srGoTo(26)" style="">
-              <div class="sr-sub-avatar-v2" style="background:linear-gradient(135deg,var(--green-bg),var(--surface3));border-color:var(--green-dim)">
-                U
-              </div>
-              <div class="sr-sub-info-v2">
-                <div class="sr-sub-name-v2">Unknown</div>
-                <div class="sr-sub-date-v2">5/4/2026 13:27:57</div>
-              </div>
-              <div style="flex-shrink:0;text-align:right">
-                <div class="sr-sub-comp-v2" style="color:var(--green)">100%</div>
-                <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:2px">
-                  <span style="color:var(--green)">✓ clean</span>
-                </div>
-              </div>
-            </div><div class="sr-sub-row-v2" onclick="srGoTo(25)" style="">
-              <div class="sr-sub-avatar-v2" style="background:linear-gradient(135deg,var(--green-bg),var(--surface3));border-color:var(--green-dim)">
-                U
-              </div>
-              <div class="sr-sub-info-v2">
-                <div class="sr-sub-name-v2">Unknown</div>
-                <div class="sr-sub-date-v2">5/4/2026 13:26:55</div>
-              </div>
-              <div style="flex-shrink:0;text-align:right">
-                <div class="sr-sub-comp-v2" style="color:var(--green)">100%</div>
-                <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:2px">
-                  <span style="color:var(--green)">✓ clean</span>
-                </div>
-              </div>
-            </div><div class="sr-sub-row-v2" onclick="srGoTo(24)" style="">
-              <div class="sr-sub-avatar-v2" style="background:linear-gradient(135deg,var(--green-bg),var(--surface3));border-color:var(--green-dim)">
-                U
-              </div>
-              <div class="sr-sub-info-v2">
-                <div class="sr-sub-name-v2">Unknown</div>
-                <div class="sr-sub-date-v2">5/3/2026 15:53:40</div>
-              </div>
-              <div style="flex-shrink:0;text-align:right">
-                <div class="sr-sub-comp-v2" style="color:var(--green)">100%</div>
-                <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:2px">
-                  <span style="color:var(--green)">✓ clean</span>
-                </div>
-              </div>
-            </div>
-        </div>
-      </div>
-
-    </div><!-- end tab-overview -->
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TAB: LATEST RESULTS                                         -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <div id="sr-tab-latest" class="sr-tab-panel">
-      <div class="sr-section">
-        <div class="sr-section-head">
-          <div class="sr-section-num sn-green">2</div>
-          <div class="sr-section-title-text">
-            <div class="sr-section-title-main">Detailed Inspection Results</div>
-            <div class="sr-section-title-sub">Every form question mapped to a control point — 5/4/2026 13:48:12 · Unknown</div>
-          </div>
-          <div style="margin-left:auto;display:flex;gap:8px">
-            <span style="font-family:var(--font-mono);font-size:9px;background:rgba(45,209,122,0.1);color:var(--green);border:1px solid rgba(45,209,122,0.25);padding:3px 9px;border-radius:12px;font-weight:500">✅ 0 Pass</span>
-            
-          </div>
-        </div>
-        <div class="sr-section-body" style="padding-top:12px">
-          <div class="sr-key">
-            <div class="sr-key-item"><div class="sr-key-dot skd-pass"></div>Pass — Item present / condition met</div>
-            <div class="sr-key-item"><div class="sr-key-dot skd-obs"></div>Observation — Noted, monitor closely</div>
-            <div class="sr-key-item"><div class="sr-key-dot skd-fail"></div>Fail — Missing / non-compliant</div>
-            <div class="sr-key-item"><div class="sr-key-dot skd-pending"></div>Pending — Not yet assessed</div>
-            <div class="sr-key-item"><div class="sr-key-dot skd-na"></div>N/A — Not applicable</div>
-          </div>
-          <table class="sr-table">
-            <thead>
-              <tr>
-                <th style="width:36px">#</th>
-                <th>Control Point / Question</th>
-                <th>Status</th>
-                <th>Response / Finding</th>
-              </tr>
-            </thead>
-            <tbody><tr class="" style="animation:srPanelIn 0.2s ease 0s both">
-      <td class="sr-num">1</td>
-      <td class="sr-control">04/11/2026</td>
-      <td><span class="sr-status ss-pending">Pending</span></td>
-      <td><span class="sr-finding">5/4/2026</span></td>
-    </tr><tr class="" style="animation:srPanelIn 0.2s ease 0.02s both">
-      <td class="sr-num">2</td>
-      <td class="sr-control">PREMISES</td>
-      <td><span class="sr-status ss-pending">Pending</span></td>
-      <td><span class="sr-finding">DEB NUT/CONT WH</span></td>
-    </tr><tr class="" style="animation:srPanelIn 0.2s ease 0.04s both">
-      <td class="sr-num">3</td>
-      <td class="sr-control">Tag #</td>
-      <td><span class="sr-status ss-pending">Pending</span></td>
-      <td><span class="sr-finding">—</span></td>
-    </tr><tr class="" style="animation:srPanelIn 0.2s ease 0.06s both">
-      <td class="sr-num">4</td>
-      <td class="sr-control">Location</td>
-      <td><span class="sr-status ss-pending">Pending</span></td>
-      <td><span class="sr-finding">—</span></td>
-    </tr><tr class="" style="animation:srPanelIn 0.2s ease 0.08s both">
-      <td class="sr-num">5</td>
-      <td class="sr-control">If other - Specify</td>
-      <td><span class="sr-status ss-pending">Pending</span></td>
-      <td><span class="sr-finding">—</span></td>
-    </tr><tr class="" style="animation:srPanelIn 0.2s ease 0.1s both">
-      <td class="sr-num">6</td>
-      <td class="sr-control">Expiration Date</td>
-      <td><span class="sr-status ss-pending">Pending</span></td>
-      <td><span class="sr-finding">—</span></td>
-    </tr><tr class="" style="animation:srPanelIn 0.2s ease 0.12s both">
-      <td class="sr-num">7</td>
-      <td class="sr-control">Type</td>
-      <td><span class="sr-status ss-pending">Pending</span></td>
-      <td><span class="sr-finding">—</span></td>
-    </tr><tr class="" style="animation:srPanelIn 0.2s ease 0.14s both">
-      <td class="sr-num">8</td>
-      <td class="sr-control">Size</td>
-      <td><span class="sr-status ss-pending">Pending</span></td>
-      <td><span class="sr-finding">—</span></td>
-    </tr><tr class="" style="animation:srPanelIn 0.2s ease 0.16s both">
-      <td class="sr-num">9</td>
-      <td class="sr-control">Pressure Status</td>
-      <td><span class="sr-status ss-pending">Pending</span></td>
-      <td><span class="sr-finding">—</span></td>
-    </tr><tr class="" style="animation:srPanelIn 0.2s ease 0.18s both">
-      <td class="sr-num">10</td>
-      <td class="sr-control">Is the seal and/or pin intact?</td>
-      <td><span class="sr-status ss-pending">Pending</span></td>
-      <td><span class="sr-finding">—</span></td>
-    </tr><tr class="" style="animation:srPanelIn 0.2s ease 0.2s both">
-      <td class="sr-num">11</td>
-      <td class="sr-control">Is there any damage?</td>
-      <td><span class="sr-status ss-pending">Pending</span></td>
-      <td><span class="sr-finding">—</span></td>
-    </tr><tr class="" style="animation:srPanelIn 0.2s ease 0.22s both">
-      <td class="sr-num">12</td>
-      <td class="sr-control">Comments</td>
-      <td><span class="sr-status ss-pending">Pending</span></td>
-      <td><span class="sr-finding">—</span></td>
-    </tr><tr class="" style="animation:srPanelIn 0.2s ease 0.24s both">
-      <td class="sr-num">13</td>
-      <td class="sr-control">Tags</td>
-      <td><span class="sr-status ss-pending">Pending</span></td>
-      <td><span class="sr-finding">—</span></td>
-    </tr><tr class="" style="animation:srPanelIn 0.2s ease 0.26s both">
-      <td class="sr-num">14</td>
-      <td class="sr-control">Tags #</td>
-      <td><span class="sr-status ss-pending">Pending</span></td>
-      <td><span class="sr-finding">—</span></td>
-    </tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div><!-- end tab-latest -->
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TAB: ISSUES TRACKER                                         -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <div id="sr-tab-issues" class="sr-tab-panel">
-
-      <!-- Action Plan for current submission -->
-      <div class="sr-section">
-        <div class="sr-section-head">
-          <div class="sr-section-num sn-amber">3</div>
-          <div class="sr-section-title-text">
-            <div class="sr-section-title-main">Action &amp; Rectification Plan</div>
-            <div class="sr-section-title-sub">Issues from this submission requiring follow-up — 5/4/2026 13:48:12</div>
-          </div>
-          
-        </div>
-        <div class="sr-section-body">
-          <div class="sr-all-pass">
-                <span style="font-size:22px">🎉</span>
-                <div>
-                  <div style="font-weight:500;margin-bottom:3px">All items passed this inspection</div>
-                  <div style="font-size:10px;color:var(--green);opacity:0.75">No corrective actions required for 5/4/2026 13:48:12</div>
-                </div>
-               </div>
-        </div>
-      </div>
-
-      <!-- Recurring Issues across all submissions -->
-      <div class="sr-section">
-        <div class="sr-section-head">
-          <div class="sr-section-num sn-red" style="font-size:13px">📉</div>
-          <div class="sr-section-title-text">
-            <div class="sr-section-title-main">Recurring Issues — All-Time Analysis</div>
-            <div class="sr-section-title-sub">Items that have failed or been flagged across all 32 submissions</div>
-          </div>
-          <span style="font-family:var(--font-mono);font-size:9px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-dim);padding:3px 10px;border-radius:var(--acf-radius-md, 8px);font-weight:500;margin-left:auto">1 RECURRING</span>
-        </div>
-        <div class="sr-section-body">
-          <div class="sr-freq-row" style="animation-delay:0s">
-                  <div class="sr-freq-rank">1</div>
-                  <div class="sr-freq-label" title="Is there any damage?">Is there any damage?</div>
-                  <div class="sr-freq-bar-wrap">
-                    <div class="sr-freq-bar" style="width:100%;background:linear-gradient(90deg,#0a2a5a,var(--blue))"></div>
-                  </div>
-                  <div class="sr-freq-count">
-                    1×
-                    <span style="color:var(--blue);font-size:9px;display:block;font-weight:500">Occasional (3%)</span>
-                  </div>
-                </div>
-        </div>
-      </div>
-
-    </div><!-- end tab-issues -->
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TAB: CHARTS                                                  -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <div id="sr-tab-charts" class="sr-tab-panel">
-      <div class="vis-grid">
-        <div class="vis-card full">
-          <div class="vis-card-title">📈 Compliance Trend Over Time</div>
-          <div class="chart-wrap"><canvas id="sr-chart-timeline"></canvas></div>
-        </div>
-        
-        <div class="vis-card">
-          <div class="vis-card-title">🔴 Top Recurring Issues</div>
-          <div class="chart-wrap"><canvas id="sr-chart-missing"></canvas></div>
-        </div>
-        <div class="vis-card ">
-          <div class="vis-card-title">🍩 Response Distribution</div>
-          <div class="chart-wrap"><canvas id="sr-chart-donut"></canvas></div>
-        </div>
-      </div>
-    </div><!-- end tab-charts -->
-
-    <!-- Report Footer -->
-    <div class="sr-footer">
-      <span>C-TRACKER · Fire Extinguisher Tracker · 32 inspections on record</span>
-      <span>Report generated: 6/4/2026, 4:36:45 PM</span>
     </div>
-  </div><div class="modal-foot"><button class="btn" onclick="closeModal('reportOverlay')">Close</button></div></div>
+
+    <!-- META CARDS -->
+    <div class="vfr-meta-row">
+      <div class="vfr-mc vfr-mc-red">
+        <div class="vfr-mc-label">📅 Date &amp; Time</div>
+        <div class="vfr-mc-value-mono">Sun, 14 Jun 2026</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:2px">11:26</div>
+      </div>
+      <div class="vfr-mc vfr-mc-blue">
+        <div class="vfr-mc-label">👤 Inspector</div>
+        <div class="vfr-mc-value">Ahmed Abu jami</div>
+      </div>
+      
+      <div class="vfr-mc vfr-mc-amber" style="grid-column:1/-1">
+        <div class="vfr-mc-label">📍 Location / Site</div>
+        <div class="vfr-mc-value">Guards Desk</div>
+      </div>
+    </div>
+
+    <!-- SCORE STRIP -->
+    <div class="vfr-score-strip">
+      <span class="vfr-ss-label">Compliance Score</span>
+      <div class="vfr-ss-track">
+        <div class="vfr-ss-fill vfr-ss-ok" id="vfrFill_vfr_trk_1778310836789_3" data-pct="100" style="width: 100%;"></div>
+      </div>
+      <span class="vfr-ss-pct" style="color:#2dd17a">100%</span>
+    </div>
+
+    <!-- BADGES -->
+    <div class="vfr-badges">
+      <span class="vfr-badge vfr-badge-green">✓ 16 answered</span>
+      <span class="vfr-badge vfr-badge-red">✗ 0 missing</span>
+      <span style="margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--green);font-weight:700">▲ 11% above avg</span>
+    </div>
+
+    <!-- ── GREEN: ANSWERED FIRST ─────────────────────────────── -->
+    <div class="vfr-sec-head vfr-sh-green">
+      <span style="font-size:16px">✅</span>
+      <span class="vfr-sec-title vfr-sec-title-green">Answered</span>
+      <span class="vfr-sec-count vfr-sc-green">16 items</span>
+    </div>
+    <div class="vfr-list vfr-list-green"><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.022s both">
+      <span class="vfr-qnum">Q1</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Date</div>
+        <span class="vfr-item-a vfr-ans-green">✓ 6/14/2026</span>
+      </div>
+    </div><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.044s both">
+      <span class="vfr-qnum">Q2</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Done By</div>
+        <span class="vfr-item-a vfr-ans-green">✓ Ahmed Abu jami</span>
+      </div>
+    </div><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.066s both">
+      <span class="vfr-qnum">Q3</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Column 4</div>
+        <span class="vfr-item-a vfr-ans-green">✓ DeB Office</span>
+      </div>
+    </div><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.088s both">
+      <span class="vfr-qnum">Q4</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Locations </div>
+        <span class="vfr-item-a vfr-ans-green">✓ Guards Desk</span>
+      </div>
+    </div><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.154s both">
+      <span class="vfr-qnum">Q7</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Check List  [Pocket Mask-CPR]</div>
+        <span class="vfr-item-a vfr-ans-green">✓ Available</span>
+      </div>
+    </div><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.176s both">
+      <span class="vfr-qnum">Q8</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Check List  [Guedel Airway Size 3-4]</div>
+        <span class="vfr-item-a vfr-ans-green">✓ Available</span>
+      </div>
+    </div><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.19799999999999998s both">
+      <span class="vfr-qnum">Q9</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Check List  [Emergency Bandages 4 inches]</div>
+        <span class="vfr-item-a vfr-ans-green">✓ Available</span>
+      </div>
+    </div><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.21999999999999997s both">
+      <span class="vfr-qnum">Q10</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Check List  [Vented Chest Seal]</div>
+        <span class="vfr-item-a vfr-ans-green">✓ Available</span>
+      </div>
+    </div><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.242s both">
+      <span class="vfr-qnum">Q11</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Check List  [forceps]</div>
+        <span class="vfr-item-a vfr-ans-green">✓ Available</span>
+      </div>
+    </div><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.264s both">
+      <span class="vfr-qnum">Q12</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Check List  [CAT Tourniquet]</div>
+        <span class="vfr-item-a vfr-ans-green">✓ Available</span>
+      </div>
+    </div><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.286s both">
+      <span class="vfr-qnum">Q13</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Check List  [CARE SOLUTION]</div>
+        <span class="vfr-item-a vfr-ans-green">✓ Available</span>
+      </div>
+    </div><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.308s both">
+      <span class="vfr-qnum">Q14</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Check List  [Gauze banadag sterile 4.5"x4.1 yaerd]</div>
+        <span class="vfr-item-a vfr-ans-green">✓ Available</span>
+      </div>
+    </div><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.32999999999999996s both">
+      <span class="vfr-qnum">Q15</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Check List  [Vaseline Compress (10x10cm)]</div>
+        <span class="vfr-item-a vfr-ans-green">✓ Available</span>
+      </div>
+    </div><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.352s both">
+      <span class="vfr-qnum">Q16</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Check List  [WaterJel Burn Dressing 20x20cm]</div>
+        <span class="vfr-item-a vfr-ans-green">✓ Available</span>
+      </div>
+    </div><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.374s both">
+      <span class="vfr-qnum">Q17</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Check List  [Face Mask]</div>
+        <span class="vfr-item-a vfr-ans-green">✓ Available</span>
+      </div>
+    </div><div class="vfr-item vfr-item-green" style="animation:srPanelIn .2s ease 0.39599999999999996s both">
+      <span class="vfr-qnum">Q18</span>
+      <span class="vfr-dot vfr-dot-green">✓</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">Submit</div>
+        <span class="vfr-item-a vfr-ans-green">✓ Submit and check another response</span>
+      </div>
+    </div></div>
+
+    <!-- ── RED: MISSING AFTER ────────────────────────────────── -->
+    <div class="vfr-sec-head vfr-sh-red" style="margin-top:10px">
+      <span style="font-size:16px">❌</span>
+      <span class="vfr-sec-title vfr-sec-title-red">Missing / Not Answered</span>
+      <span class="vfr-sec-count vfr-sc-red">0 items</span>
+    </div>
+    <div class="vfr-list vfr-list-red"><div class="vfr-empty vfr-empty-green">🎉 All questions answered — full compliance!</div></div>
+
+    <!-- VERDICT -->
+    <div class="vfr-verdict-box">
+      <div style="font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:9px">Inspection is in <strong style="color:var(--green)">Good Standing</strong>. All questions were answered.</div>
+      <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+        <span class="sr-verdict sv-ok">✅ Good Standing</span>
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">
+          avg 89% across 4 inspections
+        </span>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSc1BD7O10a0KxHhScsOlZU3m2LPExEgVOGIfeJ_YyitGZAU3Q/viewform?usp=dialog" target="_blank" style="margin-left:auto;font-family:var(--font-mono);font-size:10px;
+                color:var(--blue);text-decoration:none;background:var(--blue-bg);
+                border:1px solid var(--blue-dim);padding:4px 11px;border-radius:6px;">
+              ▶ New Inspection →</a>
+      </div>
+    </div>
+
+    
+    <!-- RECURRING MISSING ITEMS -->
+    <div class="vfr-recurring">
+      <div class="vfr-rec-head">
+        📉 Recurring Missing Items
+        <span style="margin-left:auto;background:var(--red-bg);color:var(--red);
+          border:1px solid var(--red-dim);padding:2px 8px;border-radius:7px;font-weight:700">
+          2 ITEMS
+        </span>
+      </div>
+      <div class="vfr-freq-row">
+          <span class="vfr-freq-rank">1</span>
+          <span class="vfr-freq-label" title="Tags">Tags</span>
+          <div class="vfr-freq-bar-wrap"><div class="vfr-freq-bar" style="width:100%;background:#e8394a"></div></div>
+          <span class="vfr-freq-count">4×</span>
+        </div><div class="vfr-freq-row">
+          <span class="vfr-freq-rank">2</span>
+          <span class="vfr-freq-label" title="Location">Location</span>
+          <div class="vfr-freq-bar-wrap"><div class="vfr-freq-bar" style="width:100%;background:#e8394a"></div></div>
+          <span class="vfr-freq-count">4×</span>
+        </div>
+    </div>
+
+    <!-- PDF EXPORT -->
+    <button class="vfr-export-btn" id="vfrExportBtn_vfr_trk_1778310836789_3" onclick="vfrExportPDF('trk_1778310836789',3)">
+      ⬇ Export this report to PDF
+    </button>
+
+    <div class="vfr-footer">
+      <span>C-TRACKER · First Aid · 4 inspections on record</span>
+      <span>Generated: 6/14/2026, 12:14:37 PM</span>
+    </div>
+  </div></div><div class="modal-foot"><button class="btn" onclick="closeModal('reportOverlay')">Close</button></div></div>
 </div>
 <div class="overlay" id="finalOverlay">
   <div class="modal wide"><div class="modal-head"><div class="modal-head-left"><span>📋</span><span class="modal-title">Management Report — Central Tracker</span></div><button class="modal-close" onclick="closeModal('finalOverlay')">✕</button></div><div class="modal-body" id="finalBody"></div><div class="modal-foot"><button class="btn" onclick="closeModal('finalOverlay')">Close</button><button class="btn" style="border-color:var(--blue);color:var(--blue);background:var(--blue-bg);display:flex;align-items:center;gap:6px" onclick="exportAllReportsPDF()"><span>⬇</span> Export All Reports — PDF</button></div></div>
@@ -3026,6 +2593,7 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
       <div class="form-group"><label class="form-label">Icon</label><div class="emoji-grid" id="emojiGrid"><div class="emoji-opt">🩺</div><div class="emoji-opt">⚠️</div><div class="emoji-opt">🎯</div><div class="emoji-opt">🔥</div><div class="emoji-opt">🛡️</div><div class="emoji-opt">⚙️</div><div class="emoji-opt">📋</div><div class="emoji-opt">🔍</div><div class="emoji-opt">🚨</div><div class="emoji-opt selected">🧯</div><div class="emoji-opt">💊</div><div class="emoji-opt">🪖</div><div class="emoji-opt">🔧</div><div class="emoji-opt">📡</div><div class="emoji-opt">🗺️</div><div class="emoji-opt">🧪</div><div class="emoji-opt">🔒</div><div class="emoji-opt">🚁</div></div><input type="text" id="edit-icon-val" class="form-input" placeholder="Or type any emoji" style="margin-top:8px"></div>
       <div class="form-group"><label class="form-label">Google Form URL</label><input type="text" id="edit-formUrl" class="form-input" placeholder="https://docs.google.com/forms/..."></div>
       <div class="form-group"><label class="form-label">Response Sheet ID</label><input type="text" id="edit-sheetId" class="form-input" placeholder="Sheet ID from the URL"><div class="form-hint">/spreadsheets/d/<strong>[PASTE THIS PART]</strong>/edit</div></div>
+      <div class="form-group"><label class="form-label">Session ID Field — Entry ID</label><input type="text" id="edit-sessionEntry" class="form-input" placeholder="entry.123456789"><div class="form-hint">From the form's "Session ID" question — used to group multi-section inspections together</div></div>
       <div id="editErr" style="color:var(--red);font-size:11px;font-family:var(--font-mono);display:none;margin-top:6px"></div>
     </div>
     <div class="modal-foot">
@@ -3478,11 +3046,17 @@ function renderTrackers(){
                  <div class="cha-ripple"></div>
                </button>`
             : t.formUrl
-              ? `<a class="cha-btn cha-start" href="${esc(t.formUrl)}" target="_blank">
-                   <span class="cha-icon">▶</span>
-                   <span class="cha-label">Start Check</span>
-                   <div class="cha-ripple"></div>
-                 </a>`
+              ? (t.sessionEntryId
+                  ? `<button class="cha-btn cha-start" onclick="startInspectionSession('${t.id}')">
+                       <span class="cha-icon">▶</span>
+                       <span class="cha-label">Start Check</span>
+                       <div class="cha-ripple"></div>
+                     </button>`
+                  : `<a class="cha-btn cha-start" href="${esc(t.formUrl)}" target="_blank">
+                       <span class="cha-icon">▶</span>
+                       <span class="cha-label">Start Check</span>
+                       <div class="cha-ripple"></div>
+                     </a>`)
               : `<button class="cha-btn cha-addform" onclick="openEditTracker('${t.id}')">
                    <span class="cha-icon">＋</span>
                    <span class="cha-label">Add Form</span>
@@ -3541,6 +3115,7 @@ function renderTrackers(){
   });
 
   updateSummary();
+  renderActiveSessionBadges();
 }
 
 function updateSummary(){
@@ -3631,6 +3206,7 @@ function openEditTracker(editId){
   document.getElementById('edit-icon-val').value=t?t.icon:'';
   document.getElementById('edit-formUrl').value=t?(t.formUrl||''):'';
   document.getElementById('edit-sheetId').value=t?(t.sheetId||''):'';
+  document.getElementById('edit-sessionEntry').value=t?(t.sessionEntryId||''):'';
   document.getElementById('editTitle').textContent=t?'Edit Tracker':'Add New Tracker';
   document.getElementById('editIcon').textContent=t?t.icon:'➕';
   document.getElementById('editErr').style.display='none';
@@ -3671,7 +3247,8 @@ async function saveTracker(){
     desc:document.getElementById('edit-desc').value.trim(),
     icon:document.getElementById('edit-icon-val').value.trim()||'📋',
     formUrl:document.getElementById('edit-formUrl').value.trim(),
-    sheetId:document.getElementById('edit-sheetId').value.trim()
+    sheetId:document.getElementById('edit-sheetId').value.trim(),
+    sessionEntryId:document.getElementById('edit-sessionEntry').value.trim()
   };
   if(editId){
     const i=trackers.findIndex(t=>t.id===editId);
@@ -3858,6 +3435,7 @@ function openReport(id){
 
   _rpt.tracker = t;
   _rpt.allRows  = rows;
+  _rpt.sessions = null;
   _rpt.idx      = rows.length - 1;
   _rpt.histOpen = false;
 
@@ -3931,7 +3509,10 @@ function srGoTo(idx){
   _rebuildBody();
 }
 function srPrev(){ if(_rpt.idx>0){_rpt.idx--;_rebuildBody();} }
-function srNext(){ if(_rpt.idx<_rpt.allRows.length-1){_rpt.idx++;_rebuildBody();} }
+function srNext(){
+  const maxIdx = (_rpt.sessions ? _rpt.sessions.length : _rpt.allRows.length) - 1;
+  if(_rpt.idx<maxIdx){_rpt.idx++;_rebuildBody();}
+}
 function srToggleHist(){
   _rpt.histOpen=!_rpt.histOpen;
   const d=document.getElementById('srHistDrawer');
@@ -6881,7 +6462,7 @@ window.addEventListener('resize', ()=>{
 </script>
 
 
-<div id="dbgBox" style="position: fixed; bottom: 16px; right: 16px; background: rgb(19, 21, 26); border: 1px solid rgb(45, 50, 64); border-radius: 8px; padding: 14px 16px; font-family: monospace; font-size: 11px; color: rgb(216, 220, 232); z-index: 9999; max-width: 360px; box-shadow: rgba(0, 0, 0, 0.6) 0px 8px 24px;"><div style="font-size:9px;color:#5c6278;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Connection Log</div><div id="dbgLines"><div style="margin-bottom:4px"><span style="color:#2dd17a">[OK]</span> <span style="color:var(--muted)">First Aid:</span> 12 rows</div><div style="margin-bottom:4px"><span style="color:#2dd17a">[OK]</span> <span style="color:var(--muted)">Fire Extinguisher Tracker:</span> 11 rows</div><div style="margin-bottom:4px"><span style="color:#2dd17a">[OK]</span> <span style="color:var(--muted)">Smoke Detector Tracker:</span> 8 rows</div><div style="margin-bottom:4px"><span style="color:#2dd17a">[OK]</span> <span style="color:var(--muted)">Office Security Check:</span> 3 rows</div><div style="margin-bottom:4px"><span style="color:#2dd17a">[OK]</span> <span style="color:var(--muted)">First Aid:</span> 12 rows</div><div style="margin-bottom:4px"><span style="color:#2dd17a">[OK]</span> <span style="color:var(--muted)">Fire Extinguisher Tracker:</span> 33 rows</div><div style="margin-bottom:4px"><span style="color:#2dd17a">[OK]</span> <span style="color:var(--muted)">Smoke Detector Tracker:</span> 8 rows</div><div style="margin-bottom:4px"><span style="color:#2dd17a">[OK]</span> <span style="color:var(--muted)">Office Security Check:</span> 3 rows</div></div><button onclick="this.parentElement.remove()" style="margin-top:10px;font-size:10px;background:none;border:0.5px solid var(--border);color:#5c6278;padding:3px 9px;border-radius:4px;cursor:pointer">Dismiss</button></div>
+
 
 
 <!-- ══════════════════════════════════════════════════════════════
@@ -8727,6 +8308,9 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
   font-family:var(--font-mono); font-size:10px; color:var(--dim);
 }
 
+/* Multi-section session blocks */
+.vfr-section-collapse.collapsed { display:none; }
+
 /* Light mode */
 body.light-mode .vfr-mc            { background:#f9fafd; border-color:#e2e5f0; }
 body.light-mode .vfr-score-strip   { background:#f9fafd; border-color:#e2e5f0; }
@@ -8798,7 +8382,107 @@ function _vClass(v) {
 }
 
 // ── MAIN BUILDER ──────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+// SESSION-BASED MULTI-SECTION INSPECTION SUPPORT
+// ══════════════════════════════════════════════════════════════════
+
+// Generate a unique Session ID, e.g. "TRK1778310836789_M2J3K1_AB12CD"
+function generateSessionId(trackerId){
+  const ts = Date.now().toString(36);
+  const rnd = Math.random().toString(36).substring(2,8);
+  return `${trackerId}_${ts}_${rnd}`.toUpperCase();
+}
+
+// Find the column in a row that holds the Session ID (case-insensitive match on "session id")
+function findSessionIdKey(row){
+  if(!row) return null;
+  return Object.keys(row).find(k => k.toLowerCase().includes('session id')) || null;
+}
+
+// Group an array of rows into "sessions" using the Session ID column.
+// Rows without a Session ID column, or with an empty Session ID, each become their own session.
+function groupRowsBySession(rows){
+  if(!rows || !rows.length) return [];
+  const sidKey = findSessionIdKey(rows[0]);
+  if(!sidKey){
+    // No session column at all — legacy behaviour, each row is its own session
+    return rows.map(r => ({ sessionId:null, sections:[r] }));
+  }
+
+  const groups = {};
+  const order = [];
+  rows.forEach(r => {
+    const raw = (r[sidKey]||'').toString().trim();
+    const sid = raw !== '' ? raw : `__nosession_${order.length}_${Math.random()}`;
+    if(!groups[sid]){ groups[sid]=[]; order.push(sid); }
+    groups[sid].push(r);
+  });
+
+  return order.map(sid => ({ sessionId: sid, sections: groups[sid] }));
+}
+
+// Start a multi-section inspection session: generates a Session ID, stores it
+// as "active" for this tracker, and opens the pre-filled Google Form in a new tab.
+function startInspectionSession(trackerId){
+  const t = trackers.find(x=>x.id===trackerId);
+  if(!t || !t.formUrl) return;
+
+  let active = {};
+  try{ active = JSON.parse(localStorage.getItem('ct_active_sessions')||'{}'); }catch(e){}
+
+  // Reuse existing session if one is already active for this tracker
+  let sessionId = (active[trackerId] && active[trackerId].sessionId) || generateSessionId(trackerId);
+  active[trackerId] = { sessionId, startedAt: active[trackerId]?.startedAt || new Date().toISOString() };
+  try{ localStorage.setItem('ct_active_sessions', JSON.stringify(active)); }catch(e){}
+
+  let url = t.formUrl;
+  if(t.sessionEntryId){
+    const sep = url.includes('?') ? '&' : '?';
+    url += `${sep}${encodeURIComponent(t.sessionEntryId)}=${encodeURIComponent(sessionId)}`;
+  }
+  window.open(url, '_blank');
+
+  showToast(`📋 Session ${active[trackerId] && active[trackerId].startedAt ? 'continued' : 'started'}: ${sessionId.split('_')[1]||sessionId}`, 'green');
+  renderActiveSessionBadges();
+}
+
+// End / clear the active session for a tracker (called once the inspector is done with all sections)
+function endInspectionSession(trackerId){
+  let active = {};
+  try{ active = JSON.parse(localStorage.getItem('ct_active_sessions')||'{}'); }catch(e){}
+  delete active[trackerId];
+  try{ localStorage.setItem('ct_active_sessions', JSON.stringify(active)); }catch(e){}
+  renderActiveSessionBadges();
+  showToast('Session ended — refreshing data…','green');
+  setTimeout(()=>{ if(typeof fetchAllSheets==='function') fetchAllSheets(); }, 800);
+}
+
+// Show a small pill on tracker cards that currently have an "in progress" session
+function renderActiveSessionBadges(){
+  let active = {};
+  try{ active = JSON.parse(localStorage.getItem('ct_active_sessions')||'{}'); }catch(e){}
+
+  // Remove old pills first
+  document.querySelectorAll('.session-pill').forEach(el=>el.remove());
+
+  Object.entries(active).forEach(([trackerId, sess])=>{
+    const card = document.getElementById('tc-'+trackerId);
+    if(!card) return;
+    const pill = document.createElement('div');
+    pill.className='session-pill';
+    pill.style='position:absolute;bottom:48px;left:10px;right:10px;background:var(--blue-bg);border:1px solid var(--blue-dim);border-radius:6px;padding:5px 10px;font-family:var(--font-mono);font-size:9px;color:var(--blue);display:flex;justify-content:space-between;align-items:center;z-index:6;gap:6px';
+    pill.innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📋 ${esc((sess.sessionId.split('_')[1]||sess.sessionId))}</span>
+      <span style="display:flex;gap:8px;flex-shrink:0">
+        <a href="#" onclick="startInspectionSession('${trackerId}');return false" style="color:var(--green);text-decoration:none;font-weight:700">＋ Section</a>
+        <a href="#" onclick="endInspectionSession('${trackerId}');return false" style="color:var(--red);text-decoration:none;font-weight:700">End</a>
+      </span>`;
+    card.style.position = card.style.position || 'relative';
+    card.appendChild(pill);
+  });
+}
+
 function vfrBuild(t, rows, idx) {
+
   const row  = rows[idx];
   const keys = Object.keys(row);
 
@@ -9102,6 +8786,217 @@ const missing  = allItems.filter(x => x.cls === 'missing');
   </div>`;
 }
 
+// ══════════════════════════════════════════════════════════════════
+// SESSION-AWARE REPORT WRAPPER
+// Takes the grouped "sessions" array (from groupRowsBySession) and a
+// session index. If the session has only ONE row, it behaves exactly
+// like the original vfrBuild (no visual change). If it has MULTIPLE
+// rows (multi-section inspection), it renders one collapsible block
+// per section, all inside one report.
+// ══════════════════════════════════════════════════════════════════
+function vfrBuildSession(t, allRows, sessions, sessionIdx){
+  const session = sessions[sessionIdx];
+  const sections = session.sections;
+
+  // Single-section session: behave exactly as before (find this row's
+  // position in the full rows array and call vfrBuild normally)
+  if(sections.length <= 1){
+    const rowIdx = allRows.indexOf(sections[0]);
+    return vfrBuild(t, allRows, rowIdx >= 0 ? rowIdx : allRows.length-1);
+  }
+
+  // ── MULTI-SECTION SESSION ─────────────────────────────────────
+  const headerRow = sections[0];
+  const keys = Object.keys(headerRow);
+  const dateKey = keys.find(_vDateK) || '';
+  const nameKey = keys.find(_vNameK) || '';
+  const rawDate = headerRow[dateKey] || '';
+  const doneBy  = headerRow[nameKey] || '';
+  const fmtDate = _vFmtDate(rawDate);
+  const dateShort = rawDate ? rawDate.toString().split(' ')[0] : '—';
+
+  // Aggregate compliance across ALL sections in this session
+  let totalQ=0, answeredQ=0;
+  const freqAgg = {};
+  sections.forEach(row=>{
+    Object.keys(row).filter(k=>!_vSkip(k)).forEach(k=>{
+      const v = row[k]||'';
+      if(v.trim()==='' || v==='—') return; // skip unanswered/blank fields entirely
+      totalQ++;
+      if(_vClass(v) !== 'missing') answeredQ++;
+      else freqAgg[k] = (freqAgg[k]||0)+1;
+    });
+  });
+  const pct = totalQ===0?100:Math.round((answeredQ/totalQ)*100);
+  const cls = pct>=80?'ok':pct>=50?'warn':'bad';
+  const color = pct>=80?'#2dd17a':pct>=50?'#f0a030':'#e8394a';
+  const R=36, CIRC=2*Math.PI*R, ringFill=(pct/100)*CIRC;
+
+  // Session navigator options
+  const subOpts = sessions.map((s,i)=>{
+    const r0 = s.sections[0];
+    const d = dateKey ? (r0[dateKey]||'').toString().split(' ')[0] : `#${i+1}`;
+    const n = nameKey ? (r0[nameKey]||'Unknown') : 'Unknown';
+    return `<option value="${i}" ${i===sessionIdx?'selected':''}>#${i+1} · ${esc(d)} · ${esc(n)} · ${s.sections.length} section${s.sections.length!==1?'s':''}</option>`;
+  }).join('');
+
+  // Build one block per section
+  const sectionBlocks = sections.map((row, secIdx)=> vfrSectionBlock(row, secIdx, sections.length)).join('');
+
+  const freq = Object.entries(freqAgg).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  const rid = `vfr_${t.id}_${sessionIdx}`;
+
+  return `<div class="vfr-wrap" id="${rid}">
+
+    <!-- HERO BANNER -->
+    <div class="vfr-hero">
+      <div class="vfr-hero-bg">${(typeof getTrackerSVG === 'function') ? getTrackerSVG(t.name) : ''}</div>
+      <div class="vfr-hero-grid"></div>
+      <div class="vfr-hero-fade"></div>
+      <div class="vfr-hero-inner">
+        <div class="vfr-hero-icon">${t.icon}</div>
+        <div class="vfr-hero-text">
+          <div class="vfr-hero-tag">C-TRACKER · Inspection Session</div>
+          <div class="vfr-hero-title">${esc(t.name)}</div>
+          <div class="vfr-hero-meta">
+            <span>📅 ${esc(fmtDate.split(' · ')[0] || dateShort)}</span>
+            ${fmtDate.includes(' · ') ? `<span>${esc(fmtDate.split(' · ')[1])}</span>` : ''}
+            ${doneBy ? `<span>👤 ${esc(doneBy)}</span>` : ''}
+            <span>📋 ${sections.length} section${sections.length!==1?'s':''} in this session</span>
+            <span>📁 Session ${sessionIdx+1} / ${sessions.length}</span>
+          </div>
+        </div>
+        <div class="vfr-hero-ring">
+          <svg width="84" height="84" viewBox="0 0 84 84">
+            <circle cx="42" cy="42" r="${R}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="6"/>
+            <circle cx="42" cy="42" r="${R}" fill="none" stroke="${color}" stroke-width="6"
+              stroke-dasharray="${ringFill.toFixed(1)} ${CIRC.toFixed(1)}"
+              stroke-dashoffset="${(CIRC*.25).toFixed(1)}"
+              stroke-linecap="round" transform="rotate(-90 42 42)"
+              style="filter:drop-shadow(0 0 6px ${color}88)"/>
+            <text x="42" y="40" text-anchor="middle" dominant-baseline="middle"
+              font-family="JetBrains Mono" font-size="14" fill="${color}" font-weight="800">${pct}%</text>
+            <text x="42" y="54" text-anchor="middle" dominant-baseline="middle"
+              font-family="JetBrains Mono" font-size="7" fill="rgba(255,255,255,.28)" letter-spacing="1">SESSION</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- SESSION NAVIGATOR -->
+    <div class="sr-section" style="margin-bottom:13px">
+      <div class="sr-sub-nav">
+        <span class="sr-sub-label">Session</span>
+        <select class="sr-sub-sel" id="srSubSel" onchange="srGoTo(parseInt(this.value))">${subOpts}</select>
+        <button class="sr-sub-btn" onclick="srPrev()">‹</button>
+        <button class="sr-sub-btn" onclick="srNext()">›</button>
+      </div>
+    </div>
+
+    <!-- ALL SECTIONS -->
+    ${sectionBlocks}
+
+    ${freq.length>0?`
+    <!-- RECURRING MISSING ITEMS ACROSS SECTIONS -->
+    <div class="vfr-recurring">
+      <div class="vfr-rec-head">
+        📉 Items Missing Across Sections
+        <span style="margin-left:auto;background:var(--red-bg);color:var(--red);
+          border:1px solid var(--red-dim);padding:2px 8px;border-radius:7px;font-weight:700">
+          ${freq.length} ITEMS
+        </span>
+      </div>
+      ${freq.map(([k,v],i)=>{
+        const p = Math.round((v/sections.length)*100);
+        const w = Math.round((v/(freq[0][1]||1))*100);
+        const c = p>=70?'#e8394a':p>=40?'#f0a030':'#4a9eff';
+        return `<div class="vfr-freq-row">
+          <span class="vfr-freq-rank">${i+1}</span>
+          <span class="vfr-freq-label" title="${esc(k)}">${esc(k.length>40?k.slice(0,38)+'…':k)}</span>
+          <div class="vfr-freq-bar-wrap"><div class="vfr-freq-bar" style="width:${w}%;background:${c}"></div></div>
+          <span class="vfr-freq-count">${v}×</span>
+        </div>`;
+      }).join('')}
+    </div>`:''}
+
+    <div class="vfr-footer">
+      <span>C-TRACKER · ${esc(t.name)} · ${sessions.length} session${sessions.length!==1?'s':''} on record</span>
+      <span>Generated: ${new Date().toLocaleString()}</span>
+    </div>
+  </div>`;
+}
+
+// ── Render a single section's checklist as a collapsible card ────
+function vfrSectionBlock(row, secIdx, totalSecs){
+  const keys = Object.keys(row);
+  const dateKey = keys.find(_vDateK) || '';
+
+  // Try to find a "Section/Location/Area" field to label this block
+  const sectionKey = keys.find(k=>{
+    const lo=k.toLowerCase();
+    return (lo.includes('section')||lo.includes('location')||lo.includes('area')||lo.includes('floor')||lo.includes('site'))
+      && !lo.includes('session id');
+  });
+  const sectionLabel = (sectionKey && row[sectionKey]) ? row[sectionKey] : `Section ${secIdx+1}`;
+
+  const iKeys = keys.filter(k=>!_vSkip(k) && k!==sectionKey && !k.toLowerCase().includes('session id'));
+  const items = iKeys.map((k,qi)=>({k, v: row[k]||'', qi: qi+1}))
+                      .filter(it=>it.v.trim()!=='' && it.v!=='—')
+                      .map(it=>({...it, cls:_vClass(it.v)}));
+
+  const answered = items.filter(x=>x.cls!=='missing');
+  const missing  = items.filter(x=>x.cls==='missing');
+  const total = items.length;
+  const pct = total===0?100:Math.round((answered.length/total)*100);
+  const pctColor = pct>=80?'#2dd17a':pct>=50?'#f0a030':'#e8394a';
+
+  const itemRows = items.map(item=>{
+    const isGreen = item.cls!=='missing';
+    const isPhoto = item.cls==='photo';
+    let ans;
+    if(isPhoto){
+      const prev = typeof _prev==='function' ? _prev(item.v) : item.v;
+      ans=`<img class="vfr-thumb" src="${esc(prev)}" loading="lazy" onclick="openLightbox('${esc(prev)}','${esc(item.k)}','${esc(item.v)}')" alt="Photo">`;
+    } else if(isGreen){
+      ans=`<span class="vfr-item-a vfr-ans-green">✓ ${esc(item.v)}</span>`;
+    } else {
+      ans=`<span class="vfr-item-a vfr-ans-red">⚠ Not answered</span>`;
+    }
+    const dotCls = isGreen?'vfr-dot-green':'vfr-dot-red';
+    const itemCls = isGreen?'vfr-item-green':'vfr-item-red';
+    return `<div class="vfr-item ${itemCls}">
+      <span class="vfr-qnum">Q${item.qi}</span>
+      <span class="vfr-dot ${dotCls}">${isGreen?'✓':'✗'}</span>
+      <div class="vfr-item-body">
+        <div class="vfr-item-q">${esc(item.k)}</div>
+        ${ans}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="sr-section" style="margin-bottom:14px">
+    <div class="sr-section-head" style="cursor:pointer" onclick="this.parentElement.querySelector('.vfr-section-collapse').classList.toggle('collapsed')">
+      <div class="sr-section-num sn-blue">${secIdx+1}</div>
+      <div class="sr-section-title-text">
+        <div class="sr-section-title-main">📍 ${esc(sectionLabel)}</div>
+        <div class="sr-section-title-sub">Section ${secIdx+1} of ${totalSecs} · ${esc((row[dateKey]||'').toString().split(' ')[0])}</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:${pctColor}">${pct}%</span>
+        <span style="font-family:var(--font-mono);font-size:9px;background:rgba(45,209,122,0.1);color:var(--green);border:1px solid rgba(45,209,122,0.25);padding:3px 9px;border-radius:12px">✓ ${answered.length}</span>
+        ${missing.length>0?`<span style="font-family:var(--font-mono);font-size:9px;background:rgba(232,57,74,0.1);color:var(--red);border:1px solid rgba(232,57,74,0.25);padding:3px 9px;border-radius:12px">✗ ${missing.length}</span>`:''}
+      </div>
+    </div>
+    <div class="sr-section-body vfr-section-collapse" style="padding-top:10px">
+      <div class="vfr-list vfr-list-green" style="border-radius:8px;border:1px solid var(--border)">
+        ${itemRows || '<div class="vfr-empty vfr-empty-muted">No data in this section.</div>'}
+      </div>
+    </div>
+  </div>`;
+}
+
 // ── PDF EXPORT ────────────────────────────────────────────────────
 function vfrExportPDF(trackerId, idx) {
   const btn = document.getElementById('vfrExportBtn_vfr_' + trackerId + '_' + idx);
@@ -9264,15 +9159,20 @@ function _applyVfrOverride() {
     document.getElementById('reportIcon').textContent  = t.icon;
     document.getElementById('reportTitle').textContent = t.name + ' — Inspection Report';
 
+    // Group rows into "sessions" (multi-section inspections share one Session ID)
+    const sessions = groupRowsBySession(rows);
+    const lastIdx  = sessions.length - 1;
+
     // Set up _rpt state for navigator
     window._rpt = window._rpt || {};
-    _rpt.tracker = t;
+    _rpt.tracker  = t;
     _rpt.allRows  = rows;
-    _rpt.idx      = rows.length - 1;
+    _rpt.sessions = sessions;
+    _rpt.idx      = lastIdx;
     _rpt.histOpen = false;
 
     // Render
-    document.getElementById('reportBody').innerHTML = vfrBuild(t, rows, rows.length - 1);
+    document.getElementById('reportBody').innerHTML = vfrBuildSession(t, rows, sessions, lastIdx);
 
     // Open modal
     const overlay = document.getElementById('reportOverlay');
@@ -9284,7 +9184,7 @@ function _applyVfrOverride() {
 
   // Also patch _rebuildBody so navigator prev/next works
   window._rebuildBody = function() {
-    const { tracker, allRows, idx } = window._rpt || {};
+    const { tracker, allRows, sessions, idx } = window._rpt || {};
     if (!tracker || !allRows) return;
     const el = document.getElementById('reportBody');
     if (!el) return;
@@ -9294,6 +9194,8 @@ function _applyVfrOverride() {
       el.innerHTML = (typeof buildLocalTrackerReport === 'function')
         ? buildLocalTrackerReport(tracker, allRows, idx)
         : '';
+    } else if (sessions) {
+      el.innerHTML = vfrBuildSession(tracker, allRows, sessions, idx);
     } else {
       el.innerHTML = vfrBuild(tracker, allRows, idx);
     }
@@ -9375,4 +9277,5 @@ window._rebuildBody = function() {
 console.log('✓ VFR missing-word fix applied — "Missing" checklist answers now shown in red');
 </script>
  <script src="c-tracker-theme-toggle.js"></script>
+
 </body></html>
