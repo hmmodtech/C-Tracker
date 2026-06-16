@@ -3961,7 +3961,7 @@ function _rebuildBody(){
 function buildFirstAidReport(t, rows, idx){
   const row  = rows[idx];
   const keys = Object.keys(row);
-
+console.log('ROW DATA:', JSON.stringify(row));
   // ── Field extraction helpers ──────────────────────────────────
   const findVal = (...kws) => {
     const k = keys.find(k => kws.some(w => k.toLowerCase().includes(w)));
