@@ -8800,6 +8800,7 @@ function _vClass(v) {
 // ── MAIN BUILDER ──────────────────────────────────────────────────
 function vfrBuild(t, rows, idx) {
   const row  = rows[idx];
+  console.log('VFR ROW:', JSON.stringify(row).substring(0, 500));
   const keys = Object.keys(row);
 
   // Meta extraction
