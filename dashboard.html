@@ -10139,5 +10139,642 @@ console.log('✓ VFR missing-word fix applied — "Missing" checklist answers no
   }
 
 })();
+    bash
+
+cat > /home/claude/unified-report-patch-v2.js << 'ENDOFFILE'
+// ══════════════════════════════════════════════════════════════════
+// C-TRACKER — UNIFIED REPORT PATCH v2
+// Applies the EXACT First Aid report design to ALL Google Forms trackers:
+//   • Fire Extinguisher  • Smoke Detector
+//   • Office Security    • ACF Warehouse Check
+//   • Any future Google Forms card
+//
+// v2 CHANGE: Optional/comment fields are excluded from compliance %.
+//   They still appear in the report (shown in grey), but are NOT
+//   counted as pass or fail — so they don't lower the score.
+//
+// HOW TO INSTALL:
+//   Paste this entire block just before </body> in your index.html
+//   (after all existing <script> tags)
+// ══════════════════════════════════════════════════════════════════
+
+(function applyUnifiedReportPatch() {
+  'use strict';
+
+  // ── OPTIONAL / COMMENT FIELD DETECTION ───────────────────────────
+  // Any question whose label matches these patterns is treated as
+  // optional and excluded from the compliance percentage entirely.
+  // It still displays in the report as an info row (grey).
+
+  const OPTIONAL_KEYWORDS = [
+    'comment','comments','note','notes','remark','remarks',
+    'observation','observations','additional','specify','other',
+    'if other','if yes','if no','please specify','please describe',
+    'description','details','feedback','suggestion','reason',
+    'explain','explanation','clarification','any other',
+    'free text','open text','optional','n/a if','not applicable if',
+    'photo','image','attachment','upload','signature'
+  ];
+
+  function isOptionalField(key) {
+    const lo = key.toLowerCase().trim();
+    return OPTIONAL_KEYWORDS.some(w => lo.includes(w));
+  }
+
+  // ── FIELD EXTRACTION ─────────────────────────────────────────────
+
+  function findKey(keys, candidates) {
+    const lo = keys.map(k => k.toLowerCase());
+    for (const c of candidates) {
+      const i = lo.findIndex(k => k.includes(c.toLowerCase()));
+      if (i !== -1) return keys[i];
+    }
+    return '';
+  }
+
+  function getFields(row) {
+    const keys = Object.keys(row);
+    const dateKey     = findKey(keys, ['timestamp','date']);
+    const doneByKey   = findKey(keys, ['done by','inspector','submitted by','checked by','name','by']);
+    const premiseKey  = findKey(keys, ['premises','premise','site name','facility','building','branch','deb nut','location of premises']);
+    const locationKey = findKey(
+      keys.filter(k => k !== premiseKey),
+      ['location','area','room','floor','zone','wing','sector','spot']
+    );
+    const tagKey = findKey(keys, ['tag #','tag#','tag no','tag number','serial','kit id','reference id','ref id','id number','unit id','device id']);
+    return { dateKey, doneByKey, premiseKey, locationKey, tagKey };
+  }
+
+  const META_SKIP_WORDS = [
+    'timestamp','email address','email','score','form response edit url',
+    'edit url','edit response url'
+  ];
+
+  function isMetaKey(k, fields) {
+    const lo = k.toLowerCase();
+    if (META_SKIP_WORDS.some(w => lo.includes(w))) return true;
+    const headerKeys = Object.values(fields).filter(Boolean).map(x => x.toLowerCase());
+    return headerKeys.includes(lo);
+  }
+
+  // ── VALUE CLASSIFICATION ──────────────────────────────────────────
+
+  const PASS_WORDS = [
+    'available','yes','ok','good','pass','present','working','functional',
+    'charged','intact','clean','complete','full','secured','locked','normal',
+    'operational','serviceable','green','no damage','no defect','checked',
+    'confirmed','done','found','active','clear','closed'
+  ];
+  const FAIL_WORDS = [
+    'missing','no','not available','unavailable','absent','not present',
+    'not found','none','empty','expired','broken','damaged','fail',
+    'not working','faulty','dead','discharged','dented','open','unlocked',
+    'exposed','dirty','blocked','low pressure','defective','out of order'
+  ];
+
+  function classifyValue(key, value) {
+    if (!value || value.trim() === '' || value === '—') return 'empty';
+    if (typeof _isImg === 'function' && _isImg(value)) return 'photo';
+
+    // Optional fields: skip from pass/fail — return 'optional'
+    if (isOptionalField(key)) return 'optional';
+
+    const lo  = value.trim().toLowerCase();
+    const klo = key.toLowerCase();
+
+    const invertedQuestion = ['damage','expir','defect','broken','leak','issue','problem','unsecured','unlocked','dirty','blocked','missing'];
+    const isInverted = invertedQuestion.some(w => klo.includes(w));
+
+    const isPass = PASS_WORDS.some(w => lo === w || lo.startsWith(w + ' ') || lo === w + '.');
+    const isFail = FAIL_WORDS.some(w => lo === w || lo.startsWith(w + ' ') || lo === w + '.');
+
+    if (isInverted) {
+      if (isFail) return 'pass';
+      if (isPass && (lo === 'yes' || lo.startsWith('yes'))) return 'fail';
+    } else {
+      if (isPass) return 'pass';
+      if (isFail) return 'fail';
+    }
+
+    return 'answered';
+  }
+
+  // ── DATE FORMATTER ────────────────────────────────────────────────
+
+  function formatDate(raw) {
+    if (!raw) return '—';
+    try {
+      const d = new Date(raw);
+      if (!isNaN(d)) {
+        const dd   = String(d.getDate()).padStart(2, '0');
+        const mm   = String(d.getMonth() + 1).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+      }
+    } catch(e) {}
+    return String(raw).split(' ')[0];
+  }
+
+  // ── COMPLIANCE CALCULATOR (used for cards + history rows) ─────────
+  // Excludes optional fields — only counts mandatory pass/fail items
+
+  function calcRowCompliance(row, fields) {
+    const f = fields || getFields(row);
+    const keys = Object.keys(row).filter(k => !isMetaKey(k, f));
+    let pass = 0, fail = 0;
+    keys.forEach(k => {
+      const cls = classifyValue(k, row[k] || '');
+      if (cls === 'pass' || cls === 'photo' || cls === 'answered') pass++;
+      else if (cls === 'fail') fail++;
+      // 'empty', 'optional' → NOT counted
+    });
+    const total = pass + fail;
+    return total === 0 ? 100 : Math.round((pass / total) * 100);
+  }
+
+  // ── MAIN REPORT BUILDER ───────────────────────────────────────────
+
+  function buildUnifiedReport(t, rows, idx) {
+    const row    = rows[idx];
+    const keys   = Object.keys(row);
+    const fields = getFields(row);
+    const { dateKey, doneByKey, premiseKey, locationKey, tagKey } = fields;
+
+    const rawDate  = dateKey     ? (row[dateKey]     || '') : '';
+    const doneBy   = doneByKey   ? (row[doneByKey]   || '') : '';
+    const premise  = premiseKey  ? (row[premiseKey]  || '') : '';
+    const location = locationKey ? (row[locationKey] || '') : '';
+    const tagVal   = tagKey      ? (row[tagKey]      || '') : '';
+    const fmtDate  = formatDate(rawDate);
+
+    const tagIsImg  = typeof _isImg === 'function' && _isImg(tagVal);
+    const tagImgUrl = tagIsImg ? (typeof _prev === 'function' ? _prev(tagVal) : tagVal) : null;
+    const tagText   = !tagIsImg ? tagVal : '';
+
+    // Split items into three buckets:
+    //   available  → mandatory items that PASS  (green)
+    //   missing    → mandatory items that FAIL  (red)
+    //   optional   → optional/comment fields    (grey, not counted)
+    const inspKeys = keys.filter(k => !isMetaKey(k, fields));
+    const available = [], missing = [], optionalItems = [];
+
+    inspKeys.forEach(k => {
+      const v   = row[k] || '';
+      const cls = classifyValue(k, v);
+      if (cls === 'empty') return;
+      if (cls === 'optional') {
+        if (v.trim() !== '') optionalItems.push({ k, v }); // only show if answered
+        return;
+      }
+      if (cls === 'pass' || cls === 'photo' || cls === 'answered') {
+        available.push({ k, v, cls });
+      } else {
+        missing.push({ k, v, cls });
+      }
+    });
+
+    // Compliance uses ONLY mandatory items
+    const totalMandatory = available.length + missing.length;
+    const compPct  = totalMandatory === 0 ? 100 : Math.round((available.length / totalMandatory) * 100);
+    const compCls  = compPct >= 80 ? 'ok' : compPct >= 50 ? 'warn' : 'bad';
+    const compColor = compCls === 'ok' ? '#2dd17a' : compCls === 'warn' ? '#f0a030' : '#e8394a';
+
+    // Historical average (also mandatory-only)
+    const avgComp = rows.length > 1
+      ? Math.round(rows.reduce((s, r) => s + calcRowCompliance(r), 0) / rows.length)
+      : compPct;
+
+    // SVG ring
+    const R = 40, CIRC = 2 * Math.PI * R;
+    const ringFill = (compPct / 100) * CIRC;
+
+    // Submission navigator
+    const subOptions = rows.map((r, i) => {
+      const d2 = dateKey ? (r[dateKey] || '').toString().split(' ')[0] : `#${i+1}`;
+      const n2 = doneByKey ? (r[doneByKey] || 'Unknown') : 'Unknown';
+      return `<option value="${i}" ${i === idx ? 'selected' : ''}>#${i+1} · ${esc(d2)} · ${esc(n2)}</option>`;
+    }).join('');
+
+    // History drawer
+    const histRows = rows.slice().reverse().map((r, ri) => {
+      const realIdx = rows.length - 1 - ri;
+      const d2  = dateKey   ? (r[dateKey]||'').toString().split(' ')[0] : `#${realIdx+1}`;
+      const n2  = doneByKey ? (r[doneByKey]||'Unknown') : 'Unknown';
+      const cp  = calcRowCompliance(r);
+      const hc  = cp >= 80 ? 'var(--green)' : cp >= 50 ? 'var(--amber)' : 'var(--red)';
+      const f2  = getFields(r);
+      const iss = Object.keys(r).filter(k => !isMetaKey(k,f2) && classifyValue(k,r[k]||'')==='fail').length;
+      return `<div class="sr-hist-row ${realIdx === idx ? 'active' : ''}" onclick="srPickHist(${realIdx})">
+        <div class="sr-hist-dot" style="background:${hc};box-shadow:0 0 6px ${hc}88"></div>
+        <div style="flex:1">
+          <div class="sr-hist-date">${esc(d2)}</div>
+          <div class="sr-hist-by">👤 ${esc(n2)}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="sr-hist-comp" style="color:${hc}">${cp}%</div>
+          <div class="sr-hist-issues">${iss === 0 ? '✓ clean' : iss + ' issue' + (iss !== 1 ? 's' : '')}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // ── ITEM CARD BUILDERS ────────────────────────────────────────
+
+    function availableCard(item, i) {
+      const isPhoto = item.cls === 'photo';
+      let valHtml;
+      if (isPhoto) {
+        const prevUrl = typeof _prev === 'function' ? _prev(item.v) : item.v;
+        valHtml = `<img class="sr-thumb" src="${esc(prevUrl)}" loading="lazy"
+          onclick="openLightbox('${esc(prevUrl)}','${esc(item.k)}','${esc(item.v)}')"
+          onerror="this.outerHTML='<a href=\\'${esc(item.v)}\\' target=\\'_blank\\' style=\\'color:var(--blue);font-size:10px\\'>Open photo →</a>'"
+          alt="Photo">`;
+      } else {
+        valHtml = `<div class="fa-item-val fa-item-val-avail">${esc(item.v)}</div>`;
+      }
+      return `<div class="fa-item fa-item-avail" style="animation:srPanelIn 0.2s ease ${i*0.03}s both">
+        <div class="fa-item-icon fa-icon-avail">✓</div>
+        <div class="fa-item-name">${esc(item.k)}</div>
+        ${valHtml}
+      </div>`;
+    }
+
+    function missingCard(item, i) {
+      return `<div class="fa-item fa-item-miss" style="animation:srPanelIn 0.2s ease ${i*0.03}s both">
+        <div class="fa-item-icon fa-icon-miss">✗</div>
+        <div class="fa-item-name">${esc(item.k)}</div>
+        <div class="fa-item-val fa-item-val-miss">${esc(item.v || 'Not recorded')}</div>
+      </div>`;
+    }
+
+    function optionalCard(item, i) {
+      // Grey style — not counted, clearly labelled
+      return `<div class="fa-item" style="border-bottom:1px solid var(--border);animation:srPanelIn 0.2s ease ${i*0.03}s both;opacity:0.75">
+        <div class="fa-item-icon" style="background:rgba(92,98,120,0.12);color:var(--muted);border:1px solid var(--border2);width:28px;height:28px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px">📝</div>
+        <div class="fa-item-name" style="color:var(--text-dim)">${esc(item.k)}</div>
+        <div class="fa-item-val" style="color:var(--muted);font-family:var(--font-mono);font-size:11px;white-space:normal;text-align:right;max-width:55%">${esc(item.v)}</div>
+      </div>`;
+    }
+
+    const availableHtml = available.length === 0
+      ? `<div class="fa-empty fa-empty-avail">No items recorded as available in this submission.</div>`
+      : available.map(availableCard).join('');
+
+    const missingHtml = missing.length === 0
+      ? `<div class="fa-empty fa-empty-avail">🎉 No missing items — full compliance!</div>`
+      : missing.map(missingCard).join('');
+
+    const optionalHtml = optionalItems.length === 0 ? '' : `
+      <!-- ── OPTIONAL / COMMENTS (not counted in score) ── -->
+      <div class="fa-section-head" style="margin-top:14px;background:rgba(92,98,120,0.08);border:1px solid var(--border);border-bottom:none;border-radius:12px 12px 0 0">
+        <span class="fa-section-icon">📝</span>
+        <span class="fa-section-title" style="color:var(--muted)">Comments &amp; Optional Fields</span>
+        <span class="fa-section-count" style="background:rgba(92,98,120,0.1);color:var(--muted);border:1px solid var(--border)">${optionalItems.length} field${optionalItems.length !== 1 ? 's' : ''}</span>
+        <span style="font-family:var(--font-mono);font-size:9px;color:var(--dim);margin-left:8px">not counted in score</span>
+      </div>
+      <div class="fa-list" style="border-color:var(--border);background:rgba(92,98,120,0.03)">
+        ${optionalItems.map(optionalCard).join('')}
+      </div>`;
+
+    return `
+    <style>
+      .fa-report-wrap{font-family:'Inter',sans-serif;max-width:100%}
+      .fa-hero{position:relative;border-radius:20px;overflow:hidden;margin-bottom:22px;background:linear-gradient(135deg,#0a0203,#150408);border:1px solid rgba(74,158,53,0.25);min-height:140px}
+      .fa-hero-bg{position:absolute;inset:0;opacity:0.12;pointer-events:none}
+      .fa-hero-bg svg{width:100%;height:100%;object-fit:cover;filter:saturate(1.8) brightness(0.5)}
+      .fa-hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(74,158,53,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(74,158,53,0.05) 1px,transparent 1px);background-size:28px 28px}
+      .fa-hero-inner{position:relative;z-index:2;padding:22px 26px;display:flex;align-items:center;gap:20px}
+      .fa-hero-cross{width:64px;height:64px;flex-shrink:0;background:rgba(74,158,53,0.15);border:2px solid rgba(74,158,53,0.4);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 0 30px rgba(74,158,53,0.25)}
+      .fa-hero-text{flex:1}
+      .fa-hero-tag-line{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:0.22em;text-transform:uppercase;margin-bottom:4px}
+      .fa-hero-title{font-size:22px;font-weight:500;color:var(--text);letter-spacing:-0.03em;margin-bottom:5px}
+      .fa-hero-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)}
+      .fa-hero-ring{flex-shrink:0}
+      .fa-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+      .fa-meta-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
+      .fa-meta-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+      .fa-meta-red::before{background:var(--red)}
+      .fa-meta-blue::before{background:var(--blue)}
+      .fa-meta-green::before{background:var(--green)}
+      .fa-meta-amber::before{background:var(--amber)}
+      .fa-meta-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px}
+      .fa-meta-value{font-size:15px;font-weight:500;color:var(--text);line-height:1.3;word-break:break-word}
+      .fa-meta-value-mono{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:var(--text)}
+      .fa-tag-block{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:18px;display:flex;align-items:center;gap:18px}
+      .fa-tag-img-wrap{width:90px;height:68px;flex-shrink:0;border-radius:var(--acf-radius-md,8px);overflow:hidden;border:2px solid var(--border2);background:var(--surface3);display:flex;align-items:center;justify-content:center}
+      .fa-tag-img{width:100%;height:100%;object-fit:cover;display:block}
+      .fa-tag-text-icon{font-size:32px}
+      .fa-tag-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:5px}
+      .fa-tag-id{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:500;color:var(--text);letter-spacing:0.06em}
+      .fa-tag-sub{font-size:11px;color:var(--muted);margin-top:4px}
+      .fa-section-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:12px 12px 0 0;margin-top:18px}
+      .fa-section-head-avail{background:linear-gradient(135deg,rgba(45,209,122,0.14),rgba(45,209,122,0.06));border:1px solid rgba(45,209,122,0.25);border-bottom:none}
+      .fa-section-head-miss{background:linear-gradient(135deg,rgba(232,57,74,0.14),rgba(232,57,74,0.06));border:1px solid rgba(232,57,74,0.25);border-bottom:none}
+      .fa-section-icon{font-size:18px}
+      .fa-section-title{font-size:15px;font-weight:500;letter-spacing:-0.01em}
+      .fa-section-title-avail{color:var(--green)}
+      .fa-section-title-miss{color:var(--red)}
+      .fa-section-count{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;padding:3px 10px;border-radius:8px}
+      .fa-count-avail{background:rgba(45,209,122,0.12);color:var(--green);border:1px solid rgba(45,209,122,0.3)}
+      .fa-count-miss{background:rgba(232,57,74,0.12);color:var(--red);border:1px solid rgba(232,57,74,0.3)}
+      .fa-list{border:1px solid;border-top:none;border-radius:0 0 12px 12px;overflow:hidden;margin-bottom:4px}
+      .fa-list-avail{border-color:rgba(45,209,122,0.2);background:rgba(45,209,122,0.03)}
+      .fa-list-miss{border-color:rgba(232,57,74,0.2);background:rgba(232,57,74,0.03)}
+      .fa-item{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid;transition:background 0.12s}
+      .fa-item:last-child{border-bottom:none}
+      .fa-item-avail{border-color:rgba(45,209,122,0.12)}
+      .fa-item-avail:hover{background:rgba(45,209,122,0.06)}
+      .fa-item-miss{border-color:rgba(232,57,74,0.1)}
+      .fa-item-miss:hover{background:rgba(232,57,74,0.06)}
+      .fa-item-icon{width:28px;height:28px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500}
+      .fa-icon-avail{background:rgba(45,209,122,0.15);color:var(--green);border:1px solid rgba(45,209,122,0.3)}
+      .fa-icon-miss{background:rgba(232,57,74,0.15);color:var(--red);border:1px solid rgba(232,57,74,0.3)}
+      .fa-item-name{font-size:13px;font-weight:500;color:var(--text);flex:1;line-height:1.4}
+      .fa-item-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;white-space:nowrap}
+      .fa-item-val-avail{color:var(--green)}
+      .fa-item-val-miss{color:var(--red)}
+      .fa-empty{padding:24px 18px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px}
+      .fa-empty-avail{color:var(--green)}
+      .fa-comp-strip{display:flex;align-items:center;gap:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--acf-radius-md,8px);padding:14px 18px;margin-top:18px}
+      .fa-comp-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);white-space:nowrap}
+      .fa-comp-track{flex:1;height:10px;background:var(--surface3);border-radius:5px;overflow:hidden}
+      .fa-comp-fill{height:100%;border-radius:5px;transition:width 1.4s cubic-bezier(0.4,0,0.2,1)}
+      .fa-comp-ok{background:var(--acf-green,#4a9e35);box-shadow:0 0 10px rgba(45,209,122,0.4)}
+      .fa-comp-warn{background:var(--acf-status-warning,#ea9f14)}
+      .fa-comp-bad{background:var(--acf-status-critical,#dc3232)}
+      .fa-comp-pct{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:500;white-space:nowrap}
+      body:not(.dark-mode) .fa-meta-card{background:#f9fafd;border-color:#e2e5f0}
+      body:not(.dark-mode) .fa-tag-block{background:#f9fafd;border-color:#e2e5f0}
+      body:not(.dark-mode) .fa-comp-strip{background:#f9fafd;border-color:#e2e5f0}
+    </style>
+
+    <div class="fa-report-wrap">
+
+      <!-- ── HERO BANNER ── -->
+      <div class="fa-hero">
+        <div class="fa-hero-bg">${(typeof getTrackerSVG === 'function') ? getTrackerSVG(t.name) : ''}</div>
+        <div class="fa-hero-grid"></div>
+        <div class="fa-hero-inner">
+          <div class="fa-hero-cross">${t.icon}</div>
+          <div class="fa-hero-text">
+            <div class="fa-hero-tag-line">C-TRACKER · Inspection Report</div>
+            <div class="fa-hero-title">${esc(t.name)}</div>
+            <div class="fa-hero-sub">Submission ${idx + 1} of ${rows.length} &nbsp;·&nbsp; ${esc(fmtDate)}</div>
+          </div>
+          <div class="fa-hero-ring">
+            <svg width="100" height="100" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="${R}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="7"/>
+              <circle cx="50" cy="50" r="${R}" fill="none" stroke="${compColor}" stroke-width="7"
+                stroke-dasharray="${ringFill.toFixed(1)} ${CIRC.toFixed(1)}"
+                stroke-dashoffset="${(CIRC * 0.25).toFixed(1)}"
+                stroke-linecap="round"
+                transform="rotate(-90 50 50)"
+                style="filter:drop-shadow(0 0 8px ${compColor}88)"/>
+              <text x="50" y="47" text-anchor="middle" dominant-baseline="middle"
+                font-family="JetBrains Mono" font-size="16" fill="${compColor}" font-weight="800">${compPct}%</text>
+              <text x="50" y="62" text-anchor="middle" dominant-baseline="middle"
+                font-family="JetBrains Mono" font-size="7" fill="rgba(255,255,255,0.3)" letter-spacing="1">SCORE</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SUBMISSION NAVIGATOR ── -->
+      <div class="sr-section" style="margin-bottom:16px">
+        <div class="sr-sub-nav">
+          <span class="sr-sub-label">Submission</span>
+          <select class="sr-sub-sel" id="srSubSel" onchange="srGoTo(parseInt(this.value))">${subOptions}</select>
+          <button class="sr-sub-btn" onclick="srPrev()">‹</button>
+          <button class="sr-sub-btn" onclick="srNext()">›</button>
+          <button class="sr-hist-btn" onclick="srToggleHist()">🕐 History (${rows.length})</button>
+        </div>
+        <div class="sr-hist-drawer" id="srHistDrawer">${histRows}</div>
+      </div>
+
+      <!-- ── META CARDS ── -->
+      <div class="fa-meta-grid">
+        <div class="fa-meta-card fa-meta-red">
+          <div class="fa-meta-label">📅 Date</div>
+          <div class="fa-meta-value-mono" style="font-size:17px">${esc(fmtDate)}</div>
+        </div>
+        <div class="fa-meta-card fa-meta-blue">
+          <div class="fa-meta-label">👤 Done By</div>
+          <div class="fa-meta-value">${esc(doneBy || '—')}</div>
+        </div>
+        <div class="fa-meta-card fa-meta-amber">
+          <div class="fa-meta-label">🏢 Premise</div>
+          <div class="fa-meta-value">${esc(premise || '—')}</div>
+        </div>
+        <div class="fa-meta-card fa-meta-green">
+          <div class="fa-meta-label">📍 Location</div>
+          <div class="fa-meta-value">${esc(location || '—')}</div>
+        </div>
+      </div>
+
+      <!-- ── TAG BLOCK ── -->
+      ${(tagImgUrl || tagText) ? `
+      <div class="fa-tag-block">
+        <div class="fa-tag-img-wrap">
+          ${tagImgUrl
+            ? `<img class="fa-tag-img" src="${esc(tagImgUrl)}" loading="lazy"
+                 onclick="openLightbox('${esc(tagImgUrl)}','Tag: ${esc(tagKey)}','${esc(tagVal)}')"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="Tag">
+               <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:24px">🏷️</div>`
+            : `<div class="fa-tag-text-icon">🏷️</div>`}
+        </div>
+        <div>
+          <div class="fa-tag-label">🏷 Tag / Kit ID</div>
+          <div class="fa-tag-id">${esc(tagText || '—')}</div>
+          ${tagImgUrl ? `<div class="fa-tag-sub" style="color:var(--green)">✓ Tag photo recorded</div>` : ''}
+        </div>
+      </div>` : ''}
+
+      <!-- ── AVAILABLE ITEMS (GREEN) ── -->
+      <div class="fa-section-head fa-section-head-avail">
+        <span class="fa-section-icon">✅</span>
+        <span class="fa-section-title fa-section-title-avail">Available Items</span>
+        <span class="fa-section-count fa-count-avail">${available.length} item${available.length !== 1 ? 's' : ''}</span>
+      </div>
+      <div class="fa-list fa-list-avail">${availableHtml}</div>
+
+      <!-- ── MISSING ITEMS (RED) ── -->
+      <div class="fa-section-head fa-section-head-miss" style="margin-top:14px">
+        <span class="fa-section-icon">❌</span>
+        <span class="fa-section-title fa-section-title-miss">Missing / Non-Compliant Items</span>
+        <span class="fa-section-count fa-count-miss">${missing.length} item${missing.length !== 1 ? 's' : ''}</span>
+      </div>
+      <div class="fa-list fa-list-miss">${missingHtml}</div>
+
+      <!-- ── OPTIONAL / COMMENTS (grey, not counted) ── -->
+      ${optionalHtml}
+
+      <!-- ── COMPLIANCE STRIP ── -->
+      <div class="fa-comp-strip">
+        <span class="fa-comp-label">Compliance Score</span>
+        <div class="fa-comp-track">
+          <div class="fa-comp-fill fa-comp-${compCls}" id="srCompFill" data-pct="${compPct}" style="width:0%"></div>
+        </div>
+        <span class="fa-comp-pct" style="color:${compColor}">${compPct}%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-family:var(--font-mono);font-size:10px;color:var(--muted)">
+        <span>Mandatory items only · avg ${avgComp}% across ${rows.length} inspection${rows.length!==1?'s':''}</span>
+        ${optionalItems.length > 0 ? `<span style="color:var(--dim)">· ${optionalItems.length} optional field${optionalItems.length!==1?'s':''} excluded from score</span>` : ''}
+        ${t.formUrl ? `<a href="${esc(t.formUrl)}" target="_blank" style="margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--blue);text-decoration:none;background:var(--blue-bg);border:1px solid var(--blue-dim);padding:5px 12px;border-radius:6px;">▶ New Inspection →</a>` : ''}
+      </div>
+
+      <div class="sr-footer" style="margin-top:18px">
+        <span>C-TRACKER · ${esc(t.name)}</span>
+        <span>Generated: ${new Date().toLocaleString()}</span>
+      </div>
+
+    </div>`;
+  }
+
+  // ── COMPLIANCE FOR DASHBOARD CARDS ───────────────────────────────
+  // Also patch the main calcCompliance() so the tracker card footers
+  // and the management report show correct scores (no optional fields)
+
+  function patchCalcCompliance() {
+    const _orig = window.calcCompliance;
+    window.calcCompliance = function(rows) {
+      if (!rows || !rows.length) return 0;
+      // Local tracker records keep existing logic (they have _type field)
+      if (rows[0] && rows[0]._type) return _orig(rows);
+      // Sheet-based: mandatory-only calculation
+      let totalPass = 0, totalFail = 0;
+      rows.forEach(r => {
+        const f = getFields(r);
+        Object.keys(r).forEach(k => {
+          if (isMetaKey(k, f)) return;
+          const cls = classifyValue(k, r[k] || '');
+          if (cls === 'pass' || cls === 'photo' || cls === 'answered') totalPass++;
+          else if (cls === 'fail') totalFail++;
+          // optional/empty → skip
+        });
+      });
+      const total = totalPass + totalFail;
+      return total === 0 ? 100 : Math.round((totalPass / total) * 100);
+    };
+  }
+
+  // ── APPLY OVERRIDES ───────────────────────────────────────────────
+
+  function applyOverride() {
+    // 1. Patch calcCompliance for dashboard cards
+    patchCalcCompliance();
+
+    // 2. Override openReport
+    const _origOpenReport = window.openReport;
+    window.openReport = function(id) {
+      const t = trackers.find(x => x.id === id);
+      if (!t) { if (_origOpenReport) _origOpenReport(id); return; }
+
+      if (typeof isLocalTracker === 'function' && isLocalTracker(t.name)) {
+        if (_origOpenReport) _origOpenReport(id);
+        return;
+      }
+
+      const tLow = t.name.toLowerCase();
+      if (tLow.includes('first aid') || tLow.includes('firstaid') || tLow.includes('first-aid')) {
+        if (_origOpenReport) _origOpenReport(id);
+        return;
+      }
+
+      const rows = sheetData[id];
+      if (!rows || !rows.length) { if (_origOpenReport) _origOpenReport(id); return; }
+
+      if (typeof destroyCharts === 'function') destroyCharts();
+
+      const iconEl  = document.getElementById('reportIcon');
+      const titleEl = document.getElementById('reportTitle');
+      if (iconEl)  iconEl.textContent  = t.icon;
+      if (titleEl) titleEl.textContent = t.name + ' — Inspection Report';
+
+      window._rpt = { tracker: t, allRows: rows, idx: rows.length - 1, histOpen: false };
+
+      const bodyEl = document.getElementById('reportBody');
+      if (bodyEl) bodyEl.innerHTML = buildUnifiedReport(t, rows, rows.length - 1);
+
+      const overlay = document.getElementById('reportOverlay');
+      if (overlay) overlay.classList.add('open');
+
+      setTimeout(() => {
+        const fill = document.getElementById('srCompFill');
+        if (fill) fill.style.width = (fill.dataset.pct || 0) + '%';
+      }, 160);
+    };
+
+    // 3. Override _rebuildBody for prev/next navigation
+    window._rebuildBody = function() {
+      const rpt = window._rpt;
+      if (!rpt || !rpt.tracker || !rpt.allRows) return;
+      const { tracker: t, allRows: rows, idx } = rpt;
+      const bodyEl = document.getElementById('reportBody');
+      if (!bodyEl) return;
+      const tLow = t.name.toLowerCase();
+      if (typeof isLocalTracker === 'function' && isLocalTracker(t.name)) {
+        if (typeof buildLocalTrackerReport === 'function')
+          bodyEl.innerHTML = buildLocalTrackerReport(t, rows, idx);
+      } else if (tLow.includes('first aid') || tLow.includes('firstaid') || tLow.includes('first-aid')) {
+        if (typeof buildFirstAidReport === 'function')
+          bodyEl.innerHTML = buildFirstAidReport(t, rows, idx);
+      } else {
+        bodyEl.innerHTML = buildUnifiedReport(t, rows, idx);
+      }
+      setTimeout(() => {
+        const fill = document.getElementById('srCompFill');
+        if (fill) fill.style.width = (fill.dataset.pct || 0) + '%';
+        const sel = document.getElementById('srSubSel');
+        if (sel) sel.value = idx;
+        if (rpt.histOpen) {
+          const d = document.getElementById('srHistDrawer');
+          if (d) d.classList.add('open');
+        }
+      }, 80);
+    };
+
+    // 4. Navigation functions
+    window.srGoTo = function(idx) {
+      if (!window._rpt) return;
+      window._rpt.idx = parseInt(idx, 10);
+      window._rebuildBody();
+    };
+    window.srPrev = function() {
+      if (!window._rpt || window._rpt.idx <= 0) return;
+      window._rpt.idx--;
+      window._rebuildBody();
+    };
+    window.srNext = function() {
+      if (!window._rpt || window._rpt.idx >= window._rpt.allRows.length - 1) return;
+      window._rpt.idx++;
+      window._rebuildBody();
+    };
+    window.srToggleHist = function() {
+      if (!window._rpt) return;
+      window._rpt.histOpen = !window._rpt.histOpen;
+      const d = document.getElementById('srHistDrawer');
+      if (d) d.classList.toggle('open', window._rpt.histOpen);
+    };
+    window.srPickHist = function(idx) {
+      if (!window._rpt) return;
+      window._rpt.idx = parseInt(idx, 10);
+      window._rpt.histOpen = false;
+      window._rebuildBody();
+    };
+
+    // 5. Re-render dashboard cards with corrected scores
+    if (typeof renderTrackers === 'function') renderTrackers();
+
+    console.log('✓ Unified Report Patch v2 applied — optional/comment fields excluded from compliance score');
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(applyOverride, 300));
+  } else {
+    setTimeout(applyOverride, 300);
+  }
+
+})();
+ENDOFFILE
+echo "Done"
   </script>
 </body></html>
