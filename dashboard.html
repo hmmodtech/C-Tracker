@@ -3764,12 +3764,43 @@ function log(name,status,msg){
   document.getElementById('dbgLines').innerHTML+=`<div style="margin-bottom:4px"><span style="color:${c}">[${status}]</span> <span style="color:var(--muted)">${name}:</span> ${msg}</div>`;
 }
 
-function parseRows(rows){
-  if(!rows||rows.length<2)return[];
-  const h=rows[0];
-  return rows.slice(1).map(r=>{const o={};h.forEach((k,i)=>o[k]=r[i]||'');return o;});
-}
+function parseRows(rows) {
+  if (!rows || rows.length < 2) return [];
+  const rawHeaders = rows[0];
 
+  // تتبع أعمدة Location و Tag المكررة
+  const locationCols = [];
+  const tagCols = [];
+  const otherCols = [];
+
+  rawHeaders.forEach((h, i) => {
+    const name = String(h).trim();
+    if (name === 'Location') locationCols.push(i);
+    else if (name === 'Tag') tagCols.push(i);
+    else otherCols.push({ name, i });
+  });
+
+  return rows.slice(1).map(r => {
+    const obj = {};
+
+    // الأعمدة العادية
+    otherCols.forEach(({ name, i }) => {
+      if (!obj.hasOwnProperty(name)) {
+        obj[name] = String(r[i] || '').trim();
+      }
+    });
+
+    // خذ أول Location مش فاضي
+    const loc = locationCols.map(i => String(r[i] || '').trim()).find(v => v !== '') || '';
+    obj['Location'] = loc;
+
+    // خذ أول Tag مش فاضي
+    const tag = tagCols.map(i => String(r[i] || '').trim()).find(v => v !== '') || '';
+    obj['Tag'] = tag;
+
+    return obj;
+  });
+}
 // ══════════════════════════════════════════════════════════════════
 // STATUS MODAL
 // ══════════════════════════════════════════════════════════════════
