@@ -9574,6 +9574,985 @@ console.log('✓ VFR missing-word fix applied — "Missing" checklist answers no
     setTimeout(applyFix, 200);
   }
 
-})(); </script>
+})(); 
+  </script>
+  <!-- ══════════════════════════════════════════════════════════════
+     C-TRACKER — UNIFIED VISUAL REPORT PATCH
+     
+     HOW TO INSTALL:
+     1. Open your index.html
+     2. Find the very last </script> tag before </body>
+     3. Paste this entire block AFTER that closing tag
+     4. Save and reload
+     
+     Applies the First Aid visual report style to:
+     ✓ Fire Extinguisher Tracker
+     ✓ Smoke Detector Tracker
+     ✓ Office Security Check
+     ✓ ACF Warehouse Check
+     ✓ Any future Google Forms card
+     
+     What you get:
+     - Hero banner with score ring
+     - Meta cards: Date, Done By, Premise, Location, Tag
+     - Available items (GREEN) listed first
+     - Missing / non-compliant items (RED) listed after
+     - Compliance strip with animated fill
+     - Submission navigator (prev / next / history)
+     - PDF export button
+══════════════════════════════════════════════════════════════ -->
+
+<style id="uvr-styles">
+/* ── UNIFIED VISUAL REPORT ──────────────────────────────────── */
+.uvr-wrap { font-family: var(--font-sans); }
+
+/* Hero */
+.uvr-hero {
+  position:relative; border-radius:18px; overflow:hidden;
+  margin-bottom:16px; min-height:138px;
+  background:linear-gradient(135deg,#060810,#0d1018);
+  border:1px solid rgba(255,255,255,0.07);
+}
+.uvr-hero-bg { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.uvr-hero-bg svg { width:100%; height:100%; filter:brightness(0.18) saturate(1.5); }
+.uvr-hero-grid {
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+  background-size:28px 28px;
+}
+.uvr-hero-fade {
+  position:absolute; inset:0;
+  background:linear-gradient(110deg,rgba(0,0,0,0.84) 0%,rgba(0,0,0,0.38) 55%,rgba(0,0,0,0.72) 100%);
+}
+.uvr-hero-inner {
+  position:relative; z-index:2;
+  display:flex; align-items:center; gap:16px; padding:18px 22px;
+}
+.uvr-hero-icon {
+  width:58px; height:58px; flex-shrink:0; border-radius:14px; font-size:25px;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05);
+}
+.uvr-hero-text { flex:1; min-width:0; }
+.uvr-hero-tag {
+  font-family:var(--font-mono); font-size:8px; color:rgba(255,255,255,0.3);
+  letter-spacing:0.2em; text-transform:uppercase; margin-bottom:3px;
+}
+.uvr-hero-title {
+  font-size:19px; font-weight:800; color:#fff; letter-spacing:-0.025em;
+  line-height:1.15; margin-bottom:5px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.uvr-hero-meta {
+  font-family:var(--font-mono); font-size:10px; color:rgba(255,255,255,0.35);
+  display:flex; gap:10px; flex-wrap:wrap;
+}
+.uvr-hero-ring { flex-shrink:0; }
+
+/* 2×2 meta grid */
+.uvr-meta-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:14px; }
+.uvr-meta-card {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:11px; padding:11px 14px; position:relative; overflow:hidden;
+}
+.uvr-meta-card::before {
+  content:''; position:absolute; top:0; left:0; bottom:0;
+  width:3px; border-radius:3px 0 0 3px;
+}
+.uvr-mc-red::before    { background:var(--red); }
+.uvr-mc-blue::before   { background:var(--blue); }
+.uvr-mc-green::before  { background:var(--green); }
+.uvr-mc-amber::before  { background:var(--amber); }
+.uvr-mc-purple::before { background:var(--purple,#9d6fff); }
+.uvr-mc-label {
+  font-family:var(--font-mono); font-size:9px; color:var(--muted);
+  letter-spacing:0.1em; text-transform:uppercase; margin-bottom:4px;
+}
+.uvr-mc-value      { font-size:13px; font-weight:700; color:var(--text); line-height:1.3; word-break:break-word; }
+.uvr-mc-value-mono { font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--text); }
+
+/* Tag block */
+.uvr-tag-block {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:13px; padding:14px 16px; margin-bottom:14px;
+  display:flex; align-items:center; gap:14px;
+}
+.uvr-tag-img-wrap {
+  width:80px; height:60px; flex-shrink:0; border-radius:8px; overflow:hidden;
+  border:2px solid var(--border2); background:var(--surface3);
+  display:flex; align-items:center; justify-content:center;
+}
+.uvr-tag-img { width:100%; height:100%; object-fit:cover; display:block; }
+.uvr-tag-icon { font-size:28px; }
+.uvr-tag-label { font-family:var(--font-mono); font-size:9px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:4px; }
+.uvr-tag-id { font-family:var(--font-mono); font-size:19px; font-weight:700; color:var(--text); letter-spacing:0.05em; }
+.uvr-tag-sub { font-size:11px; color:var(--muted); margin-top:3px; }
+
+/* Score strip */
+.uvr-score-strip {
+  display:flex; align-items:center; gap:12px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; padding:12px 15px; margin-bottom:14px;
+}
+.uvr-ss-label { font-family:var(--font-mono); font-size:10px; color:var(--muted); white-space:nowrap; }
+.uvr-ss-track { flex:1; height:9px; background:var(--surface3); border-radius:5px; overflow:hidden; }
+.uvr-ss-fill  { height:100%; border-radius:5px; width:0; transition:width 1.4s cubic-bezier(.4,0,.2,1); }
+.uvr-ss-ok    { background:linear-gradient(90deg,#12522a,#2dd17a); box-shadow:0 0 8px rgba(45,209,122,.4); }
+.uvr-ss-warn  { background:linear-gradient(90deg,#5a3200,#f0a030); }
+.uvr-ss-bad   { background:linear-gradient(90deg,#5a0a12,#e8394a); }
+.uvr-ss-pct   { font-family:var(--font-mono); font-size:16px; font-weight:800; white-space:nowrap; }
+
+/* Section headers */
+.uvr-sec-head {
+  display:flex; align-items:center; gap:9px;
+  padding:11px 15px; border-radius:12px 12px 0 0; margin-top:14px;
+}
+.uvr-sh-green { background:linear-gradient(135deg,rgba(45,209,122,.13),rgba(45,209,122,.05)); border:1px solid rgba(45,209,122,.22); border-bottom:none; }
+.uvr-sh-red   { background:linear-gradient(135deg,rgba(232,57,74,.13),rgba(232,57,74,.05));  border:1px solid rgba(232,57,74,.22);  border-bottom:none; }
+.uvr-sec-title { font-size:13px; font-weight:800; }
+.uvr-sec-title-green { color:var(--green); }
+.uvr-sec-title-red   { color:var(--red); }
+.uvr-sec-count { margin-left:auto; font-family:var(--font-mono); font-size:10px; font-weight:700; padding:2px 9px; border-radius:8px; }
+.uvr-sc-green { background:rgba(45,209,122,.1); color:var(--green); border:1px solid rgba(45,209,122,.28); }
+.uvr-sc-red   { background:rgba(232,57,74,.1);  color:var(--red);   border:1px solid rgba(232,57,74,.28); }
+
+/* Item lists */
+.uvr-list { border:1px solid; border-top:none; border-radius:0 0 12px 12px; overflow:hidden; }
+.uvr-list-green { border-color:rgba(45,209,122,.18); background:rgba(45,209,122,.025); }
+.uvr-list-red   { border-color:rgba(232,57,74,.18);  background:rgba(232,57,74,.025);  }
+
+.uvr-item {
+  display:flex; align-items:flex-start; gap:11px; padding:11px 15px;
+  border-bottom:1px solid; transition:background .12s; cursor:default;
+}
+.uvr-item:last-child { border-bottom:none; }
+.uvr-item-green { border-color:rgba(45,209,122,.1); }
+.uvr-item-green:hover { background:rgba(45,209,122,.04); }
+.uvr-item-red   { border-color:rgba(232,57,74,.08); }
+.uvr-item-red:hover   { background:rgba(232,57,74,.04); }
+
+.uvr-item-num  { font-family:var(--font-mono); font-size:9px; color:var(--dim); padding-top:2px; min-width:20px; text-align:right; flex-shrink:0; }
+.uvr-item-dot  { width:24px; height:24px; border-radius:7px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; margin-top:1px; }
+.uvr-dot-green { background:rgba(45,209,122,.15); color:var(--green); border:1px solid rgba(45,209,122,.28); }
+.uvr-dot-red   { background:rgba(232,57,74,.15);  color:var(--red);   border:1px solid rgba(232,57,74,.28); }
+
+.uvr-item-body { flex:1; min-width:0; }
+.uvr-item-q    { font-size:12px; font-weight:600; color:var(--text); line-height:1.45; margin-bottom:4px; }
+.uvr-item-a    { font-size:12px; line-height:1.5; word-break:break-word; }
+.uvr-ans-green { color:var(--green); font-weight:600; }
+.uvr-ans-red   { color:var(--red); font-style:italic; }
+
+/* Photo thumbnail */
+.uvr-thumb {
+  width:54px; height:40px; object-fit:cover; border-radius:6px;
+  border:1px solid var(--border2); cursor:zoom-in; flex-shrink:0;
+  transition:transform .2s, box-shadow .2s; display:block; margin-top:2px;
+}
+.uvr-thumb:hover { transform:scale(1.1); box-shadow:0 4px 14px rgba(0,0,0,.5); }
+
+/* Empty states */
+.uvr-empty { padding:20px 15px; text-align:center; font-family:var(--font-mono); font-size:11px; }
+.uvr-empty-green { color:var(--green); }
+.uvr-empty-muted { color:var(--muted); }
+
+/* Verdict box */
+.uvr-verdict-box {
+  background:var(--surface2); border:1px solid var(--border); border-radius:10px;
+  padding:13px 16px; margin-top:12px;
+}
+
+/* Recurring issues */
+.uvr-recurring {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:12px; overflow:hidden; margin-top:14px;
+}
+.uvr-rec-head {
+  padding:10px 15px; border-bottom:1px solid var(--border);
+  font-family:var(--font-mono); font-size:9px; color:var(--muted);
+  letter-spacing:.1em; text-transform:uppercase; display:flex; align-items:center; gap:8px;
+}
+.uvr-freq-row  { display:flex; align-items:center; gap:10px; padding:8px 15px; border-bottom:1px solid rgba(34,38,47,.28); }
+.uvr-freq-row:last-child { border-bottom:none; }
+.uvr-freq-rank { font-family:var(--font-mono); font-size:9px; color:var(--dim); width:14px; text-align:center; flex-shrink:0; }
+.uvr-freq-label{ font-size:11px; color:var(--text-dim); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.uvr-freq-track{ width:72px; height:6px; background:var(--surface3); border-radius:4px; overflow:hidden; flex-shrink:0; }
+.uvr-freq-bar  { height:100%; border-radius:4px; transition:width .9s cubic-bezier(.4,0,.2,1); }
+.uvr-freq-count{ font-family:var(--font-mono); font-size:10px; font-weight:700; color:var(--text-dim); white-space:nowrap; min-width:28px; text-align:right; }
+
+/* Export button */
+.uvr-export-btn {
+  width:100%; padding:11px 15px; border-radius:10px;
+  border:1px solid var(--border2); background:transparent; color:var(--text);
+  font-family:var(--font-mono); font-size:11px; font-weight:700;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  gap:8px; transition:background .15s; margin-top:14px; letter-spacing:.04em;
+}
+.uvr-export-btn:hover  { background:var(--surface2); }
+.uvr-export-btn:disabled { opacity:.55; cursor:default; }
+
+/* Footer */
+.uvr-footer {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:11px 0 2px; border-top:1px solid var(--border); margin-top:12px;
+  font-family:var(--font-mono); font-size:10px; color:var(--dim);
+}
+
+/* Light mode overrides */
+body:not(.dark-mode) .uvr-meta-card  { background:#f9fafd; border-color:#e2e5f0; }
+body:not(.dark-mode) .uvr-tag-block  { background:#f9fafd; border-color:#e2e5f0; }
+body:not(.dark-mode) .uvr-score-strip{ background:#f9fafd; border-color:#e2e5f0; }
+body:not(.dark-mode) .uvr-verdict-box{ background:#f9fafd; border-color:#e2e5f0; }
+body:not(.dark-mode) .uvr-recurring  { background:#f9fafd; border-color:#e2e5f0; }
+body:not(.dark-mode) .uvr-ss-track   { background:#eef0f8; }
+body:not(.dark-mode) .uvr-freq-track { background:#eef0f8; }
+body:not(.dark-mode) .uvr-hero { background:linear-gradient(135deg,#e8eaf6,#d4d8f0); border-color:#c0c4dc; }
+body:not(.dark-mode) .uvr-hero-title { color:#1c2033; }
+body:not(.dark-mode) .uvr-hero-meta,
+body:not(.dark-mode) .uvr-hero-tag   { color:#8890aa; }
+</style>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// UNIFIED VISUAL REPORT — same style as First Aid
+// Applies to: Fire Extinguisher, Smoke Detector, Office Security,
+//             ACF Warehouse, and any other Google Forms tracker.
+// ══════════════════════════════════════════════════════════════════
+
+// ── 1. FIELD MAPPINGS per tracker type ───────────────────────────
+// These define which columns in the Google Sheet map to which
+// display fields in the report header.
+
+function _uvrGetMapping(trackerName) {
+  const n = trackerName.toLowerCase();
+
+  // ── Fire Extinguisher ─────────────────────────────────────────
+  if (n.includes('fire') || n.includes('extinguisher')) {
+    return {
+      dateKeys:    ['timestamp', 'date', '04/11/2026'],
+      doneByKeys:  ['done by', 'inspector', 'name', 'by'],
+      premiseKeys: ['premises', 'premise', 'site', 'facility', 'location of premises', 'deb nut'],
+      locationKeys:['location', 'room', 'area', 'floor', 'sector', 'zone'],
+      tagKeys:     ['tag #', 'tag#', 'tag number', 'tag no', 'serial', 'id number'],
+      skipKeys:    ['timestamp', 'email', 'score', 'edit url'],
+      passWords:   ['charged', 'ok', 'yes', 'good', 'pass', 'full', 'complete', 'intact', 'normal', 'green', 'serviceable', 'no damage', 'no'],
+      failWords:   ['expired', 'low', 'missing', 'empty', 'damage', 'fail', 'not', 'broken', 'discharged', 'absent', 'dented', 'yes'],
+      // "Is there any damage?" — YES = bad, NO = good
+      invertKeys:  ['damage', 'expired', 'defect', 'problem', 'issue', 'fail'],
+    };
+  }
+
+  // ── Smoke Detector ────────────────────────────────────────────
+  if (n.includes('smoke') || n.includes('detector')) {
+    return {
+      dateKeys:    ['timestamp', 'date'],
+      doneByKeys:  ['done by', 'inspector', 'name', 'tested by', 'by'],
+      premiseKeys: ['premises', 'premise', 'site', 'building', 'block', 'facility'],
+      locationKeys:['location', 'floor', 'room', 'area', 'zone'],
+      tagKeys:     ['tag', 'serial', 'unit id', 'device id', 'id', 'number'],
+      skipKeys:    ['timestamp', 'email', 'score', 'edit url'],
+      passWords:   ['functional', 'working', 'ok', 'yes', 'pass', 'green', 'good', 'normal', 'operational', 'clean', 'pass', 'no'],
+      failWords:   ['fail', 'not working', 'broken', 'missing', 'damaged', 'expired', 'absent', 'faulty', 'dead', 'yes'],
+      invertKeys:  ['damage', 'defect', 'blocked', 'dirty', 'expired', 'issue', 'fail', 'missing battery'],
+    };
+  }
+
+  // ── Office Security ───────────────────────────────────────────
+  if (n.includes('security') || n.includes('office')) {
+    return {
+      dateKeys:    ['timestamp', 'date'],
+      doneByKeys:  ['done by', 'inspector', 'officer', 'name', 'checked by', 'by'],
+      premiseKeys: ['premises', 'office', 'site', 'building', 'block', 'facility'],
+      locationKeys:['location', 'floor', 'room', 'area', 'zone', 'wing'],
+      tagKeys:     ['reference', 'ref', 'report id', 'check id', 'id', 'tag'],
+      skipKeys:    ['timestamp', 'email', 'score', 'edit url'],
+      passWords:   ['secured', 'locked', 'ok', 'yes', 'pass', 'good', 'normal', 'clear', 'closed', 'working', 'no'],
+      failWords:   ['open', 'unlocked', 'broken', 'missing', 'not working', 'fail', 'damaged', 'exposed', 'absent', 'yes'],
+      invertKeys:  ['damage', 'open', 'unsecured', 'unlocked', 'broken', 'missing', 'expired', 'issue'],
+    };
+  }
+
+  // ── ACF Warehouse / Generic fallback ─────────────────────────
+  return {
+    dateKeys:    ['timestamp', 'date'],
+    doneByKeys:  ['done by', 'inspector', 'name', 'checked by', 'by'],
+    premiseKeys: ['premises', 'warehouse', 'site', 'facility', 'building', 'location of premises'],
+    locationKeys:['location', 'room', 'area', 'zone', 'floor', 'section'],
+    tagKeys:     ['tag', 'ref', 'id', 'serial', 'number', 'code'],
+    skipKeys:    ['timestamp', 'email', 'score', 'edit url'],
+    passWords:   ['yes', 'ok', 'good', 'pass', 'complete', 'available', 'present', 'working', 'clean', 'no'],
+    failWords:   ['no', 'missing', 'fail', 'broken', 'expired', 'absent', 'damaged', 'empty', 'yes'],
+    invertKeys:  ['damage', 'expired', 'missing', 'broken', 'issue', 'defect'],
+  };
+}
+
+// ── 2. KEY FINDERS ───────────────────────────────────────────────
+
+function _uvrFindKey(keys, candidates) {
+  const lo = keys.map(k => k.toLowerCase());
+  for (const c of candidates) {
+    const found = lo.find(k => k.includes(c.toLowerCase()));
+    if (found !== undefined) return keys[lo.indexOf(found)];
+  }
+  return '';
+}
+
+function _uvrIsSkip(key, skipList) {
+  const lo = key.toLowerCase();
+  return skipList.some(s => lo.includes(s.toLowerCase()));
+}
+
+// ── 3. VALUE CLASSIFIER ──────────────────────────────────────────
+// Returns 'pass', 'fail', or 'photo'
+
+function _uvrClassify(key, value, mapping) {
+  if (!value || value.trim() === '' || value === '—') return 'empty';
+  if (typeof _isImg === 'function' && _isImg(value)) return 'photo';
+
+  const lo = value.trim().toLowerCase();
+  const keyLo = key.toLowerCase();
+
+  // Check if this key is an "inverted" question (Yes = bad, No = good)
+  const isInverted = mapping.invertKeys && mapping.invertKeys.some(w => keyLo.includes(w.toLowerCase()));
+
+  const isPass = mapping.passWords.some(w => lo === w.toLowerCase() || lo.includes(w.toLowerCase()));
+  const isFail = mapping.failWords.some(w => lo === w.toLowerCase() || lo.includes(w.toLowerCase()));
+
+  if (isInverted) {
+    // For "Is there damage?" — Yes = fail, No = pass
+    if (isFail) return 'pass';
+    if (isPass) return 'fail';
+  } else {
+    if (isPass) return 'pass';
+    if (isFail) return 'fail';
+  }
+
+  // Default: has a value → treat as answered/pass
+  return 'answered';
+}
+
+// ── 4. DATE FORMATTER ────────────────────────────────────────────
+
+function _uvrFmtDate(raw) {
+  if (!raw) return '—';
+  try {
+    const d = new Date(raw);
+    if (!isNaN(d)) {
+      const dd   = String(d.getDate()).padStart(2, '0');
+      const mm   = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      const hh   = String(d.getHours()).padStart(2, '0');
+      const min  = String(d.getMinutes()).padStart(2, '0');
+      return `${dd}/${mm}/${yyyy} · ${hh}:${min}`;
+    }
+  } catch(e) {}
+  return raw;
+}
+
+// ── 5. MAIN BUILDER ──────────────────────────────────────────────
+
+function buildUnifiedVisualReport(t, rows, idx) {
+  const row     = rows[idx];
+  const keys    = Object.keys(row);
+  const mapping = _uvrGetMapping(t.name);
+
+  // Extract header fields
+  const dateKey     = _uvrFindKey(keys, mapping.dateKeys);
+  const doneByKey   = _uvrFindKey(keys, mapping.doneByKeys);
+  const premiseKey  = _uvrFindKey(keys, mapping.premiseKeys);
+  const locationKey = _uvrFindKey(keys, mapping.locationKeys);
+  const tagKey      = _uvrFindKey(keys, mapping.tagKeys);
+
+  const rawDate  = dateKey    ? (row[dateKey]    || '') : '';
+  const doneBy   = doneByKey  ? (row[doneByKey]  || '') : '';
+  const premise  = premiseKey ? (row[premiseKey] || '') : '';
+  const location = locationKey? (row[locationKey]|| '') : '';
+  const tagVal   = tagKey     ? (row[tagKey]     || '') : '';
+  const fmtDate  = _uvrFmtDate(rawDate);
+  const dateShort= rawDate ? rawDate.toString().split(' ')[0] : '—';
+
+  // Tag: image or text?
+  const tagIsImg  = typeof _isImg === 'function' && _isImg(tagVal);
+  const tagImgUrl = tagIsImg ? (typeof _prev === 'function' ? _prev(tagVal) : tagVal) : null;
+  const tagText   = !tagIsImg ? tagVal : '';
+
+  // Determine which keys are "inspection" questions (not meta/header)
+  const metaValues = [dateKey, doneByKey, premiseKey, locationKey, tagKey].filter(Boolean);
+  const inspKeys   = keys.filter(k => {
+    if (metaValues.includes(k)) return false;
+    if (_uvrIsSkip(k, mapping.skipKeys)) return false;
+    return true;
+  });
+
+  // Classify each inspection item
+  const allItems = inspKeys.map((k, qi) => {
+    const v   = row[k] || '';
+    const cls = _uvrClassify(k, v, mapping);
+    return { k, v, qi: qi + 1, cls };
+  }).filter(x => x.cls !== 'empty'); // hide truly blank fields
+
+  const passed  = allItems.filter(x => x.cls === 'pass' || x.cls === 'photo' || x.cls === 'answered');
+  const failed  = allItems.filter(x => x.cls === 'fail');
+
+  // Compliance
+  const total   = allItems.length;
+  const passN   = passed.length;
+  const pct     = total === 0 ? 100 : Math.round((passN / total) * 100);
+  const scoreCls= pct >= 80 ? 'ok' : pct >= 50 ? 'warn' : 'bad';
+  const color   = pct >= 80 ? '#2dd17a' : pct >= 50 ? '#f0a030' : '#e8394a';
+
+  // Historical average
+  const avgPct = rows.length > 1 ? Math.round(
+    rows.reduce((sum, r) => {
+      const ks  = Object.keys(r).filter(k => !metaValues.includes(k) && !_uvrIsSkip(k, mapping.skipKeys));
+      const p   = ks.filter(k => { const cls = _uvrClassify(k, r[k]||'', mapping); return cls === 'pass' || cls === 'photo' || cls === 'answered'; }).length;
+      const tot = ks.filter(k => _uvrClassify(k, r[k]||'', mapping) !== 'empty').length;
+      return sum + (tot === 0 ? 100 : Math.round((p / tot) * 100));
+    }, 0) / rows.length
+  ) : pct;
+
+  const diff       = pct - avgPct;
+  const trendTxt   = diff > 0 ? `▲ ${diff}% above avg` : diff < 0 ? `▼ ${Math.abs(diff)}% below avg` : '— at avg';
+  const trendColor = diff > 0 ? 'var(--green)' : diff < 0 ? 'var(--red)' : 'var(--muted)';
+
+  // Recurring failures
+  const mc = {};
+  rows.forEach(r => {
+    Object.keys(r).forEach(k => {
+      if (metaValues.includes(k)) return;
+      if (_uvrIsSkip(k, mapping.skipKeys)) return;
+      if (_uvrClassify(k, r[k] || '', mapping) === 'fail') mc[k] = (mc[k] || 0) + 1;
+    });
+  });
+  const freq = Object.entries(mc).sort((a,b) => b[1]-a[1]).slice(0, 5);
+
+  // Score ring SVG
+  const R = 36, CIRC = 2 * Math.PI * R;
+  const ringFill = (pct / 100) * CIRC;
+
+  // Submission navigator options
+  const subOpts = rows.map((r, i) => {
+    const d = dateKey ? (r[dateKey] || '').toString().split(' ')[0] : `#${i+1}`;
+    const n = doneByKey ? (r[doneByKey] || 'Unknown') : 'Unknown';
+    return `<option value="${i}" ${i === idx ? 'selected' : ''}>#${i+1} · ${esc(d)} · ${esc(n)}</option>`;
+  }).join('');
+
+  // History drawer
+  const histHtml = rows.slice().reverse().map((r, ri) => {
+    const realIdx = rows.length - 1 - ri;
+    const d  = dateKey   ? (r[dateKey]   || '').toString().split(' ')[0] : `#${realIdx+1}`;
+    const n  = doneByKey ? (r[doneByKey] || 'Unknown') : 'Unknown';
+    const ks = Object.keys(r).filter(k => !metaValues.includes(k) && !_uvrIsSkip(k, mapping.skipKeys));
+    const p2 = ks.filter(k => { const cls = _uvrClassify(k, r[k]||'', mapping); return cls === 'pass' || cls === 'photo' || cls === 'answered'; }).length;
+    const t2 = ks.filter(k => _uvrClassify(k, r[k]||'', mapping) !== 'empty').length;
+    const cp = t2 === 0 ? 100 : Math.round((p2 / t2) * 100);
+    const hc = cp >= 80 ? 'var(--green)' : cp >= 50 ? 'var(--amber)' : 'var(--red)';
+    const issues = ks.filter(k => _uvrClassify(k, r[k]||'', mapping) === 'fail').length;
+    return `<div class="sr-hist-row ${realIdx === idx ? 'active' : ''}" onclick="srPickHist(${realIdx})">
+      <div class="sr-hist-dot" style="background:${hc}"></div>
+      <div style="flex:1">
+        <div class="sr-hist-date">${esc(d)}</div>
+        <div class="sr-hist-by">👤 ${esc(n)}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="sr-hist-comp" style="color:${hc}">${cp}%</div>
+        <div class="sr-hist-issues">${issues === 0 ? '✓ clean' : issues + ' issue' + (issues !== 1 ? 's' : '')}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Item card HTML
+  function itemCard(item) {
+    const { k, v, qi, cls } = item;
+    const isGreen = cls !== 'fail';
+    const isPhoto = cls === 'photo';
+
+    let ansHtml;
+    if (isPhoto) {
+      const prev = typeof _prev === 'function' ? _prev(v) : v;
+      ansHtml = `<img class="uvr-thumb" src="${esc(prev)}" loading="lazy"
+        onclick="openLightbox('${esc(prev)}','${esc(k)}','${esc(v)}')"
+        onerror="this.outerHTML='<a href=\\'${esc(v)}\\' target=\\'_blank\\' style=\\'color:var(--blue);font-size:10px\\'>Open photo →</a>'"
+        alt="Photo">`;
+    } else if (isGreen) {
+      ansHtml = `<span class="uvr-item-a uvr-ans-green">✓ ${esc(v)}</span>`;
+    } else {
+      ansHtml = `<span class="uvr-item-a uvr-ans-red">✗ ${esc(v || 'Not recorded')}</span>`;
+    }
+
+    const itemCls = isGreen ? 'uvr-item uvr-item-green' : 'uvr-item uvr-item-red';
+    const dotCls  = isGreen ? 'uvr-item-dot uvr-dot-green' : 'uvr-item-dot uvr-dot-red';
+    const dotChar = isGreen ? '✓' : '✗';
+    return `<div class="${itemCls}" style="animation:srPanelIn .2s ease ${qi * .022}s both">
+      <span class="uvr-item-num">Q${qi}</span>
+      <span class="${dotCls}">${dotChar}</span>
+      <div class="uvr-item-body">
+        <div class="uvr-item-q">${esc(k)}</div>
+        ${ansHtml}
+      </div>
+    </div>`;
+  }
+
+  const passedHtml = passed.length === 0
+    ? `<div class="uvr-empty uvr-empty-muted">No items recorded as OK in this submission.</div>`
+    : passed.map(itemCard).join('');
+
+  const failedHtml = failed.length === 0
+    ? `<div class="uvr-empty uvr-empty-green">🎉 No issues found — full compliance!</div>`
+    : failed.map(itemCard).join('');
+
+  // Verdict
+  const verdictText = pct >= 80
+    ? `This inspection is in <strong style="color:var(--green)">Good Standing</strong>. ${failed.length === 0 ? 'No issues recorded.' : failed.length + ' minor issue(s) noted for follow-up.'}`
+    : pct >= 50
+    ? `This inspection is <strong style="color:var(--amber)">Satisfactory but needs attention</strong>. ${failed.length} issue(s) require corrective action before the next cycle.`
+    : `This inspection shows <strong style="color:var(--red)">Critical Non-Compliance</strong>. ${failed.length} issue(s) — immediate action and supervisor escalation required.`;
+  const verdCls   = pct >= 80 ? 'sv-ok' : pct >= 50 ? 'sv-warn' : 'sv-bad';
+  const verdEmoji = pct >= 80 ? '✅' : pct >= 50 ? '⚠️' : '🚨';
+  const verdLabel = pct >= 80 ? 'Good Standing' : pct >= 50 ? 'Action Required' : 'Critical';
+
+  const rid = `uvr_${t.id}_${idx}`;
+
+  return `<div class="uvr-wrap" id="${rid}">
+
+    <!-- ── HERO BANNER ─────────────────────────────────────── -->
+    <div class="uvr-hero">
+      <div class="uvr-hero-bg">${(typeof getTrackerSVG === 'function') ? getTrackerSVG(t.name) : ''}</div>
+      <div class="uvr-hero-grid"></div>
+      <div class="uvr-hero-fade"></div>
+      <div class="uvr-hero-inner">
+        <div class="uvr-hero-icon">${t.icon}</div>
+        <div class="uvr-hero-text">
+          <div class="uvr-hero-tag">C-TRACKER · Inspection Report</div>
+          <div class="uvr-hero-title">${esc(t.name)}</div>
+          <div class="uvr-hero-meta">
+            <span>📅 ${esc(fmtDate.split(' · ')[0] || dateShort)}</span>
+            ${fmtDate.includes(' · ') ? `<span>${esc(fmtDate.split(' · ')[1])}</span>` : ''}
+            ${doneBy   ? `<span>👤 ${esc(doneBy)}</span>`   : ''}
+            ${premise  ? `<span>🏢 ${esc(premise)}</span>`  : ''}
+            ${location ? `<span>📍 ${esc(location)}</span>` : ''}
+            <span>📋 ${idx + 1} / ${rows.length}</span>
+          </div>
+        </div>
+        <!-- Score ring -->
+        <div class="uvr-hero-ring">
+          <svg width="86" height="86" viewBox="0 0 86 86">
+            <circle cx="43" cy="43" r="${R}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="6"/>
+            <circle cx="43" cy="43" r="${R}" fill="none" stroke="${color}" stroke-width="6"
+              stroke-dasharray="${ringFill.toFixed(1)} ${CIRC.toFixed(1)}"
+              stroke-dashoffset="${(CIRC * .25).toFixed(1)}"
+              stroke-linecap="round" transform="rotate(-90 43 43)"
+              style="filter:drop-shadow(0 0 6px ${color}88)"/>
+            <text x="43" y="40" text-anchor="middle" dominant-baseline="middle"
+              font-family="JetBrains Mono" font-size="14" fill="${color}" font-weight="800">${pct}%</text>
+            <text x="43" y="55" text-anchor="middle" dominant-baseline="middle"
+              font-family="JetBrains Mono" font-size="7" fill="rgba(255,255,255,.28)" letter-spacing="1">SCORE</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SUBMISSION NAVIGATOR ─────────────────────────────── -->
+    <div class="sr-section" style="margin-bottom:13px">
+      <div class="sr-sub-nav">
+        <span class="sr-sub-label">Submission</span>
+        <select class="sr-sub-sel" id="srSubSel" onchange="srGoTo(parseInt(this.value))">${subOpts}</select>
+        <button class="sr-sub-btn" onclick="srPrev()">‹</button>
+        <button class="sr-sub-btn" onclick="srNext()">›</button>
+        <button class="sr-hist-btn" onclick="srToggleHist()">🕐 History (${rows.length})</button>
+      </div>
+      <div class="sr-hist-drawer" id="srHistDrawer">${histHtml}</div>
+    </div>
+
+    <!-- ── META CARDS: Date · Done By · Premise · Location ──── -->
+    <div class="uvr-meta-grid">
+      <div class="uvr-meta-card uvr-mc-red">
+        <div class="uvr-mc-label">📅 Date</div>
+        <div class="uvr-mc-value-mono">${esc(fmtDate.split(' · ')[0] || dateShort)}</div>
+        ${fmtDate.includes(' · ') ? `<div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:2px">${esc(fmtDate.split(' · ')[1])}</div>` : ''}
+      </div>
+      <div class="uvr-meta-card uvr-mc-blue">
+        <div class="uvr-mc-label">👤 Done By</div>
+        <div class="uvr-mc-value">${esc(doneBy || '—')}</div>
+      </div>
+      <div class="uvr-meta-card uvr-mc-amber">
+        <div class="uvr-mc-label">🏢 Premise</div>
+        <div class="uvr-mc-value">${esc(premise || '—')}</div>
+      </div>
+      <div class="uvr-meta-card uvr-mc-green">
+        <div class="uvr-mc-label">📍 Location</div>
+        <div class="uvr-mc-value">${esc(location || '—')}</div>
+      </div>
+    </div>
+
+    <!-- ── TAG BLOCK (shown only if tag exists) ─────────────── -->
+    ${(tagImgUrl || tagText) ? `
+    <div class="uvr-tag-block">
+      <div class="uvr-tag-img-wrap">
+        ${tagImgUrl
+          ? `<img class="uvr-tag-img" src="${esc(tagImgUrl)}" loading="lazy"
+               onclick="openLightbox('${esc(tagImgUrl)}','Tag: ${esc(tagKey)}','${esc(tagVal)}')"
+               onerror="this.style.display='none'" alt="Tag">
+             <span class="uvr-tag-icon" style="display:none">🏷️</span>`
+          : `<span class="uvr-tag-icon">🏷️</span>`}
+      </div>
+      <div>
+        <div class="uvr-tag-label">🏷 Tag / Reference ID</div>
+        <div class="uvr-tag-id">${esc(tagText || tagKey || '—')}</div>
+        ${tagImgUrl ? `<div class="uvr-tag-sub" style="color:var(--green)">✓ Tag photo recorded</div>` : ''}
+      </div>
+    </div>` : ''}
+
+    <!-- ── SCORE STRIP ───────────────────────────────────────── -->
+    <div class="uvr-score-strip">
+      <span class="uvr-ss-label">Compliance Score</span>
+      <div class="uvr-ss-track">
+        <div class="uvr-ss-fill uvr-ss-${scoreCls}" id="uvrFill_${rid}" data-pct="${pct}" style="width:0%"></div>
+      </div>
+      <span class="uvr-ss-pct" style="color:${color}">${pct}%</span>
+    </div>
+
+    <!-- ── AVAILABLE / PASSED ITEMS (GREEN FIRST) ───────────── -->
+    <div class="uvr-sec-head uvr-sh-green">
+      <span style="font-size:16px">✅</span>
+      <span class="uvr-sec-title uvr-sec-title-green">Available / Compliant</span>
+      <span class="uvr-sec-count uvr-sc-green">${passed.length} item${passed.length !== 1 ? 's' : ''}</span>
+    </div>
+    <div class="uvr-list uvr-list-green">${passedHtml}</div>
+
+    <!-- ── MISSING / FAILED ITEMS (RED AFTER) ───────────────── -->
+    <div class="uvr-sec-head uvr-sh-red" style="margin-top:10px">
+      <span style="font-size:16px">❌</span>
+      <span class="uvr-sec-title uvr-sec-title-red">Missing / Non-Compliant</span>
+      <span class="uvr-sec-count uvr-sc-red">${failed.length} item${failed.length !== 1 ? 's' : ''}</span>
+    </div>
+    <div class="uvr-list uvr-list-red">${failedHtml}</div>
+
+    <!-- ── VERDICT BOX ───────────────────────────────────────── -->
+    <div class="uvr-verdict-box">
+      <div style="font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:9px">${verdictText}</div>
+      <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+        <span class="sr-verdict ${verdCls}">${verdEmoji} ${verdLabel}</span>
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">
+          avg ${avgPct}% · ${rows.length} inspection${rows.length !== 1 ? 's' : ''} on record
+        </span>
+        <span style="font-family:var(--font-mono);font-size:10px;color:${trendColor};font-weight:700">${trendTxt}</span>
+        ${t.formUrl
+          ? `<a href="${esc(t.formUrl)}" target="_blank"
+              style="margin-left:auto;font-family:var(--font-mono);font-size:10px;
+                color:var(--blue);text-decoration:none;background:var(--blue-bg);
+                border:1px solid var(--blue-dim);padding:4px 11px;border-radius:6px;">
+              ▶ New Inspection →</a>`
+          : ''}
+      </div>
+    </div>
+
+    <!-- ── RECURRING ISSUES ──────────────────────────────────── -->
+    ${freq.length > 0 ? `
+    <div class="uvr-recurring">
+      <div class="uvr-rec-head">
+        📉 Recurring Issues — All Inspections
+        <span style="margin-left:auto;background:var(--red-bg);color:var(--red);
+          border:1px solid var(--red-dim);padding:2px 8px;border-radius:7px;font-weight:700;font-size:9px">
+          ${freq.length} ITEM${freq.length !== 1 ? 'S' : ''}
+        </span>
+      </div>
+      ${freq.map(([k, v], i) => {
+        const p = Math.round((v / rows.length) * 100);
+        const w = Math.round((v / (freq[0][1] || 1)) * 100);
+        const c = p >= 70 ? '#e8394a' : p >= 40 ? '#f0a030' : '#4a9eff';
+        return `<div class="uvr-freq-row">
+          <span class="uvr-freq-rank">${i+1}</span>
+          <span class="uvr-freq-label" title="${esc(k)}">${esc(k.length > 40 ? k.slice(0,38)+'…' : k)}</span>
+          <div class="uvr-freq-track"><div class="uvr-freq-bar" style="width:${w}%;background:${c}"></div></div>
+          <span class="uvr-freq-count">${v}×</span>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+
+    <!-- ── PDF EXPORT ────────────────────────────────────────── -->
+    <button class="uvr-export-btn" id="uvrExportBtn_${rid}" onclick="uvrExportPDF('${t.id}',${idx})">
+      ⬇ Export this report to PDF
+    </button>
+
+    <div class="uvr-footer">
+      <span>C-TRACKER · ${esc(t.name)} · ${rows.length} inspection${rows.length !== 1 ? 's' : ''} on record</span>
+      <span>Generated: ${new Date().toLocaleString()}</span>
+    </div>
+  </div>`;
+}
+
+// ── 6. PDF EXPORT ────────────────────────────────────────────────
+
+function uvrExportPDF(trackerId, idx) {
+  const btn = document.querySelector(`[id^="uvrExportBtn_uvr_${trackerId}"]`);
+  if (btn) { btn.innerHTML = '⏳ Generating PDF…'; btn.disabled = true; }
+
+  const t    = trackers.find(x => x.id === trackerId);
+  const rows = sheetData[trackerId];
+  if (!t || !rows) { if(btn){ btn.innerHTML='⬇ Export this report to PDF'; btn.disabled=false; } return; }
+
+  const row     = rows[idx];
+  const keys    = Object.keys(row);
+  const mapping = _uvrGetMapping(t.name);
+
+  const dateKey     = _uvrFindKey(keys, mapping.dateKeys);
+  const doneByKey   = _uvrFindKey(keys, mapping.doneByKeys);
+  const premiseKey  = _uvrFindKey(keys, mapping.premiseKeys);
+  const locationKey = _uvrFindKey(keys, mapping.locationKeys);
+  const tagKey      = _uvrFindKey(keys, mapping.tagKeys);
+
+  const rawDate  = dateKey    ? (row[dateKey]    || '') : '';
+  const doneBy   = doneByKey  ? (row[doneByKey]  || '') : '—';
+  const premise  = premiseKey ? (row[premiseKey] || '') : '—';
+  const location = locationKey? (row[locationKey]|| '') : '—';
+  const tagVal   = tagKey     ? (row[tagKey]     || '') : '';
+  const fmtDate  = _uvrFmtDate(rawDate);
+
+  const metaValues = [dateKey, doneByKey, premiseKey, locationKey, tagKey].filter(Boolean);
+  const inspKeys   = keys.filter(k => !metaValues.includes(k) && !_uvrIsSkip(k, mapping.skipKeys));
+  const allItems   = inspKeys.map((k, qi) => {
+    const v = row[k] || '';
+    const cls = _uvrClassify(k, v, mapping);
+    return { k, v, qi: qi + 1, cls };
+  }).filter(x => x.cls !== 'empty');
+
+  const passed = allItems.filter(x => x.cls === 'pass' || x.cls === 'photo' || x.cls === 'answered');
+  const failed = allItems.filter(x => x.cls === 'fail');
+  const pct    = allItems.length === 0 ? 100 : Math.round((passed.length / allItems.length) * 100);
+  const pColor = pct >= 80 ? '#16a34a' : pct >= 50 ? '#d97706' : '#dc2626';
+  const esc2   = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  const passRows = passed.map((x,i) => `
+    <tr style="background:${i%2===0?'#f9fafb':'#fff'}">
+      <td style="padding:7px 11px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#9ca3af;width:28px">${x.qi}</td>
+      <td style="padding:7px 11px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151;line-height:1.5">${esc2(x.k)}</td>
+      <td style="padding:7px 11px;border-bottom:1px solid #e5e7eb;font-size:12px;font-weight:600;color:#16a34a">${x.cls==='photo'?'📷 Photo recorded':'✓ '+esc2(x.v)}</td>
+    </tr>`).join('');
+
+  const failRows = failed.map((x,i) => `
+    <tr style="background:${i%2===0?'#fff5f5':'#fff'}">
+      <td style="padding:7px 11px;border-bottom:1px solid #fecaca;font-size:11px;color:#9ca3af;width:28px">${x.qi}</td>
+      <td style="padding:7px 11px;border-bottom:1px solid #fecaca;font-size:12px;color:#374151;line-height:1.5;border-left:3px solid #dc2626">${esc2(x.k)}</td>
+      <td style="padding:7px 11px;border-bottom:1px solid #fecaca;font-size:12px;color:#dc2626;font-weight:600">✗ ${esc2(x.v||'Not compliant')}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>${esc2(t.name)} — Inspection #${idx+1}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',sans-serif;color:#111827;background:#fff;padding:28px}h2{font-size:13px;font-weight:700;margin-bottom:11px;padding-bottom:7px;border-bottom:2px solid #e5e7eb}.no-print{margin-bottom:20px;padding:10px 15px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px}@media print{.no-print{display:none!important}body{padding:14px}@page{margin:16mm 14mm}}</style>
+</head><body>
+<div class="no-print">
+  <span style="font-size:12px;color:#1d4ed8">📄 Press <strong>Ctrl+P</strong> → Save as PDF</span>
+  <button onclick="window.print()" style="padding:6px 16px;background:#1d4ed8;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">🖨 Print / Save PDF</button>
+</div>
+
+<!-- HEADER -->
+<div style="border:2px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:22px">
+  <div style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:20px 24px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(255,255,255,.3);letter-spacing:.2em;text-transform:uppercase;margin-bottom:4px">C-TRACKER · Inspection Report</div>
+      <div style="font-size:20px;font-weight:800;color:#fff">${t.icon} ${esc2(t.name)}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:4px;font-family:'JetBrains Mono',monospace">Sub ${idx+1} of ${rows.length} · ${new Date().toLocaleString()}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:30px;font-weight:800;color:${pColor}">${pct}%</div>
+      <div style="font-size:9px;color:rgba(255,255,255,.3);font-family:'JetBrains Mono',monospace;text-transform:uppercase;margin-top:2px">Compliance</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-top:1px solid #e5e7eb">
+    <div style="padding:11px 16px;border-right:1px solid #e5e7eb">
+      <div style="font-size:9px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;color:#9ca3af;margin-bottom:3px">📅 Date</div>
+      <div style="font-size:12px;font-weight:700;color:#111827">${esc2(fmtDate.split(' · ')[0] || rawDate)}</div>
+    </div>
+    <div style="padding:11px 16px;border-right:1px solid #e5e7eb">
+      <div style="font-size:9px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;color:#9ca3af;margin-bottom:3px">👤 Done By</div>
+      <div style="font-size:12px;font-weight:700;color:#111827">${esc2(doneBy)}</div>
+    </div>
+    <div style="padding:11px 16px;border-right:1px solid #e5e7eb">
+      <div style="font-size:9px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;color:#9ca3af;margin-bottom:3px">🏢 Premise</div>
+      <div style="font-size:12px;font-weight:700;color:#111827">${esc2(premise)}</div>
+    </div>
+    <div style="padding:11px 16px">
+      <div style="font-size:9px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;color:#9ca3af;margin-bottom:3px">📍 Location</div>
+      <div style="font-size:12px;font-weight:700;color:#111827">${esc2(location)}</div>
+    </div>
+  </div>
+  ${tagVal ? `<div style="padding:11px 16px;border-top:1px solid #e5e7eb;background:#f9fafb">
+    <span style="font-size:9px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;color:#9ca3af;margin-right:10px">🏷 Tag / Reference</span>
+    <span style="font-size:13px;font-weight:700;color:#111827;font-family:'JetBrains Mono',monospace">${esc2(tagVal)}</span>
+  </div>` : ''}
+</div>
+
+<!-- AVAILABLE ITEMS -->
+<div style="margin-bottom:22px">
+  <h2 style="color:#16a34a;border-color:#bbf7d0">✅ Available / Compliant Items (${passed.length})</h2>
+  ${passed.length === 0
+    ? `<div style="padding:16px;text-align:center;color:#9ca3af;font-size:12px">No compliant items recorded.</div>`
+    : `<table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+        <thead><tr>
+          <th style="padding:7px 11px;border-bottom:2px solid #e5e7eb;font-size:9px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">#</th>
+          <th style="padding:7px 11px;border-bottom:2px solid #e5e7eb;font-size:9px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Item / Check</th>
+          <th style="padding:7px 11px;border-bottom:2px solid #e5e7eb;font-size:9px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Status</th>
+        </tr></thead><tbody>${passRows}</tbody></table>`}
+</div>
+
+<!-- MISSING / NON-COMPLIANT -->
+<div style="margin-bottom:22px">
+  <h2 style="color:#dc2626;border-color:#fecaca">❌ Missing / Non-Compliant Items (${failed.length})</h2>
+  ${failed.length === 0
+    ? `<div style="padding:16px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;text-align:center;color:#16a34a;font-size:12px">🎉 No issues found — full compliance!</div>`
+    : `<table style="width:100%;border-collapse:collapse;border:1px solid #fecaca;border-radius:8px;overflow:hidden">
+        <thead><tr>
+          <th style="padding:7px 11px;border-bottom:2px solid #fecaca;font-size:9px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#fff5f5">#</th>
+          <th style="padding:7px 11px;border-bottom:2px solid #fecaca;font-size:9px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#fff5f5">Item / Check</th>
+          <th style="padding:7px 11px;border-bottom:2px solid #fecaca;font-size:9px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#fff5f5">Recorded Response</th>
+        </tr></thead><tbody>${failRows}</tbody></table>`}
+</div>
+
+<div style="margin-top:24px;padding-top:12px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;font-family:'JetBrains Mono',monospace">
+  <span>C-TRACKER · ${esc2(t.name)} · ${rows.length} inspection${rows.length!==1?'s':''}</span>
+  <span>Generated: ${new Date().toLocaleString()}</span>
+</div>
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+    if(btn){ btn.innerHTML='✓ PDF preview opened'; setTimeout(()=>{ btn.innerHTML='⬇ Export this report to PDF'; btn.disabled=false; }, 3000); }
+    showToast('✓ PDF preview opened — use Ctrl+P to save', 'green');
+  } else {
+    showToast('Allow popups to export PDF', 'amber');
+    if(btn){ btn.innerHTML='⬇ Export this report to PDF'; btn.disabled=false; }
+  }
+}
+
+// ── 7. ANIMATE SCORE FILLS ───────────────────────────────────────
+
+function _uvrAnimateFills() {
+  document.querySelectorAll('[id^="uvrFill_"]').forEach(el => {
+    el.style.width = (el.dataset.pct || 0) + '%';
+  });
+}
+
+// ── 8. OVERRIDE openReport & _rebuildBody ────────────────────────
+
+(function applyUVROverride() {
+
+  const _origOpen = window.openReport;
+  window.openReport = function(id) {
+    const t = trackers.find(x => x.id === id);
+    if (!t) { if (typeof _origOpen === 'function') _origOpen(id); return; }
+
+    // Local trackers: keep existing behaviour
+    if (typeof isLocalTracker === 'function' && isLocalTracker(t.name)) {
+      if (typeof _origOpen === 'function') _origOpen(id);
+      return;
+    }
+
+    // First Aid: keep its custom report
+    const tName = t.name.toLowerCase();
+    if (tName.includes('first aid') || tName.includes('firstaid') || tName.includes('first-aid')) {
+      if (typeof _origOpen === 'function') _origOpen(id);
+      return;
+    }
+
+    // Sheet-based trackers → Unified Visual Report
+    const rows = sheetData[id];
+    if (!rows || !rows.length) { if (typeof _origOpen === 'function') _origOpen(id); return; }
+
+    if (typeof destroyCharts === 'function') destroyCharts();
+
+    const iconEl  = document.getElementById('reportIcon');
+    const titleEl = document.getElementById('reportTitle');
+    if (iconEl)  iconEl.textContent  = t.icon;
+    if (titleEl) titleEl.textContent = t.name + ' — Inspection Report';
+
+    window._rpt = { tracker: t, allRows: rows, idx: rows.length - 1, histOpen: false };
+
+    const bodyEl = document.getElementById('reportBody');
+    if (bodyEl) bodyEl.innerHTML = buildUnifiedVisualReport(t, rows, rows.length - 1);
+
+    const overlay = document.getElementById('reportOverlay');
+    if (overlay) overlay.classList.add('open');
+
+    setTimeout(_uvrAnimateFills, 160);
+  };
+
+  // Override _rebuildBody for navigator prev/next
+  window._rebuildBody = function() {
+    const rpt = window._rpt;
+    if (!rpt || !rpt.tracker || !rpt.allRows) return;
+
+    const t    = rpt.tracker;
+    const rows = rpt.allRows;
+    const idx  = rpt.idx;
+
+    const bodyEl = document.getElementById('reportBody');
+    if (!bodyEl) return;
+
+    // Route to correct builder
+    const tName = t.name.toLowerCase();
+    if (typeof isLocalTracker === 'function' && isLocalTracker(t.name)) {
+      if (typeof buildLocalTrackerReport === 'function')
+        bodyEl.innerHTML = buildLocalTrackerReport(t, rows, idx);
+    } else if (tName.includes('first aid') || tName.includes('firstaid') || tName.includes('first-aid')) {
+      if (typeof buildFirstAidReport === 'function')
+        bodyEl.innerHTML = buildFirstAidReport(t, rows, idx);
+    } else {
+      bodyEl.innerHTML = buildUnifiedVisualReport(t, rows, idx);
+    }
+
+    setTimeout(() => {
+      _uvrAnimateFills();
+      // Also animate local tracker compliance fills
+      document.querySelectorAll('[data-pct]').forEach(el => {
+        el.style.width = (el.dataset.pct || 0) + '%';
+      });
+      const sel = document.getElementById('srSubSel');
+      if (sel) sel.value = idx;
+      if (rpt.histOpen) {
+        const d = document.getElementById('srHistDrawer');
+        if (d) d.classList.add('open');
+      }
+    }, 80);
+  };
+
+  // Ensure navigation functions are properly bound
+  window.srGoTo = function(idx) {
+    if (!window._rpt) return;
+    window._rpt.idx = parseInt(idx, 10);
+    window._rebuildBody();
+  };
+  window.srPrev = function() {
+    if (!window._rpt || window._rpt.idx <= 0) return;
+    window._rpt.idx--;
+    window._rebuildBody();
+  };
+  window.srNext = function() {
+    if (!window._rpt || window._rpt.idx >= window._rpt.allRows.length - 1) return;
+    window._rpt.idx++;
+    window._rebuildBody();
+  };
+  window.srToggleHist = function() {
+    if (!window._rpt) return;
+    window._rpt.histOpen = !window._rpt.histOpen;
+    const d = document.getElementById('srHistDrawer');
+    if (d) d.classList.toggle('open', window._rpt.histOpen);
+  };
+  window.srPickHist = function(idx) {
+    if (!window._rpt) return;
+    window._rpt.idx = parseInt(idx, 10);
+    window._rpt.histOpen = false;
+    window._rebuildBody();
+  };
+
+  console.log('✓ Unified Visual Report applied to Fire Extinguisher, Smoke Detector, Office Security, and ACF Warehouse trackers');
+
+})();
+</script>
 <script src="c-tracker-theme-toggle.js"></script>
+  
 </body></html>
