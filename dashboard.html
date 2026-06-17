@@ -8543,7 +8543,8 @@ window.openReport = function(id) {
 };
 
 console.log('✓ VFR patch loaded — visual form report active for all Type A trackers');
-  // ══════════════════════════════════════════════════════════════════
+   <script src="c-tracker-theme-toggle.js">
+// ══════════════════════════════════════════════════════════════════
 // C-TRACKER — UNIFIED REPORT PATCH v2
 // Applies the EXACT First Aid report design to ALL Google Forms trackers:
 //   • Fire Extinguisher  • Smoke Detector
@@ -8633,6 +8634,38 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
     'exposed','dirty','blocked','low pressure','defective','out of order'
   ];
 
+  // ── INVERTED QUESTIONS ───────────────────────────────────────────
+  // Questions where "Yes" = BAD and "No" = GOOD.
+  // Pattern: "Is there any X?" / "Any X?" / "Does it have X?"
+  // where X is something undesirable (damage, defect, leak…).
+  // Detection: if the question label contains any of these words,
+  // flip Yes↔No so the compliance calculation is correct.
+
+  const INVERTED_QUESTION_WORDS = [
+    'damage', 'damaged', 'physical damage',
+    'defect', 'defective',
+    'expir', 'expired',
+    'broken', 'crack', 'cracked',
+    'leak', 'leaking', 'leakage',
+    'issue', 'issues',
+    'problem', 'problems',
+    'fault', 'faulty',
+    'unsecured', 'unlocked', 'open',
+    'dirty', 'contaminated',
+    'blocked', 'obstruct',
+    'missing pin', 'missing seal',
+    'tampered', 'vandal',
+    'corrosion', 'rust',
+    'low pressure', 'pressure drop',
+    'discharge', 'discharged',
+    'overdue', 'out of date'
+  ];
+
+  function isInvertedQuestion(key) {
+    const klo = key.toLowerCase();
+    return INVERTED_QUESTION_WORDS.some(w => klo.includes(w));
+  }
+
   function classifyValue(key, value) {
     if (!value || value.trim() === '' || value === '—') return 'empty';
     if (typeof _isImg === 'function' && _isImg(value)) return 'photo';
@@ -8641,21 +8674,32 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
     if (isOptionalField(key)) return 'optional';
 
     const lo  = value.trim().toLowerCase();
-    const klo = key.toLowerCase();
 
-    const invertedQuestion = ['damage','expir','defect','broken','leak','issue','problem','unsecured','unlocked','dirty','blocked','missing'];
-    const isInverted = invertedQuestion.some(w => klo.includes(w));
+    // ── INVERTED QUESTION LOGIC ────────────────────────────────
+    // "Is there any physical damage?" → No = PASS, Yes = FAIL
+    if (isInvertedQuestion(key)) {
+      // Answer is clearly "No" (no problem) → PASS ✅
+      if (lo === 'no' || lo === 'none' || lo === 'no damage' ||
+          lo === 'no defect' || lo === 'no issue' || lo === 'not damaged' ||
+          lo === 'not defective' || lo === 'intact' || lo.startsWith('no ')) {
+        return 'pass';
+      }
+      // Answer is clearly "Yes" (problem exists) → FAIL ❌
+      if (lo === 'yes' || lo === 'yes, damaged' || lo === 'yes, defective' ||
+          lo.startsWith('yes') || lo === 'damaged' || lo === 'defective' ||
+          lo === 'broken' || lo === 'expired' || lo === 'cracked') {
+        return 'fail';
+      }
+      // Fallback for inverted: treat as answered (neutral)
+      return 'answered';
+    }
 
+    // ── NORMAL QUESTION LOGIC ──────────────────────────────────
     const isPass = PASS_WORDS.some(w => lo === w || lo.startsWith(w + ' ') || lo === w + '.');
     const isFail = FAIL_WORDS.some(w => lo === w || lo.startsWith(w + ' ') || lo === w + '.');
 
-    if (isInverted) {
-      if (isFail) return 'pass';
-      if (isPass && (lo === 'yes' || lo.startsWith('yes'))) return 'fail';
-    } else {
-      if (isPass) return 'pass';
-      if (isFail) return 'fail';
-    }
+    if (isPass) return 'pass';
+    if (isFail) return 'fail';
 
     return 'answered';
   }
@@ -9175,7 +9219,5 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
   }
 
 })();
-
 </script>
-
 </body></html>
