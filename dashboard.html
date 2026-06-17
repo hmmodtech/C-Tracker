@@ -8643,8 +8643,24 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
   // flip Yes↔No so the compliance calculation is correct.
 
   const INVERTED_QUESTION_WORDS = [
-    'places suggested' 'physical damage',
+    'places suggested','physical damage',
+    'damage', 'damaged', 
     'defect', 'defective',
+    'expir', 'expired',
+    'broken', 'crack', 'cracked',
+    'leak', 'leaking', 'leakage',
+    'issue', 'issues',
+    'problem', 'problems',
+    'fault', 'faulty',
+    'unsecured', 'unlocked', 'open',
+    'dirty', 'contaminated',
+    'blocked', 'obstruct',
+    'missing pin', 'missing seal',
+    'tampered', 'vandal',
+    'corrosion', 'rust',
+    'low pressure', 'pressure drop',
+    'discharge', 'discharged',
+    'overdue', 'out of date'
   ];
 
   function isInvertedQuestion(key) {
