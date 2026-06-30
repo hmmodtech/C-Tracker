@@ -5953,15 +5953,14 @@ function getLocalTrackerFields(type){
   {key:'externalTestNumber',label:'What is the number used for the external test?',              type:'text',  conditional:{key:'externalTestDone', value:'Yes'}},
   {key:'lastUpdate',        label:'Last Update',                                                 type:'date'},
 ];
-    case 'pharmacy': return [
+     case 'pharmacy': return [
       {key:'date',        label:'Date of Record',                                                                  type:'date',  required:true},
       {key:'doneBy',      label:'Done By',                                                                         type:'text',  required:true},
       {key:'inventoryCheck', label:'Is the Pharmacy Focal Point did a physical inventory check for the Pharmacy?', type:'yesno', required:false},
-      {key:'disposalConfirmed', label:'Are all expired medications disposed of properly?',                         type:'yesno', conditional:{key:'hasExpired',value:'No'}},
+      {key:'hasExpired',  label:'Is there any expired items?',                                                     type:'yesno', required:false},
+      {key:'expiredItems',label:'List of Expired Items',                                                           type:'textarea', conditional:{key:'hasExpired',value:'Yes'}},
+      {key:'disposalConfirmed', label:'Are all expired medications disposed of properly?',                         type:'yesno', conditional:{key:'hasExpired',value:'Yes'}},
     ];
-  {key:'hasExpired',  label:'Is there any expired items?',                                                     type:'yesno', required:false},
-  //  {key:'expiredItems',label:'List of Expired Items',                                                           type:'textarea', conditional:{key:'hasExpired',value:'Yes'}},
-     
     case 'hrcontact': return [
       {key:'date',                   label:'Date of the Record',                                type:'date',   required:true},
       {key:'doneBy',                 label:'Done By',                                           type:'text',   required:true},
