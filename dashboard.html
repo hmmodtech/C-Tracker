@@ -460,6 +460,55 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
   .save-toast.show{transform:translateX(-50%) translateY(0)}
   ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
+/* ══ ABOUT PAGE MODAL ══════════════════════════════════════════ */
+.about-header-card{border:0.5px solid var(--border2);border-radius:14px;padding:22px 24px;margin-bottom:18px;background:var(--card-bg);position:relative;overflow:hidden}
+.about-header-top{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+.about-logo-box{width:52px;height:52px;background:#0d2e1a;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:0.5px solid #1f5c34}
+.about-logo-box svg{width:28px;height:28px}
+.about-eyebrow{font-family:var(--font-mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.about-main-title{font-size:22px;font-weight:500;color:var(--text);letter-spacing:-0.02em;line-height:1.1}
+.about-subtitle{font-size:13px;color:var(--text-dim);margin-top:2px}
+.about-pills{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.about-pill{font-family:var(--font-mono);font-size:10px;padding:3px 10px;border-radius:20px;border:0.5px solid;letter-spacing:0.04em;display:flex;align-items:center;gap:5px}
+.about-pill-green{background:rgba(45,209,122,0.1);border-color:rgba(45,209,122,0.3);color:var(--green)}
+.about-pill-green .about-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+.about-pill-muted{background:var(--surface2);border-color:var(--border2);color:var(--muted)}
+.about-section{border:0.5px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:14px;background:var(--card-bg)}
+.about-section-label{font-family:var(--font-mono);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.about-section-label::before{content:'';width:16px;height:1px;background:var(--accent);display:inline-block}
+.about-body{font-size:13px;color:var(--text);line-height:1.8}
+.about-body p{margin:0 0 12px}
+.about-body p:last-child{margin:0}
+.about-body strong{color:var(--text);font-weight:500}
+.about-features{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+.about-feat{border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;background:var(--card-bg)}
+.about-feat-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:15px}
+.about-feat-icon-green{background:rgba(45,209,122,0.1);border:0.5px solid rgba(45,209,122,0.25);color:var(--green)}
+.about-feat-icon-blue{background:var(--blue-bg);border:0.5px solid var(--blue-dim);color:var(--blue)}
+.about-feat-icon-amber{background:var(--amber-bg);border:0.5px solid var(--amber-dim);color:var(--amber)}
+.about-feat-title{font-size:12px;font-weight:500;color:var(--text);margin-bottom:5px}
+.about-feat-desc{font-size:11px;color:var(--muted);line-height:1.55}
+.about-dev-card{border:0.5px solid var(--border);border-radius:12px;overflow:hidden;background:var(--card-bg);margin-bottom:14px}
+.about-dev-bar{display:flex;align-items:center;gap:8px;padding:10px 20px;border-bottom:0.5px solid var(--border)}
+.about-dev-bar::before{content:'';width:20px;height:1px;background:var(--accent);display:inline-block}
+.about-dev-bar-label{font-family:var(--font-mono);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent)}
+.about-dev-inner{padding:20px 24px;display:flex;gap:18px;align-items:flex-start}
+.about-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#1a3a28,#0d4a28);border:2px solid #2e5e3e;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:16px;font-weight:500;color:#3dca76;flex-shrink:0;position:relative}
+.about-avatar-badge{position:absolute;bottom:0;right:0;width:16px;height:16px;border-radius:50%;background:#3dca76;border:2px solid var(--card-bg);display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff}
+.about-dev-name{font-size:18px;font-weight:500;color:var(--text);letter-spacing:-0.015em;margin-bottom:2px}
+.about-dev-role{font-family:var(--font-mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:5px}
+.about-dev-org{font-size:12px;color:var(--muted);margin-bottom:12px}
+.about-dev-contacts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.about-contact{display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10px;padding:4px 10px;border-radius:6px;background:var(--surface2);border:0.5px solid var(--border);color:var(--text-dim);text-decoration:none}
+.about-bio{font-size:12px;color:var(--text-dim);line-height:1.7;background:var(--surface2);border:0.5px solid var(--border);border-radius:8px;padding:14px 16px}
+.about-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+.about-tag{font-family:var(--font-mono);font-size:10px;padding:4px 12px;border-radius:6px;background:var(--surface2);border:0.5px solid var(--border);color:var(--muted);letter-spacing:0.03em}
+.about-footer-text{text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--dim);padding-top:10px;letter-spacing:0.06em}
+body.dark-mode .about-header-card,
+body.dark-mode .about-section,
+body.dark-mode .about-feat,
+body.dark-mode .about-dev-card{background:var(--card-bg)}
+
 
   /* ══ ENHANCED CARD HOVER ACTION BUTTONS ══════════════════════════ */
   .card-hover-actions{
@@ -1509,6 +1558,7 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
     <a class="nav-item" href="#" onclick="openFinalReport();return false"><span class="nav-icon">◇</span> Reports</a>
     <div class="nav-section">System</div>
     <a class="nav-item" href="#" onclick="openSettings();return false"><span class="nav-icon">◎</span> Settings</a>
+    <a class="nav-item" href="#" onclick="openAboutPage();return false"><span class="nav-icon">ℹ</span> About</a>
     <a class="nav-item" href="#" onclick="manualCloudSync()"><span class="nav-icon">☁</span> Cloud Sync</a>
     <a class="nav-item" href="#" onclick="saveFile()"><span class="nav-icon">↓</span> Save File</a>
   </nav>
@@ -2168,6 +2218,112 @@ body.dark-mode .sr-score-ring-track { stroke: rgba(255,255,255,0.05); }
 </div>
 
 <!-- MODALS -->
+<!-- ABOUT MODAL -->
+<div class="overlay" id="aboutOverlay">
+  <div class="modal wide">
+    <div class="modal-head">
+      <div class="modal-head-left"><span>ℹ</span><span class="modal-title">About C-TRACKER</span></div>
+      <button class="modal-close" onclick="closeModal('aboutOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- HEADER CARD -->
+      <div class="about-header-card">
+        <div class="about-header-top">
+          <div class="about-logo-box">
+            <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="6" width="20" height="16" rx="3" stroke="#3dca76" stroke-width="1.4"/>
+              <rect x="8" y="10" width="5" height="5" rx="1" fill="#3dca76" opacity="0.8"/>
+              <rect x="15" y="10" width="5" height="2" rx="0.5" fill="#3dca76" opacity="0.5"/>
+              <rect x="15" y="13" width="3" height="2" rx="0.5" fill="#3dca76" opacity="0.35"/>
+              <rect x="8" y="17" width="12" height="1.5" rx="0.5" fill="#3dca76" opacity="0.3"/>
+            </svg>
+          </div>
+          <div>
+            <div class="about-eyebrow">Action Against Hunger · ACF OPT · Gaza Base</div>
+            <div class="about-main-title">C-TRACKER</div>
+            <div class="about-subtitle">Field Operations Compliance &amp; Asset Readiness Dashboard</div>
+          </div>
+        </div>
+        <div class="about-pills">
+          <span class="about-pill about-pill-green"><span class="about-dot"></span> ACTIVE</span>
+          <span class="about-pill about-pill-muted">LIVE DATA</span>
+          <span class="about-pill about-pill-muted">RESTRICTED ACCESS</span>
+          <span class="about-pill about-pill-muted">v5</span>
+        </div>
+      </div>
+
+      <!-- ABOUT THE PLATFORM -->
+      <div class="about-section">
+        <div class="about-section-label">About the platform</div>
+        <div class="about-body">
+          <p><strong>C-Tracker</strong> is an automated, real-time field operations compliance and asset readiness dashboard. Designed specifically for humanitarian and NGO operational teams, it consolidates fragmented monitoring workflows into a single, high-visibility control desk.</p>
+          <p>Instead of requiring management to manually open and check <strong>5 separate Google Forms</strong> (with their response sheets) and <strong>9 independent local record tables</strong>, C-Tracker aggregates all <strong>14 data sources</strong> into one unified, real-time page that generates clear, visualized final reports.</p>
+        </div>
+      </div>
+
+      <!-- FEATURE CARDS -->
+      <div class="about-features">
+        <div class="about-feat">
+          <div class="about-feat-icon about-feat-icon-green">◈</div>
+          <div class="about-feat-title">Unified dashboard</div>
+          <div class="about-feat-desc">14 data sources in one real-time control desk — no tab switching required</div>
+        </div>
+        <div class="about-feat">
+          <div class="about-feat-icon about-feat-icon-blue">☁</div>
+          <div class="about-feat-title">Cloud sync</div>
+          <div class="about-feat-desc">Google Sheets and Supabase real-time sync with role-based access control</div>
+        </div>
+        <div class="about-feat">
+          <div class="about-feat-icon about-feat-icon-amber">◇</div>
+          <div class="about-feat-title">Visual reports</div>
+          <div class="about-feat-desc">Auto-generated compliance reports with charts and exportable PDF output</div>
+        </div>
+      </div>
+
+      <!-- DEVELOPER CARD -->
+      <div class="about-dev-card">
+        <div class="about-dev-bar">
+          <span class="about-dev-bar-label">Developed by</span>
+        </div>
+        <div class="about-dev-inner">
+          <div class="about-avatar">
+            AJ
+            <div class="about-avatar-badge">✓</div>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div class="about-dev-name">Ahmed Abu Jami</div>
+            <div class="about-dev-role">Security Assistant</div>
+            <div class="about-dev-org">Action Against Hunger (ACF) · oPT · Gaza Base</div>
+            <div class="about-dev-contacts">
+              <a class="about-contact" href="mailto:aabujami@pt.acfspain.org">✉ aabujami@pt.acfspain.org</a>
+              <a class="about-contact" href="mailto:hmmodtech@gmail.com">✉ hmmodtech@gmail.com</a>
+            </div>
+            <div class="about-bio">
+              Ahmed Abu Jami conceived, designed, and built C-Tracker entirely from scratch — including the multi-source Google Sheets integration engine, the local records system with Supabase cloud sync, the role-based access control, and the full glassmorphism dashboard UI. The platform was developed specifically to serve ACF oPT Gaza Base operations teams with faster, smarter, and more reliable field compliance monitoring in one of the world's most complex humanitarian environments.
+            </div>
+            <div class="about-tags">
+              <span class="about-tag">System Architecture</span>
+              <span class="about-tag">Full-Stack Development</span>
+              <span class="about-tag">Dashboard UI/UX</span>
+              <span class="about-tag">Humanitarian Tech</span>
+              <span class="about-tag">Field Operations</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-footer-text">
+        C-TRACKER v5 &nbsp;·&nbsp; ACF oPT – Gaza Base &nbsp;·&nbsp; INTERNAL – STAFF USE ONLY<br>
+        © 2024–2026 Ahmed Abu Jami · All rights reserved
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('aboutOverlay')">Close</button>
+    </div>
+  </div>
+</div>
 <div class="overlay" id="statusOverlay">
   <div class="modal"><div class="modal-head"><div class="modal-head-left"><span id="statusIcon"></span><span class="modal-title" id="statusTitle">Status</span></div><button class="modal-close" onclick="closeModal('statusOverlay')">✕</button></div><div class="modal-body" id="statusBody"></div><div class="modal-foot"><button class="btn" onclick="closeModal('statusOverlay')">Close</button></div></div>
 </div>
@@ -3397,6 +3553,7 @@ function showToast(msg, color='green'){
 // ══════════════════════════════════════════════════════════════════
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
+function openAboutPage(){openModal('aboutOverlay');}
 document.querySelectorAll('.overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
 
 // ══════════════════════════════════════════════════════════════════
@@ -5093,7 +5250,7 @@ function destroyCharts(){Object.keys(charts).forEach(k=>{if(charts[k]){charts[k]
 function openFinalReport(){
   destroyCharts();
   // Ensure local tracker data is in sheetData
-  trackers.forEach(t=>{ if(isLocalTracker(t.name)){ const r=getLocalRows(t.id); if(r.length) sheetData[t.id]=r; } });
+  trackers.forEach(t=>{ if(isLocalTracker(t.name)){ const r=getLocalRows(t.id); if(r && r.length>0) sheetData[t.id]=r; else sheetData[t.id]=null; } });
 
   const totalR=trackers.reduce((s,t)=>s+(sheetData[t.id]?sheetData[t.id].length:0),0);
   // "linked" = has sheet OR has local records
@@ -5412,7 +5569,7 @@ function buildMgmtFindings(){
 // ══════════════════════════════════════════════════════════════════
 function exportAllReportsPDF(){
   // Make sure local tracker data is loaded
-  trackers.forEach(t=>{ if(isLocalTracker(t.name)){ const r=getLocalRows(t.id); if(r.length) sheetData[t.id]=r; } });
+  trackers.forEach(t=>{ if(isLocalTracker(t.name)){ const r=getLocalRows(t.id); if(r && r.length>0) sheetData[t.id]=r; else sheetData[t.id]=null; } });
 
   const oc = calcOverallCompliance();
   const ocColor = oc>=80?'#16a34a':oc>=50?'#d97706':'#dc2626';
@@ -5703,7 +5860,9 @@ function loadLocalRecords(){
 
 // Get records for a tracker (merges into sheetData-compatible rows format)
 function getLocalRows(trackerId){
-  return localRecords[trackerId] || [];
+  const rows = localRecords[trackerId];
+  if(!rows || !Array.isArray(rows) || rows.length === 0) return [];
+  return rows;
 }
 
 // Add a record
@@ -5798,9 +5957,9 @@ function getLocalTrackerFields(type){
       {key:'date',        label:'Date of Record',                                                                  type:'date',  required:true},
       {key:'doneBy',      label:'Done By',                                                                         type:'text',  required:true},
       {key:'inventoryCheck', label:'Is the Pharmacy Focal Point did a physical inventory check for the Pharmacy?', type:'yesno', required:false},
+      {key:'hasExpired',  label:'Is there any expired items?',                                                     type:'yesno', required:false},
+      {key:'expiredItems',label:'List of Expired Items',                                                           type:'textarea', conditional:{key:'hasExpired',value:'Yes'}},
       {key:'disposalConfirmed', label:'Are all expired medications disposed of properly?',                         type:'yesno', conditional:{key:'hasExpired',value:'Yes'}},
-      {key:'expiredItems',label:'List of Expired Items',                                                           type:'textarea', conditional:{key:'hasExpired',value:'No'}},
-      {key:'disposalConfirmed', label:'Disposal Confirmed',                                                        type:'disposal', conditional:{key:'hasExpired',value:'No'}},
     ];
     case 'hrcontact': return [
       {key:'date',                   label:'Date of the Record',                                type:'date',   required:true},
@@ -6794,7 +6953,8 @@ loadState().then(()=>{
   trackers.forEach(t=>{
     if(isLocalTracker(t.name)){
       const rows = getLocalRows(t.id);
-      if(rows.length) sheetData[t.id] = rows;
+      if(rows && rows.length > 0) sheetData[t.id] = rows;
+      else sheetData[t.id] = null;
     }
   });
   renderTrackers();
@@ -7040,7 +7200,9 @@ window.addLocalRecord = async function(trackerId, record) {
 
 // ── OVERRIDE: getLocalRows → Supabase + localStorage merge ────────
 window.getLocalRows = function(trackerId) {
-  return localRecords[trackerId] || [];
+  const rows = localRecords[trackerId];
+  if(!rows || !Array.isArray(rows) || rows.length === 0) return [];
+  return rows;
 };
 
 // ── LOAD records FROM Supabase on startup ─────────────────────────
@@ -7070,8 +7232,9 @@ async function loadRecordsFromSupabase() {
     // Sync to sheetData
     trackers.forEach(t => {
       if (isLocalTracker(t.name)) {
-        const rows = localRecords[t.id] || [];
-        if (rows.length) sheetData[t.id] = rows;
+        const rows = localRecords[t.id];
+        if (rows && Array.isArray(rows) && rows.length > 0) sheetData[t.id] = rows;
+        else sheetData[t.id] = null;
       }
     });
 
