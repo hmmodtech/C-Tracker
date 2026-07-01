@@ -4166,7 +4166,7 @@ console.log('ROW DATA:', JSON.stringify(row));
       const dd = String(d.getDate()).padStart(2,'0');
       const mm = String(d.getMonth()+1).padStart(2,'0');
       const yyyy = d.getFullYear();
-      fmtDate = `${dd}/${mm}/${yyyy}`;
+      fmtDate = `${dd}-${mm}-${yyyy}`;
     }
   } catch(e){}
 
@@ -4588,7 +4588,7 @@ function buildStructuredReport(t, rows, idx){
   const subOptions = rows.map((r,i)=>{
     const d=r[dateKey]||('Submission #'+(i+1));
     const n=r[nameKey]||'Unknown';
-    return `<option value="${i}" ${i===idx?'selected':''}>#${i+1} · ${d.split(' ')[0]} · ${esc(n)}</option>`;
+    return `<option value="${i}" ${i===idx?'selected':''}>#${i+1} · ${formatDateDMY(d.split(' ')[0])} · ${esc(n)}</option>`;
   }).join('');
 
   // ── HISTORY ROWS ─────────────────────────────────────────────────
@@ -4603,7 +4603,7 @@ function buildStructuredReport(t, rows, idx){
     return `<div class="sr-hist-row ${realIdx===idx?'active':''}" onclick="srPickHist(${realIdx})">
       <div class="sr-hist-dot" style="background:${hColor};box-shadow:0 0 6px ${hColor}88"></div>
       <div style="flex:1">
-        <div class="sr-hist-date">${esc(d.split(' ')[0])}</div>
+        <div class="sr-hist-date">${esc(formatDateDMY(d.split(' ')[0]))}</div>
         <div class="sr-hist-by">👤 ${esc(n)}</div>
       </div>
       <div style="text-align:right">
@@ -4826,7 +4826,7 @@ function buildStructuredReport(t, rows, idx){
               </div>
               <div class="sr-sub-info-v2">
                 <div class="sr-sub-name-v2">${esc(n)}</div>
-                <div class="sr-sub-date-v2">${esc(d)}</div>
+                <div class="sr-sub-date-v2">${esc(formatDateDMY(d))}</div>
               </div>
               <div style="flex-shrink:0;text-align:right">
                 <div class="sr-sub-comp-v2" style="color:var(--${cc})">${cp}%</div>
@@ -5676,7 +5676,7 @@ function exportAllReportsPDF(){
           <div style="background:#fafafa;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb">
             <div>
               <span style="font-size:12px;font-weight:500;color:#111827">Record #${i+1}</span>
-              <span style="font-size:11px;color:#6b7280;margin-left:10px">${escH(r.date||'—')}</span>
+              <span style="font-size:11px;color:#6b7280;margin-left:10px">${escH(formatDateDMY(r.date||'—'))}</span>
               <span style="font-size:11px;color:#6b7280;margin-left:10px">👤 ${escH(r.doneBy||'—')}</span>
             </div>
             <span style="font-size:14px;font-weight:500;color:${rColor}">${rComp}%</span>
@@ -5693,7 +5693,7 @@ function exportAllReportsPDF(){
         const rComp=_compRow(r); const rColor=cc(rComp);
         return `<tr>
           <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#9ca3af">${i+1}</td>
-          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${escH((r[dateKey]||'—').split(' ')[0])}</td>
+          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${escH(formatDateDMY((r[dateKey]||'—').split(' ')[0]))}</td>
           <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${escH(r[personKey]||'—')}</td>
           <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;font-weight:500;color:${rColor}">${rComp}%</td>
         </tr>`;
@@ -6207,7 +6207,7 @@ function buildLocalTrackerReport(t, rows, idx){
   const compCls = compPct>=80?'ok':compPct>=50?'warn':'bad';
   const compColor = compCls==='ok'?'#2dd17a':compCls==='warn'?'#f0a030':'#e8394a';
 
-  const fmtDate = row.date || '—';
+  const fmtDate = formatDateDMY(row.date || '—');
   const doneBy  = row.doneBy || '—';
   const lastUpd = row.lastUpdate || '—';
 
@@ -6217,7 +6217,7 @@ function buildLocalTrackerReport(t, rows, idx){
 
   // Submission nav options
   const subOptions = rows.map((r,i)=>
-    `<option value="${i}" ${i===idx?'selected':''}>#${i+1} · ${r.date||'—'} · ${esc(r.doneBy||'Unknown')}</option>`
+    `<option value="${i}" ${i===idx?'selected':''}>#${i+1} · ${formatDateDMY(r.date||'—')} · ${esc(r.doneBy||'Unknown')}</option>`
   ).join('');
 
   // History drawer
@@ -6231,7 +6231,7 @@ function buildLocalTrackerReport(t, rows, idx){
     return `<div class="sr-hist-row ${realIdx===idx?'active':''}" onclick="srPickHist(${realIdx})">
       <div class="sr-hist-dot" style="background:${hColor}"></div>
       <div style="flex:1">
-        <div class="sr-hist-date">${esc(r.date||'—')}</div>
+        <div class="sr-hist-date">${esc(formatDateDMY(r.date||'—'))}</div>
         <div class="sr-hist-by">👤 ${esc(r.doneBy||'Unknown')}</div>
       </div>
       <div style="text-align:right">
@@ -6661,13 +6661,40 @@ function calcCompliance(rows){
   return tot===0?100:Math.round((ok/tot)*100);
 }
 function calcOverallCompliance(){const wd=trackers.filter(t=>sheetData[t.id]&&sheetData[t.id].length>0);if(!wd.length)return 0;return Math.round(wd.reduce((s,t)=>s+calcCompliance(sheetData[t.id]),0)/wd.length);}
+function formatDateDMY(raw){
+  if(!raw||raw==='—'||raw==='') return '—';
+  try{
+    // handle yyyy-mm-dd or m/d/yyyy or full timestamp
+    const d=new Date(raw);
+    if(!isNaN(d)){
+      const dd=String(d.getDate()).padStart(2,'0');
+      const mm=String(d.getMonth()+1).padStart(2,'0');
+      const yyyy=d.getFullYear();
+      return dd+'-'+mm+'-'+yyyy;
+    }
+  }catch(e){}
+  // fallback: if already dd-mm-yyyy or similar, return as-is
+  return raw.split('T')[0].split(' ')[0];
+}
+function formatDateDMY(raw){
+  if(!raw||raw==='—'||raw==='') return '—';
+  try{
+    const d=new Date(raw);
+    if(!isNaN(d)){
+      const dd=String(d.getDate()).padStart(2,'0');
+      const mm=String(d.getMonth()+1).padStart(2,'0');
+      const yyyy=d.getFullYear();
+      return dd+'-'+mm+'-'+yyyy;
+    }
+  }catch(e){}
+  return raw.split('T')[0].split(' ')[0];
+}
 function getLastDate(rows){
   if(!rows||!rows.length)return'—';
   const l=rows[rows.length-1];
-  // local tracker records use 'date' key directly
-  if(l.date) return l.date;
+  if(l.date) return formatDateDMY(l.date);
   const k=Object.keys(l).find(k=>k.toLowerCase().includes('timestamp')||k.toLowerCase().includes('date'));
-  return k?(l[k]||'—').split(' ')[0]:'—';
+  return k?formatDateDMY((l[k]||'—').split(' ')[0]):'—';
 }
 function getLastPerson(rows){
   if(!rows||!rows.length)return'—';
@@ -8187,9 +8214,12 @@ function _vfrFmtDate(raw) {
   try {
     const d = new Date(raw);
     if (!isNaN(d)) {
-      return d.toLocaleDateString('en-GB', {
-        weekday:'short', day:'2-digit', month:'short', year:'numeric'
-      }) + ' · ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+      const dd  = String(d.getDate()).padStart(2,'0');
+      const mm  = String(d.getMonth()+1).padStart(2,'0');
+      const yyyy = d.getFullYear();
+      const hh  = String(d.getHours()).padStart(2,'0');
+      const min = String(d.getMinutes()).padStart(2,'0');
+      return `${dd}-${mm}-${yyyy} · ${hh}:${min}`;
     }
   } catch(e) {}
   return raw;
@@ -8878,7 +8908,7 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
         const dd   = String(d.getDate()).padStart(2, '0');
         const mm   = String(d.getMonth() + 1).padStart(2, '0');
         const yyyy = d.getFullYear();
-        return `${dd}/${mm}/${yyyy}`;
+        return `${dd}-${mm}-${yyyy}`;
       }
     } catch(e) {}
     return String(raw).split(' ')[0];
@@ -8959,7 +8989,7 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
 
     // Submission navigator
     const subOptions = rows.map((r, i) => {
-      const d2 = dateKey ? (r[dateKey] || '').toString().split(' ')[0] : `#${i+1}`;
+      const d2 = formatDateDMY(dateKey ? (r[dateKey] || '').toString().split(' ')[0] : `#${i+1}`);
       const n2 = doneByKey ? (r[doneByKey] || 'Unknown') : 'Unknown';
       return `<option value="${i}" ${i === idx ? 'selected' : ''}>#${i+1} · ${esc(d2)} · ${esc(n2)}</option>`;
     }).join('');
