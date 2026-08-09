@@ -9296,10 +9296,12 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
 
   function patchCalcCompliance() {
     const _orig = window.calcCompliance;
-    window.calcCompliance = function(rows) {
+    window.calcCompliance = function(rows, trackerName) {
       if (!rows || !rows.length) return 0;
-      // Local tracker records keep existing logic (they have _type field)
-      if (rows[0] && rows[0]._type) return _orig(rows);
+      // Local tracker: delegate entirely to original with trackerName
+      if (trackerName && isLocalTracker(trackerName)) return _orig(rows, trackerName);
+      // Also detect by _type field for backwards compat
+      if (rows[0] && rows[0]._type) return _orig(rows, trackerName);
       // Sheet-based: mandatory-only calculation
       let totalPass = 0, totalFail = 0;
       rows.forEach(r => {
