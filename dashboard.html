@@ -4130,28 +4130,8 @@ function _rowClass(v){
   return '';
 }
 function _compRow(r){
-  if(!r) return 100;
-  var _META=['timestamp','date:','date','column 1','email','score','edit url','session id','form response','if other','specify','comments','tags #','tags'];
-  var _META_FULL=['done by','inspector','submitted by','checked by','premises','site name','facility','building','branch','location of premises','tag #','tag','location','area','expiration date','type','size'];
-  var _INVERTED=['damage','defect','expir','broken','leak','issue','problem','fault','unsecured','unlocked','dirty','blocked','tamper','corrosion','rust','low pressure','discharge','overdue','out of date','missing pin','missing seal'];
-  var _PASS=['available','yes','ok','good','pass','present','working','functional','charged','intact','clean','complete','full','secured','locked','normal','operational','serviceable','no damage','no defect','checked','confirmed','done','found','active','clear','closed','no issue','not damaged','not defective'];
-  var _FAIL=['missing','not available','unavailable','absent','not present','not found','none','empty','expired','broken','damaged','fail','not working','faulty','dead','discharged','dented','exposed','dirty','blocked','low pressure','defective','out of order'];
-  var _isMeta=function(k){var lo=k.toLowerCase();return _META.some(function(w){return lo===w||lo.startsWith(w);})||_META_FULL.some(function(w){return lo===w||lo.includes(w);});};
-  var _isInv=function(k){return _INVERTED.some(function(w){return k.toLowerCase().includes(w);});};
-  var ok=0,tot=0;
-  Object.keys(r).forEach(function(k){
-    if(_isMeta(k))return;
-    var v=(r[k]||'').trim().toLowerCase();
-    if(!v||v==='—')return;
-    if(_isInv(k)){
-      if(v==='no'||v==='none'||v.startsWith('no ')||v==='not damaged'||v==='intact'){ok++;tot++;}
-      else if(v==='yes'||v==='damaged'||v==='defective'||v.startsWith('yes ')){tot++;}
-    } else {
-      var isP=_PASS.some(function(w){return v===w||v.startsWith(w+' ')||v===w+'.';});
-      var isF=_FAIL.some(function(w){return v===w||v.startsWith(w+' ')||v===w+'.';});
-      if(isP){ok++;tot++;}else if(isF){tot++;}
-    }
-  });
+  let ok=0,tot=0;
+  Object.values(r).forEach(v=>{ if(isOk(v))ok++; if(isOk(v)||isBad(v))tot++; });
   return tot===0?100:Math.round((ok/tot)*100);
 }
 
@@ -5689,7 +5669,7 @@ function exportAllReportsPDF(){
     </div>`).join('');
   })();
 
-  // Per-tracker detail sections — CARD LAYOUT (matches management report UI)
+  // Per-tracker detail sections
   let trackerSections = '';
   trackers.forEach(t=>{
     const rows=sheetData[t.id];
@@ -5698,20 +5678,18 @@ function exportAllReportsPDF(){
     const tc=typeConfig[type]||{icon:t.icon,label:t.name};
     const comp=rows&&rows.length?calcCompliance(rows,t.name):null;
     const cColor=comp===null?'#9ca3af':cc(comp);
-    const compLabel=comp===null?'No Data':comp>=80?'✅ On Target':comp>=50?'⚠ Needs Attention':'🚨 Critical';
 
-    // ── Tracker section header ─────────────────────────────────────
     trackerSections+=`<div style="page-break-before:always;padding-top:8px">
-      <div style="display:flex;align-items:center;gap:14px;padding:18px 22px;background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:12px 12px 0 0;">
+      <div style="display:flex;align-items:center;gap:14px;padding:18px 22px;background:#f3f4f6;border-radius:12px 12px 0 0;border:1px solid #e5e7eb;border-bottom:none">
         <div style="font-size:32px">${tc.icon}</div>
         <div style="flex:1">
-          <div style="font-size:9px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.15em;color:rgba(255,255,255,0.35);margin-bottom:3px">C-TRACKER · ${escH(tc.label)}</div>
-          <div style="font-size:20px;font-weight:500;color:#fff">${escH(t.name)}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px;font-family:'JetBrains Mono',monospace">${rows&&rows.length?rows.length+' record'+(rows.length!==1?'s':'')+' · Last: '+getLastDate(rows):'No records'}</div>
+          <div style="font-size:9px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.15em;color:#9ca3af;margin-bottom:3px">C-TRACKER · ${escH(tc.label)}</div>
+          <div style="font-size:20px;font-weight:500;color:#111827">${escH(t.name)}</div>
+          <div style="font-size:11px;color:#6b7280;margin-top:3px;font-family:'JetBrains Mono',monospace">${rows&&rows.length?rows.length+' record'+(rows.length!==1?'s':''):'No records'} · Last: ${rows&&rows.length?getLastDate(rows):'—'}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:36px;font-weight:500;color:${cColor}">${comp!==null?comp+'%':'—'}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.3);font-family:'JetBrains Mono',monospace;text-transform:uppercase;margin-top:2px">${compLabel}</div>
+          <div style="font-size:30px;font-weight:500;color:${cColor}">${comp!==null?comp+'%':'—'}</div>
+          <div style="font-size:9px;color:#9ca3af;font-family:'JetBrains Mono',monospace;text-transform:uppercase;margin-top:2px">Compliance</div>
         </div>
       </div>`;
 
@@ -5720,12 +5698,8 @@ function exportAllReportsPDF(){
       return;
     }
 
-    // ── Record cards grid ──────────────────────────────────────────
-    trackerSections+=`<div style="border:1px solid #e5e7eb;border-radius:0 0 12px 12px;padding:16px;background:#f9fafb;">
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">`;
-
     if(fields){
-      // Local tracker — yesno fields as card rows
+      // Local tracker — one mini-table per record
       const checkFields=fields.filter(f=>f.type==='yesno');
       rows.forEach((r,i)=>{
         const applicableFields=checkFields.filter(f=>{
@@ -5735,93 +5709,60 @@ function exportAllReportsPDF(){
         const passN=applicableFields.filter(f=>(r[f.key]||'').toLowerCase()==='yes').length;
         const rComp=applicableFields.length===0?100:Math.round((passN/applicableFields.length)*100);
         const rColor=cc(rComp);
-        const rBorder=rComp>=80?'#16a34a':rComp>=50?'#d97706':'#dc2626';
-        const fieldRows=fields.filter(f=>f.key!=='date'&&f.key!=='doneBy').map(f=>{
+        const detailRows=fields.filter(f=>f.key!=='date'&&f.key!=='doneBy').map(f=>{
           const v=r[f.key]||'—';
           let display=v, color='#374151';
           if(f.type==='yesno'){
             color=v.toLowerCase()==='yes'?'#16a34a':v.toLowerCase()==='no'?'#dc2626':'#9ca3af';
             display=v.toLowerCase()==='yes'?'✓ Yes':v.toLowerCase()==='no'?'✗ No':'—';
           }
-          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid #f0f0f0;">
-            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">${escH(f.label)}</span>
-            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:${color}">${escH(display)}</span>
-          </div>`;
+          return `<tr>
+            <td style="padding:7px 12px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#374151;width:68%">${escH(f.label)}</td>
+            <td style="padding:7px 12px;border-bottom:1px solid #f3f4f6;font-size:12px;font-weight:500;color:${color}">${escH(display)}</td>
+          </tr>`;
         }).join('');
-        trackerSections+=`<div style="background:#fff;border:1px solid #e5e7eb;border-top:3px solid ${rBorder};border-radius:12px;padding:14px;position:relative;page-break-inside:avoid;">
-          <div style="position:absolute;top:10px;right:10px;font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 8px;border-radius:20px;background:${rComp>=80?'rgba(22,163,74,0.1)':rComp>=50?'rgba(217,119,6,0.1)':'rgba(220,38,38,0.1)'};color:${rColor};border:1px solid ${rBorder}40;">${rComp}%</span>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-            <div style="font-size:20px">${tc.icon}</div>
+
+        const isFirst=i===0;
+        const isLast=i===rows.length-1;
+        trackerSections+=`<div style="border:1px solid #e5e7eb;border-top:${isFirst?'1px solid #e5e7eb':'none'};${isLast?'border-radius:0 0 12px 12px':''};overflow:hidden;page-break-inside:avoid">
+          <div style="background:#fafafa;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb">
             <div>
-              <div style="font-size:11px;font-weight:500;color:#111827">Record #${i+1}</div>
-              <div style="font-size:9px;color:#6b7280;font-family:'JetBrains Mono',monospace">${escH(formatDateDMY(r.date||'—'))}</div>
+              <span style="font-size:12px;font-weight:500;color:#111827">Record #${i+1}</span>
+              <span style="font-size:11px;color:#6b7280;margin-left:10px">${escH(formatDateDMY(r.date||'—'))}</span>
+              <span style="font-size:11px;color:#6b7280;margin-left:10px">👤 ${escH(r.doneBy||'—')}</span>
             </div>
+            <span style="font-size:14px;font-weight:500;color:${rColor}">${rComp}%</span>
           </div>
-          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid #f0f0f0;margin-bottom:6px;">
-            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;">Inspector</span>
-            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:#374151">${escH(r.doneBy||'—')}</span>
-          </div>
-          ${fieldRows}
-          <div style="height:3px;background:#f0f0f0;border-radius:2px;overflow:hidden;margin-top:10px;">
-            <div style="height:100%;width:${rComp}%;background:${rBorder};border-radius:2px;"></div>
-          </div>
+          <table style="width:100%;border-collapse:collapse"><tbody>${detailRows}</tbody></table>
         </div>`;
       });
     } else {
-      // Sheet tracker — card per row
+      // Sheet tracker — summary table
       const keys=Object.keys(rows[0]);
       const dateKey=keys.find(k=>k.toLowerCase().includes('timestamp')||k.toLowerCase().includes('date'));
       const personKey=keys.find(k=>k.toLowerCase().includes('done')||k.toLowerCase().includes('by')||k.toLowerCase().includes('name'));
-      const questionKeys=keys.filter(k=>{
-        const lo=k.toLowerCase();
-        return !['timestamp','date:','date','column 1','email','score','edit url','session id',
-          'form response','if other','specify','comments','tags #','tags','done by','inspector',
-          'submitted by','checked by','premises','site name','facility','building','branch',
-          'location of premises','tag #','tag','location','area','expiration date','type','size'].some(w=>lo===w||lo.includes(w));
-      });
-      rows.forEach((r,i)=>{
-        const rComp=_compRow(r);
-        const rColor=cc(rComp);
-        const rBorder=rComp>=80?'#16a34a':rComp>=50?'#d97706':'#dc2626';
-        const qRows=questionKeys.map(k=>{
-          const v=(r[k]||'').trim();
-          if(!v||v==='—') return '';
-          const vlo=v.toLowerCase();
-          let color='#374151';
-          const passW=['available','yes','ok','good','pass','present','working','functional','charged','intact','clean','complete','full','secured','locked','normal','operational','checked','confirmed','done','active','clear','closed','no damage','no defect','no issue','not damaged'];
-          const failW=['missing','no','not available','unavailable','absent','not present','not found','none','empty','expired','broken','damaged','fail','not working','faulty','dead','discharged','dirty','blocked','low pressure','defective'];
-          const invW=['damage','defect','expir','broken','leak','issue','problem','fault','unlock','dirty','blocked','tamper','corrosion','rust','low pressure','discharge','overdue'];
-          const isInv=invW.some(w=>k.toLowerCase().includes(w));
-          if(isInv){
-            color=(vlo==='no'||vlo==='none'||vlo.startsWith('no ')||vlo==='intact')?'#16a34a':(vlo==='yes'||vlo.startsWith('yes'))?'#dc2626':'#374151';
-          } else {
-            if(passW.some(w=>vlo===w||vlo.startsWith(w+' ')))color='#16a34a';
-            else if(failW.some(w=>vlo===w||vlo.startsWith(w+' ')))color='#dc2626';
-          }
-          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:0.5px solid #f0f0f0;">
-            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.03em;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(k)}</span>
-            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:${color}">${escH(v)}</span>
-          </div>`;
-        }).filter(Boolean).join('');
-        trackerSections+=`<div style="background:#fff;border:1px solid #e5e7eb;border-top:3px solid ${rBorder};border-radius:12px;padding:14px;position:relative;page-break-inside:avoid;">
-          <div style="position:absolute;top:10px;right:10px;font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 8px;border-radius:20px;background:${rComp>=80?'rgba(22,163,74,0.1)':rComp>=50?'rgba(217,119,6,0.1)':'rgba(220,38,38,0.1)'};color:${rColor};border:1px solid ${rBorder}40;">${rComp}%</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-            <div style="font-size:20px">${t.icon}</div>
-            <div>
-              <div style="font-size:11px;font-weight:500;color:#111827">Record #${i+1}</div>
-              <div style="font-size:9px;color:#6b7280;font-family:'JetBrains Mono',monospace">${escH(formatDateDMY((r[dateKey]||'—').split(' ')[0]))}</div>
-            </div>
-          </div>
-          ${personKey?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid #f0f0f0;margin-bottom:5px;"><span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;">Inspector</span><span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:#374151">${escH(r[personKey]||'—')}</span></div>`:''}
-          ${qRows}
-          <div style="height:3px;background:#f0f0f0;border-radius:2px;overflow:hidden;margin-top:10px;">
-            <div style="height:100%;width:${rComp}%;background:${rBorder};border-radius:2px;"></div>
-          </div>
-        </div>`;
-      });
+      const bodyRows=rows.map((r,i)=>{
+        const rComp=_compRow(r); const rColor=cc(rComp);
+        return `<tr>
+          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#9ca3af">${i+1}</td>
+          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${escH(formatDateDMY((r[dateKey]||'—').split(' ')[0]))}</td>
+          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${escH(r[personKey]||'—')}</td>
+          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;font-weight:500;color:${rColor}">${rComp}%</td>
+        </tr>`;
+      }).join('');
+      trackerSections+=`<div style="border:1px solid #e5e7eb;border-radius:0 0 12px 12px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr>
+            <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">#</th>
+            <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Date</th>
+            <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Inspector</th>
+            <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Score</th>
+          </tr></thead>
+          <tbody>${bodyRows}</tbody>
+        </table>
+      </div>`;
     }
-
-    trackerSections+=`</div></div></div>`;
+    trackerSections+=`</div>`;
   });
 
   const html=`<!DOCTYPE html>
@@ -9555,52 +9496,6 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
     window.addEventListener('load', runWhenReady);
   }
 
-})();
-</script>
-
-<!-- LAST-MONTH COMPLIANCE PATCH v3 -->
-<script>
-(function(){
-  function _rowDateStr(row){
-    if(!row) return null;
-    if(row.date) return row.date.split(' ')[0];
-    var k=Object.keys(row).find(function(k){var lo=k.toLowerCase();return lo.includes('timestamp')||lo==='date'||lo==='column 1';});
-    return k?(row[k]||'').split(' ')[0]:null;
-  }
-  function _lastMonthRows(rows){
-    if(!rows||!rows.length) return rows;
-    var latestMs=0;
-    rows.forEach(function(r){var ds=_rowDateStr(r);if(ds){var ms=new Date(ds).getTime();if(!isNaN(ms)&&ms>latestMs)latestMs=ms;}});
-    if(!latestMs) return rows;
-    var latest=new Date(latestMs);
-    var ty=latest.getFullYear(),tm=latest.getMonth();
-    var filtered=rows.filter(function(r){
-      var ds=_rowDateStr(r);if(!ds)return false;
-      var d=new Date(ds);if(isNaN(d))return false;
-      return d.getFullYear()===ty&&d.getMonth()===tm;
-    });
-    return filtered.length?filtered:rows;
-  }
-  function applyPatch(){
-    var _prev=window.calcCompliance;
-    window.calcCompliance=function(rows,trackerName){
-      if(!rows||!rows.length) return 0;
-      if(typeof isLocalTracker==='function'&&isLocalTracker(trackerName)) return _prev(rows,trackerName);
-      if(rows[0]&&rows[0]._type) return _prev(rows,trackerName);
-      return _prev(_lastMonthRows(rows),trackerName);
-    };
-    window.calcOverallCompliance=function(){
-      if(typeof trackers==='undefined') return 0;
-      var wd=trackers.filter(function(t){return sheetData[t.id]&&sheetData[t.id].length>0;});
-      if(!wd.length) return 0;
-      return Math.round(wd.reduce(function(s,t){return s+window.calcCompliance(sheetData[t.id],t.name);},0)/wd.length);
-    };
-    if(typeof renderTrackers==='function') renderTrackers();
-    console.log('Compliance Patch v3 applied');
-  }
-  function run(){setTimeout(applyPatch,1200);}
-  if(document.readyState==='complete') run();
-  else window.addEventListener('load',run);
 })();
 </script>
 </body></html>
