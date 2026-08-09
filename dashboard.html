@@ -4130,8 +4130,28 @@ function _rowClass(v){
   return '';
 }
 function _compRow(r){
-  let ok=0,tot=0;
-  Object.values(r).forEach(v=>{ if(isOk(v))ok++; if(isOk(v)||isBad(v))tot++; });
+  if(!r) return 100;
+  var _META=['timestamp','date:','date','column 1','email','score','edit url','session id','form response','if other','specify','comments','tags #','tags'];
+  var _META_FULL=['done by','inspector','submitted by','checked by','premises','site name','facility','building','branch','location of premises','tag #','tag','location','area','expiration date','type','size'];
+  var _INVERTED=['damage','defect','expir','broken','leak','issue','problem','fault','unsecured','unlocked','dirty','blocked','tamper','corrosion','rust','low pressure','discharge','overdue','out of date','missing pin','missing seal'];
+  var _PASS=['available','yes','ok','good','pass','present','working','functional','charged','intact','clean','complete','full','secured','locked','normal','operational','serviceable','no damage','no defect','checked','confirmed','done','found','active','clear','closed','no issue','not damaged','not defective'];
+  var _FAIL=['missing','not available','unavailable','absent','not present','not found','none','empty','expired','broken','damaged','fail','not working','faulty','dead','discharged','dented','exposed','dirty','blocked','low pressure','defective','out of order'];
+  var _isMeta=function(k){var lo=k.toLowerCase();return _META.some(function(w){return lo===w||lo.startsWith(w);})||_META_FULL.some(function(w){return lo===w||lo.includes(w);});};
+  var _isInv=function(k){return _INVERTED.some(function(w){return k.toLowerCase().includes(w);});};
+  var ok=0,tot=0;
+  Object.keys(r).forEach(function(k){
+    if(_isMeta(k))return;
+    var v=(r[k]||'').trim().toLowerCase();
+    if(!v||v==='—')return;
+    if(_isInv(k)){
+      if(v==='no'||v==='none'||v.startsWith('no ')||v==='not damaged'||v==='intact'){ok++;tot++;}
+      else if(v==='yes'||v==='damaged'||v==='defective'||v.startsWith('yes ')){tot++;}
+    } else {
+      var isP=_PASS.some(function(w){return v===w||v.startsWith(w+' ')||v===w+'.';});
+      var isF=_FAIL.some(function(w){return v===w||v.startsWith(w+' ')||v===w+'.';});
+      if(isP){ok++;tot++;}else if(isF){tot++;}
+    }
+  });
   return tot===0?100:Math.round((ok/tot)*100);
 }
 
@@ -9496,6 +9516,52 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
     window.addEventListener('load', runWhenReady);
   }
 
+})();
+</script>
+
+<!-- LAST-MONTH COMPLIANCE PATCH v3 -->
+<script>
+(function(){
+  function _rowDateStr(row){
+    if(!row) return null;
+    if(row.date) return row.date.split(' ')[0];
+    var k=Object.keys(row).find(function(k){var lo=k.toLowerCase();return lo.includes('timestamp')||lo==='date'||lo==='column 1';});
+    return k?(row[k]||'').split(' ')[0]:null;
+  }
+  function _lastMonthRows(rows){
+    if(!rows||!rows.length) return rows;
+    var latestMs=0;
+    rows.forEach(function(r){var ds=_rowDateStr(r);if(ds){var ms=new Date(ds).getTime();if(!isNaN(ms)&&ms>latestMs)latestMs=ms;}});
+    if(!latestMs) return rows;
+    var latest=new Date(latestMs);
+    var ty=latest.getFullYear(),tm=latest.getMonth();
+    var filtered=rows.filter(function(r){
+      var ds=_rowDateStr(r);if(!ds)return false;
+      var d=new Date(ds);if(isNaN(d))return false;
+      return d.getFullYear()===ty&&d.getMonth()===tm;
+    });
+    return filtered.length?filtered:rows;
+  }
+  function applyPatch(){
+    var _prev=window.calcCompliance;
+    window.calcCompliance=function(rows,trackerName){
+      if(!rows||!rows.length) return 0;
+      if(typeof isLocalTracker==='function'&&isLocalTracker(trackerName)) return _prev(rows,trackerName);
+      if(rows[0]&&rows[0]._type) return _prev(rows,trackerName);
+      return _prev(_lastMonthRows(rows),trackerName);
+    };
+    window.calcOverallCompliance=function(){
+      if(typeof trackers==='undefined') return 0;
+      var wd=trackers.filter(function(t){return sheetData[t.id]&&sheetData[t.id].length>0;});
+      if(!wd.length) return 0;
+      return Math.round(wd.reduce(function(s,t){return s+window.calcCompliance(sheetData[t.id],t.name);},0)/wd.length);
+    };
+    if(typeof renderTrackers==='function') renderTrackers();
+    console.log('Compliance Patch v3 applied');
+  }
+  function run(){setTimeout(applyPatch,1200);}
+  if(document.readyState==='complete') run();
+  else window.addEventListener('load',run);
 })();
 </script>
 </body></html>
