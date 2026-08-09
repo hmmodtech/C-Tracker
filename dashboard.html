@@ -4182,7 +4182,7 @@ console.log('ROW DATA:', JSON.stringify(row));
   const tagText   = !_isImg(tagVal) ? tagVal : '';
 
   // ── Separate items into available / missing ───────────────────
-  const META_KW = ['timestamp','email','done by','inspector','name','by','premise','facility','site name','branch','location','area','room','zone','floor','tag'];
+  const META_KW = ['timestamp','email','done by','inspector','name','by','premise','facility','site name','branch','location','area','room','zone','floor','tag','column 1','date'];
   const checkKeys = keys.filter(k => !META_KW.some(w => k.toLowerCase().includes(w)));
 
   const available = [];
@@ -4531,8 +4531,8 @@ function buildStructuredReport(t, rows, idx){
 
   // inspector/date
   const dateKey = keys.find(k=>k.toLowerCase().includes('timestamp')||k.toLowerCase().includes('date'));
-  const nameKey = keys.find(k=>k.toLowerCase().includes('done')||k.toLowerCase().includes('by')||k.toLowerCase().includes('name'));
-  const locKey  = keys.find(k=>k.toLowerCase().includes('location')||k.toLowerCase().includes('site'));
+  const nameKey = keys.find(k=>{ const lo=k.toLowerCase(); return lo==='done by'||lo.startsWith('done by')||lo==='inspector'||lo.includes('your name')||lo.includes('staff name')||lo.includes('submitted by'); });
+  const locKey  = keys.find(k=>{ const lo=k.toLowerCase(); return lo==='premise'||lo.startsWith('which premise')||lo.includes('location')||lo.includes('site'); });
   const inspDate   = row[dateKey]||'—';
   const inspPerson = row[nameKey]||'Unknown';
   const inspLoc    = locKey ? row[locKey] : '';
@@ -8202,7 +8202,8 @@ body.light-mode .vfr-hero-meta    { color:#8890aa; }
 
 // ── Field classification helpers ─────────────────────────────────
 const VFR_META_SKIP = [
-  'timestamp','email address','email','score','form response edit url'
+  'timestamp','email address','email','score','form response edit url',
+  'premise','which premise','date','column 1'
 ];
 function _vfrIsMetaKey(k) {
   const lo = k.toLowerCase();
@@ -8210,16 +8211,20 @@ function _vfrIsMetaKey(k) {
 }
 function _vfrIsDateKey(k) {
   const lo = k.toLowerCase();
-  return lo.includes('timestamp') || lo.includes('date');
+  return lo.includes('timestamp') || lo === 'date' || lo === 'column 1' || 
+         (lo.includes('date') && lo.length < 20);
 }
 function _vfrIsNameKey(k) {
   const lo = k.toLowerCase();
-  return lo.includes('done by') || lo.includes('inspector') || lo.includes('done_by') ||
-         lo.includes('submitted by') || lo.includes('full name') || lo.includes('name');
+  return lo === 'done by' || lo === 'inspector' || lo === 'done_by' ||
+         lo.includes('submitted by') || lo === 'full name' ||
+         lo.startsWith('done by') || lo.startsWith('inspector') ||
+         lo.includes('your name') || lo.includes('staff name');
 }
 function _vfrIsLocKey(k) {
   const lo = k.toLowerCase();
-  return lo.includes('location') || lo.includes('site') || lo.includes('premise') || lo.includes('area');
+  return lo.includes('location') || lo.includes('site') || lo.includes('area') ||
+         lo === 'premise' || lo.startsWith('which premise') || lo.startsWith('which location');
 }
 
 // ── Classify a value (answered / missing / photo / number / other) ──
