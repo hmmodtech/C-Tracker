@@ -6656,24 +6656,23 @@ function isOk(v){if(!v)return false;const l=v.toLowerCase();return l==='yes'||l.
 function isBad(v){if(!v)return false;const l=v.toLowerCase();return l==='no'||l.includes('missing')||l.includes('empty')||l.includes('none')||l.includes('not available')||l.includes('expired');}
 function calcCompliance(rows, trackerName){
   if(!rows||!rows.length)return 0;
-  // Local tracker: use field definitions to get accurate compliance
+  // Local tracker: use LAST record only (same as what report shows)
   if(trackerName && isLocalTracker(trackerName)){
     const type = getLocalTrackerType(trackerName);
     const fields = getLocalTrackerFields(type);
     const yesnoFields = fields.filter(f => f.type === 'yesno');
     if(yesnoFields.length === 0) return 100;
+    const r = rows[rows.length - 1]; // last record only
     let ok=0, tot=0;
-    rows.forEach(r=>{
-      yesnoFields.forEach(f=>{
-        if(f.conditional){
-          const condVal = (r[f.conditional.key]||'').toLowerCase();
-          const requiredVal = (f.conditional.value||'').toLowerCase();
-          if(condVal !== requiredVal) return;
-        }
-        const lo=(r[f.key]||'').toLowerCase();
-        if(lo==='yes'){ok++;tot++;}
-        else if(lo==='no'){tot++;}
-      });
+    yesnoFields.forEach(f=>{
+      if(f.conditional){
+        const condVal = (r[f.conditional.key]||'').toLowerCase();
+        const requiredVal = (f.conditional.value||'').toLowerCase();
+        if(condVal !== requiredVal) return;
+      }
+      const lo=(r[f.key]||'').toLowerCase();
+      if(lo==='yes'){ok++;tot++;}
+      else if(lo==='no'){tot++;}
     });
     return tot===0?100:Math.round((ok/tot)*100);
   }
