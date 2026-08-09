@@ -5689,7 +5689,7 @@ function exportAllReportsPDF(){
     </div>`).join('');
   })();
 
-  // Per-tracker detail sections
+  // Per-tracker detail sections — CARD LAYOUT (matches management report UI)
   let trackerSections = '';
   trackers.forEach(t=>{
     const rows=sheetData[t.id];
@@ -5698,18 +5698,20 @@ function exportAllReportsPDF(){
     const tc=typeConfig[type]||{icon:t.icon,label:t.name};
     const comp=rows&&rows.length?calcCompliance(rows,t.name):null;
     const cColor=comp===null?'#9ca3af':cc(comp);
+    const compLabel=comp===null?'No Data':comp>=80?'✅ On Target':comp>=50?'⚠ Needs Attention':'🚨 Critical';
 
+    // ── Tracker section header ─────────────────────────────────────
     trackerSections+=`<div style="page-break-before:always;padding-top:8px">
-      <div style="display:flex;align-items:center;gap:14px;padding:18px 22px;background:#f3f4f6;border-radius:12px 12px 0 0;border:1px solid #e5e7eb;border-bottom:none">
+      <div style="display:flex;align-items:center;gap:14px;padding:18px 22px;background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:12px 12px 0 0;">
         <div style="font-size:32px">${tc.icon}</div>
         <div style="flex:1">
-          <div style="font-size:9px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.15em;color:#9ca3af;margin-bottom:3px">C-TRACKER · ${escH(tc.label)}</div>
-          <div style="font-size:20px;font-weight:500;color:#111827">${escH(t.name)}</div>
-          <div style="font-size:11px;color:#6b7280;margin-top:3px;font-family:'JetBrains Mono',monospace">${rows&&rows.length?rows.length+' record'+(rows.length!==1?'s':''):'No records'} · Last: ${rows&&rows.length?getLastDate(rows):'—'}</div>
+          <div style="font-size:9px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.15em;color:rgba(255,255,255,0.35);margin-bottom:3px">C-TRACKER · ${escH(tc.label)}</div>
+          <div style="font-size:20px;font-weight:500;color:#fff">${escH(t.name)}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px;font-family:'JetBrains Mono',monospace">${rows&&rows.length?rows.length+' record'+(rows.length!==1?'s':'')+' · Last: '+getLastDate(rows):'No records'}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:30px;font-weight:500;color:${cColor}">${comp!==null?comp+'%':'—'}</div>
-          <div style="font-size:9px;color:#9ca3af;font-family:'JetBrains Mono',monospace;text-transform:uppercase;margin-top:2px">Compliance</div>
+          <div style="font-size:36px;font-weight:500;color:${cColor}">${comp!==null?comp+'%':'—'}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.3);font-family:'JetBrains Mono',monospace;text-transform:uppercase;margin-top:2px">${compLabel}</div>
         </div>
       </div>`;
 
@@ -5718,8 +5720,12 @@ function exportAllReportsPDF(){
       return;
     }
 
+    // ── Record cards grid ──────────────────────────────────────────
+    trackerSections+=`<div style="border:1px solid #e5e7eb;border-radius:0 0 12px 12px;padding:16px;background:#f9fafb;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">`;
+
     if(fields){
-      // Local tracker — one mini-table per record
+      // Local tracker — yesno fields as card rows
       const checkFields=fields.filter(f=>f.type==='yesno');
       rows.forEach((r,i)=>{
         const applicableFields=checkFields.filter(f=>{
@@ -5729,60 +5735,93 @@ function exportAllReportsPDF(){
         const passN=applicableFields.filter(f=>(r[f.key]||'').toLowerCase()==='yes').length;
         const rComp=applicableFields.length===0?100:Math.round((passN/applicableFields.length)*100);
         const rColor=cc(rComp);
-        const detailRows=fields.filter(f=>f.key!=='date'&&f.key!=='doneBy').map(f=>{
+        const rBorder=rComp>=80?'#16a34a':rComp>=50?'#d97706':'#dc2626';
+        const fieldRows=fields.filter(f=>f.key!=='date'&&f.key!=='doneBy').map(f=>{
           const v=r[f.key]||'—';
           let display=v, color='#374151';
           if(f.type==='yesno'){
             color=v.toLowerCase()==='yes'?'#16a34a':v.toLowerCase()==='no'?'#dc2626':'#9ca3af';
             display=v.toLowerCase()==='yes'?'✓ Yes':v.toLowerCase()==='no'?'✗ No':'—';
           }
-          return `<tr>
-            <td style="padding:7px 12px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#374151;width:68%">${escH(f.label)}</td>
-            <td style="padding:7px 12px;border-bottom:1px solid #f3f4f6;font-size:12px;font-weight:500;color:${color}">${escH(display)}</td>
-          </tr>`;
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid #f0f0f0;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">${escH(f.label)}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:${color}">${escH(display)}</span>
+          </div>`;
         }).join('');
-
-        const isFirst=i===0;
-        const isLast=i===rows.length-1;
-        trackerSections+=`<div style="border:1px solid #e5e7eb;border-top:${isFirst?'1px solid #e5e7eb':'none'};${isLast?'border-radius:0 0 12px 12px':''};overflow:hidden;page-break-inside:avoid">
-          <div style="background:#fafafa;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb">
+        trackerSections+=`<div style="background:#fff;border:1px solid #e5e7eb;border-top:3px solid ${rBorder};border-radius:12px;padding:14px;position:relative;page-break-inside:avoid;">
+          <div style="position:absolute;top:10px;right:10px;font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 8px;border-radius:20px;background:${rComp>=80?'rgba(22,163,74,0.1)':rComp>=50?'rgba(217,119,6,0.1)':'rgba(220,38,38,0.1)'};color:${rColor};border:1px solid ${rBorder}40;">${rComp}%</span>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <div style="font-size:20px">${tc.icon}</div>
             <div>
-              <span style="font-size:12px;font-weight:500;color:#111827">Record #${i+1}</span>
-              <span style="font-size:11px;color:#6b7280;margin-left:10px">${escH(formatDateDMY(r.date||'—'))}</span>
-              <span style="font-size:11px;color:#6b7280;margin-left:10px">👤 ${escH(r.doneBy||'—')}</span>
+              <div style="font-size:11px;font-weight:500;color:#111827">Record #${i+1}</div>
+              <div style="font-size:9px;color:#6b7280;font-family:'JetBrains Mono',monospace">${escH(formatDateDMY(r.date||'—'))}</div>
             </div>
-            <span style="font-size:14px;font-weight:500;color:${rColor}">${rComp}%</span>
           </div>
-          <table style="width:100%;border-collapse:collapse"><tbody>${detailRows}</tbody></table>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid #f0f0f0;margin-bottom:6px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;">Inspector</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:#374151">${escH(r.doneBy||'—')}</span>
+          </div>
+          ${fieldRows}
+          <div style="height:3px;background:#f0f0f0;border-radius:2px;overflow:hidden;margin-top:10px;">
+            <div style="height:100%;width:${rComp}%;background:${rBorder};border-radius:2px;"></div>
+          </div>
         </div>`;
       });
     } else {
-      // Sheet tracker — summary table
+      // Sheet tracker — card per row
       const keys=Object.keys(rows[0]);
       const dateKey=keys.find(k=>k.toLowerCase().includes('timestamp')||k.toLowerCase().includes('date'));
       const personKey=keys.find(k=>k.toLowerCase().includes('done')||k.toLowerCase().includes('by')||k.toLowerCase().includes('name'));
-      const bodyRows=rows.map((r,i)=>{
-        const rComp=_compRow(r); const rColor=cc(rComp);
-        return `<tr>
-          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#9ca3af">${i+1}</td>
-          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${escH(formatDateDMY((r[dateKey]||'—').split(' ')[0]))}</td>
-          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">${escH(r[personKey]||'—')}</td>
-          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;font-weight:500;color:${rColor}">${rComp}%</td>
-        </tr>`;
-      }).join('');
-      trackerSections+=`<div style="border:1px solid #e5e7eb;border-radius:0 0 12px 12px;overflow:hidden">
-        <table style="width:100%;border-collapse:collapse">
-          <thead><tr>
-            <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">#</th>
-            <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Date</th>
-            <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Inspector</th>
-            <th style="padding:8px 12px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;background:#f9fafb">Score</th>
-          </tr></thead>
-          <tbody>${bodyRows}</tbody>
-        </table>
-      </div>`;
+      const questionKeys=keys.filter(k=>{
+        const lo=k.toLowerCase();
+        return !['timestamp','date:','date','column 1','email','score','edit url','session id',
+          'form response','if other','specify','comments','tags #','tags','done by','inspector',
+          'submitted by','checked by','premises','site name','facility','building','branch',
+          'location of premises','tag #','tag','location','area','expiration date','type','size'].some(w=>lo===w||lo.includes(w));
+      });
+      rows.forEach((r,i)=>{
+        const rComp=_compRow(r);
+        const rColor=cc(rComp);
+        const rBorder=rComp>=80?'#16a34a':rComp>=50?'#d97706':'#dc2626';
+        const qRows=questionKeys.map(k=>{
+          const v=(r[k]||'').trim();
+          if(!v||v==='—') return '';
+          const vlo=v.toLowerCase();
+          let color='#374151';
+          const passW=['available','yes','ok','good','pass','present','working','functional','charged','intact','clean','complete','full','secured','locked','normal','operational','checked','confirmed','done','active','clear','closed','no damage','no defect','no issue','not damaged'];
+          const failW=['missing','no','not available','unavailable','absent','not present','not found','none','empty','expired','broken','damaged','fail','not working','faulty','dead','discharged','dirty','blocked','low pressure','defective'];
+          const invW=['damage','defect','expir','broken','leak','issue','problem','fault','unlock','dirty','blocked','tamper','corrosion','rust','low pressure','discharge','overdue'];
+          const isInv=invW.some(w=>k.toLowerCase().includes(w));
+          if(isInv){
+            color=(vlo==='no'||vlo==='none'||vlo.startsWith('no ')||vlo==='intact')?'#16a34a':(vlo==='yes'||vlo.startsWith('yes'))?'#dc2626':'#374151';
+          } else {
+            if(passW.some(w=>vlo===w||vlo.startsWith(w+' ')))color='#16a34a';
+            else if(failW.some(w=>vlo===w||vlo.startsWith(w+' ')))color='#dc2626';
+          }
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:0.5px solid #f0f0f0;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.03em;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(k)}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:${color}">${escH(v)}</span>
+          </div>`;
+        }).filter(Boolean).join('');
+        trackerSections+=`<div style="background:#fff;border:1px solid #e5e7eb;border-top:3px solid ${rBorder};border-radius:12px;padding:14px;position:relative;page-break-inside:avoid;">
+          <div style="position:absolute;top:10px;right:10px;font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 8px;border-radius:20px;background:${rComp>=80?'rgba(22,163,74,0.1)':rComp>=50?'rgba(217,119,6,0.1)':'rgba(220,38,38,0.1)'};color:${rColor};border:1px solid ${rBorder}40;">${rComp}%</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <div style="font-size:20px">${t.icon}</div>
+            <div>
+              <div style="font-size:11px;font-weight:500;color:#111827">Record #${i+1}</div>
+              <div style="font-size:9px;color:#6b7280;font-family:'JetBrains Mono',monospace">${escH(formatDateDMY((r[dateKey]||'—').split(' ')[0]))}</div>
+            </div>
+          </div>
+          ${personKey?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid #f0f0f0;margin-bottom:5px;"><span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9ca3af;text-transform:uppercase;">Inspector</span><span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:#374151">${escH(r[personKey]||'—')}</span></div>`:''}
+          ${qRows}
+          <div style="height:3px;background:#f0f0f0;border-radius:2px;overflow:hidden;margin-top:10px;">
+            <div style="height:100%;width:${rComp}%;background:${rBorder};border-radius:2px;"></div>
+          </div>
+        </div>`;
+      });
     }
-    trackerSections+=`</div>`;
+
+    trackerSections+=`</div></div></div>`;
   });
 
   const html=`<!DOCTYPE html>
