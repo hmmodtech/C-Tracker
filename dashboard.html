@@ -5654,8 +5654,12 @@ function exportAllReportsPDF(){
       // Local tracker — one mini-table per record
       const checkFields=fields.filter(f=>f.type==='yesno');
       rows.forEach((r,i)=>{
-        const passN=checkFields.filter(f=>(r[f.key]||'').toLowerCase()==='yes').length;
-        const rComp=checkFields.length===0?100:Math.round((passN/checkFields.length)*100);
+        const applicableFields=checkFields.filter(f=>{
+          if(!f.conditional) return true;
+          return (r[f.conditional.key]||'').toLowerCase()===(f.conditional.value||'').toLowerCase();
+        });
+        const passN=applicableFields.filter(f=>(r[f.key]||'').toLowerCase()==='yes').length;
+        const rComp=applicableFields.length===0?100:Math.round((passN/applicableFields.length)*100);
         const rColor=cc(rComp);
         const detailRows=fields.filter(f=>f.key!=='date'&&f.key!=='doneBy').map(f=>{
           const v=r[f.key]||'—';
@@ -6200,9 +6204,15 @@ function buildLocalTrackerReport(t, rows, idx){
 
   // Compute compliance: count yes/no fields where yes=pass, no=fail
   const checkFields = fields.filter(f => f.type === 'yesno');
-  const passN = checkFields.filter(f => (row[f.key]||'').toLowerCase() === 'yes').length;
-  const failN  = checkFields.filter(f => (row[f.key]||'').toLowerCase() === 'no').length;
-  const totalCheck = checkFields.length;
+  // Respect conditional fields — only count them when their condition is met
+  const applicableFields = checkFields.filter(f => {
+    if(!f.conditional) return true;
+    const condVal = (row[f.conditional.key]||'').toLowerCase();
+    return condVal === (f.conditional.value||'').toLowerCase();
+  });
+  const passN = applicableFields.filter(f => (row[f.key]||'').toLowerCase() === 'yes').length;
+  const failN  = applicableFields.filter(f => (row[f.key]||'').toLowerCase() === 'no').length;
+  const totalCheck = applicableFields.length;
   const compPct = totalCheck === 0 ? 100 : Math.round((passN/totalCheck)*100);
   const compCls = compPct>=80?'ok':compPct>=50?'warn':'bad';
   const compColor = compCls==='ok'?'#2dd17a':compCls==='warn'?'#f0a030':'#e8394a';
@@ -6540,9 +6550,13 @@ function exportLocalTrackerPDF(trackerId){
 
   const rowsHtml = rows.map((r, i) => {
     const checkFields = fields.filter(f=>f.type==='yesno');
-    const passN = checkFields.filter(f=>(r[f.key]||'').toLowerCase()==='yes').length;
-    const failN = checkFields.filter(f=>(r[f.key]||'').toLowerCase()==='no').length;
-    const comp = checkFields.length===0?100:Math.round((passN/checkFields.length)*100);
+    const applicableFields = checkFields.filter(f=>{
+      if(!f.conditional) return true;
+      return (r[f.conditional.key]||'').toLowerCase()===(f.conditional.value||'').toLowerCase();
+    });
+    const passN = applicableFields.filter(f=>(r[f.key]||'').toLowerCase()==='yes').length;
+    const failN = applicableFields.filter(f=>(r[f.key]||'').toLowerCase()==='no').length;
+    const comp = applicableFields.length===0?100:Math.round((passN/applicableFields.length)*100);
     const compColor = comp>=80?'#16a34a':comp>=50?'#d97706':'#dc2626';
 
     const detailRows = fields.filter(f=>f.key!=='date'&&f.key!=='doneBy').map(f=>{
@@ -6644,12 +6658,21 @@ function calcCompliance(rows){
   if(!rows||!rows.length)return 0;
   // Detect local tracker records (they have a _type field)
   if(rows[0]&&rows[0]._type){
-    // For local trackers, compliance = yes fields / (yes+no fields)
-    let ok=0,tot=0;
+    // Use same logic as buildLocalTrackerReport:
+    // only count fields defined as type='yesno', respecting conditionals
+    const type = getLocalTrackerType(rows[0]._type || '');
+    const fields = getLocalTrackerFields(type);
+    const yesnoFields = fields.filter(f => f.type === 'yesno');
+    let ok=0, tot=0;
     rows.forEach(r=>{
-      Object.entries(r).forEach(([k,v])=>{
-        if(k.startsWith('_')||k==='date'||k==='doneBy'||k==='lastUpdate') return;
-        const lo=(v||'').toLowerCase();
+      yesnoFields.forEach(f=>{
+        // Skip conditional fields where the condition is not met
+        if(f.conditional){
+          const condVal = (r[f.conditional.key]||'').toLowerCase();
+          const requiredVal = (f.conditional.value||'').toLowerCase();
+          if(condVal !== requiredVal) return;
+        }
+        const lo=(r[f.key]||'').toLowerCase();
         if(lo==='yes'){ok++;tot++;}
         else if(lo==='no'){tot++;}
       });
