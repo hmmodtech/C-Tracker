@@ -3598,7 +3598,7 @@ function renderTrackers(){
   sortedTrackers.forEach(t=>{
     const rows=sheetData[t.id];
     const hasData=rows&&rows.length>0;
-    const comp=hasData?calcCompliance(rows):null;
+    const comp=hasData?calcCompliance(rows,t.name):null;
     const cc=comp===null?'na':comp>=80?'ok':comp>=50?'warn':'bad';
     const dotClass=cc==='ok'?'dot-ok':cc==='warn'?'dot-warn':cc==='bad'?'dot-bad':'dot-none';
     const isLinked=!!t.sheetId;
@@ -3970,7 +3970,7 @@ function openStatus(id){
   let h='';
   if(!rows||!rows.length){ h=noDataHtml(t); }
   else if(isLocalTracker(t.name)){
-    const comp = calcCompliance(rows);
+    const comp = calcCompliance(rows,t.name);
     const compCls = comp>=80?'ok':comp>=50?'warn':'bad';
     h=`<div class="report-header">
       <div class="report-stat"><div class="report-stat-label">Total Records</div><div class="report-stat-val ok">${rows.length}</div></div>
@@ -5135,7 +5135,7 @@ function buildRaw(t,rows){
 
 function buildVis(t,rows,pfx){
   const mc={};rows.forEach(r=>Object.entries(r).forEach(([k,v])=>{if(v&&isBad(v))mc[k]=(mc[k]||0)+1;}));
-  const comp=calcCompliance(rows);const color=comp>=80?'ok':comp>=50?'warn':'bad';
+  const comp=calcCompliance(rows,t.name);const color=comp>=80?'ok':comp>=50?'warn':'bad';
   const sorted=Object.entries(mc).sort((a,b)=>b[1]-a[1]).slice(0,6);
   // extract image URLs from data if any column contains an image url
   const imgUrls=[];
@@ -5275,7 +5275,7 @@ function openFinalReport(){
     }
     return s+rows.reduce((ss,r)=>ss+Object.values(r).filter(v=>isBad(v)).length,0);
   },0);
-  const trackersBelowTarget=withData.filter(t=>calcCompliance(sheetData[t.id])<80).length;
+  const trackersBelowTarget=withData.filter(t=>calcCompliance(sheetData[t.id],t.name)<80).length;
 
   // SVG ring
   const R=44,CIRC=2*Math.PI*R;
@@ -5342,7 +5342,7 @@ function openFinalReport(){
   trackers.forEach(t=>{
     const rows=sheetData[t.id];
     const hasData=rows&&rows.length>0;
-    const comp=hasData?calcCompliance(rows):null;
+    const comp=hasData?calcCompliance(rows,t.name):null;
     const cc=comp===null?'na':comp>=80?'ok':comp>=50?'warn':'bad';
     const ccColor=cc==='ok'?'var(--green)':cc==='warn'?'var(--amber)':cc==='bad'?'var(--red)':'var(--dim)';
     const lastDate=getLastDate(rows);
@@ -5455,7 +5455,7 @@ function openFinalReport(){
   setTimeout(()=>{
     if(!withData.length) return;
     const labs=trackers.map(t=>t.icon+' '+t.name.split(' ')[0]);
-    const cv=trackers.map(t=>sheetData[t.id]?calcCompliance(sheetData[t.id]):0);
+    const cv=trackers.map(t=>sheetData[t.id]?calcCompliance(sheetData[t.id],t.name):0);
     const rv=trackers.map(t=>sheetData[t.id]?sheetData[t.id].length:0);
     const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};
     mk('fin-comp','bar',{
@@ -5506,7 +5506,7 @@ function buildMgmtFindings(){
   // per-tracker analysis
   trackers.forEach(t=>{
     const rows=sheetData[t.id]; if(!rows||!rows.length) return;
-    const comp=calcCompliance(rows);
+    const comp=calcCompliance(rows,t.name);
     const mc={};rows.forEach(r=>Object.entries(r).forEach(([k,v])=>{if(v&&isBad(v))mc[k]=(mc[k]||0)+1;}));
     const topIssue=Object.entries(mc).sort((a,b)=>b[1]-a[1])[0];
 
@@ -5590,7 +5590,7 @@ function exportAllReportsPDF(){
   // Summary table rows
   const summaryRows = trackers.map(t=>{
     const rows=sheetData[t.id];
-    const comp=rows&&rows.length?calcCompliance(rows):null;
+    const comp=rows&&rows.length?calcCompliance(rows,t.name):null;
     const cColor=comp===null?'#9ca3af':cc(comp);
     const status=comp===null?'No Data':comp>=80?'✅ On Target':comp>=50?'⚠ Needs Attention':'🚨 Critical';
     return `<tr>
@@ -5607,7 +5607,7 @@ function exportAllReportsPDF(){
     const findings=[];
     trackers.forEach(t=>{
       const rows=sheetData[t.id]; if(!rows||!rows.length) return;
-      const comp=calcCompliance(rows);
+      const comp=calcCompliance(rows,t.name);
       if(comp<50) findings.push({bg:'#fef2f2',border:'#fca5a5',left:'#dc2626',icon:'🚨',title:'Critical Non-Compliance',text:`${t.icon} <strong>${escH(t.name)}</strong> is at <strong>${comp}%</strong> — below 80% target. Immediate action required.`});
       else if(comp<80) findings.push({bg:'#fffbeb',border:'#fcd34d',left:'#d97706',icon:'⚠',title:'Below Target',text:`${t.icon} <strong>${escH(t.name)}</strong> is at <strong>${comp}%</strong>. Review and address missing items.`});
       else findings.push({bg:'#f0fdf4',border:'#86efac',left:'#16a34a',icon:'✅',title:'On Target',text:`${t.icon} <strong>${escH(t.name)}</strong> performing at <strong>${comp}%</strong> across ${rows.length} records.`});
@@ -5628,7 +5628,7 @@ function exportAllReportsPDF(){
     const type=getLocalTrackerType(t.name);
     const fields=type?getLocalTrackerFields(type):null;
     const tc=typeConfig[type]||{icon:t.icon,label:t.name};
-    const comp=rows&&rows.length?calcCompliance(rows):null;
+    const comp=rows&&rows.length?calcCompliance(rows,t.name):null;
     const cColor=comp===null?'#9ca3af':cc(comp);
 
     trackerSections+=`<div style="page-break-before:always;padding-top:8px">
@@ -6654,19 +6654,17 @@ function exportLocalTrackerPDF(trackerId){
 // ══════════════════════════════════════════════════════════════════
 function isOk(v){if(!v)return false;const l=v.toLowerCase();return l==='yes'||l.includes('ok')||l.includes('complete')||l.includes('full')||l.includes('available')||l.includes('good');}
 function isBad(v){if(!v)return false;const l=v.toLowerCase();return l==='no'||l.includes('missing')||l.includes('empty')||l.includes('none')||l.includes('not available')||l.includes('expired');}
-function calcCompliance(rows){
+function calcCompliance(rows, trackerName){
   if(!rows||!rows.length)return 0;
-  // Detect local tracker records (they have a _type field)
-  if(rows[0]&&rows[0]._type){
-    // Use same logic as buildLocalTrackerReport:
-    // only count fields defined as type='yesno', respecting conditionals
-    const type = getLocalTrackerType(rows[0]._type || '');
+  // Local tracker: use field definitions to get accurate compliance
+  if(trackerName && isLocalTracker(trackerName)){
+    const type = getLocalTrackerType(trackerName);
     const fields = getLocalTrackerFields(type);
     const yesnoFields = fields.filter(f => f.type === 'yesno');
+    if(yesnoFields.length === 0) return 100;
     let ok=0, tot=0;
     rows.forEach(r=>{
       yesnoFields.forEach(f=>{
-        // Skip conditional fields where the condition is not met
         if(f.conditional){
           const condVal = (r[f.conditional.key]||'').toLowerCase();
           const requiredVal = (f.conditional.value||'').toLowerCase();
@@ -6679,11 +6677,12 @@ function calcCompliance(rows){
     });
     return tot===0?100:Math.round((ok/tot)*100);
   }
+  // Sheet-based tracker: use isOk/isBad heuristic
   let ok=0,tot=0;
   rows.forEach(r=>Object.values(r).forEach(v=>{if(isOk(v))ok++;if(isOk(v)||isBad(v))tot++;}));
   return tot===0?100:Math.round((ok/tot)*100);
 }
-function calcOverallCompliance(){const wd=trackers.filter(t=>sheetData[t.id]&&sheetData[t.id].length>0);if(!wd.length)return 0;return Math.round(wd.reduce((s,t)=>s+calcCompliance(sheetData[t.id]),0)/wd.length);}
+function calcOverallCompliance(){const wd=trackers.filter(t=>sheetData[t.id]&&sheetData[t.id].length>0);if(!wd.length)return 0;return Math.round(wd.reduce((s,t)=>s+calcCompliance(sheetData[t.id],t.name),0)/wd.length);}
 function formatDateDMY(raw){
   if(!raw||raw==='—'||raw==='') return '—';
   try{
