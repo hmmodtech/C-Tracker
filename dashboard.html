@@ -4130,8 +4130,29 @@ function _rowClass(v){
   return '';
 }
 function _compRow(r){
+  if(!r) return 100;
+  const _CR_META=['timestamp','email','score','edit url','edit response url','form response'];
+  const _CR_PASS=['available','yes','ok','good','pass','present','working','functional','charged','intact','clean','complete','full','secured','locked','normal','operational','serviceable','no damage','no defect','checked','confirmed','done','found','active','clear','closed','no issue','not damaged','not defective'];
+  const _CR_FAIL=['missing','no','not available','unavailable','absent','not present','not found','none','empty','expired','broken','damaged','fail','not working','faulty','dead','discharged','dented','open','unlocked','exposed','dirty','blocked','low pressure','defective','out of order'];
+  const _isMetaK=k=>{
+    const lo=k.toLowerCase();
+    if(_CR_META.some(w=>lo.includes(w)))return true;
+    if(lo==='date'||lo==='column 1')return true;
+    if(['done by','inspector','submitted by','checked by'].some(w=>lo.includes(w)))return true;
+    if(['premises','premise','site name','facility','building','branch','location of premises'].some(w=>lo.includes(w)))return true;
+    if(['location','area','room','floor','zone','wing','sector'].some(w=>lo.includes(w)))return true;
+    if(['tag #','tag#','tag no','tag number','serial','kit id','unit id','device id','reference id'].some(w=>lo.includes(w)))return true;
+    return false;
+  };
   let ok=0,tot=0;
-  Object.values(r).forEach(v=>{ if(isOk(v))ok++; if(isOk(v)||isBad(v))tot++; });
+  Object.keys(r).forEach(k=>{
+    if(_isMetaK(k))return;
+    const v=(r[k]||'').trim().toLowerCase();
+    if(!v||v==='—')return;
+    const isP=_CR_PASS.some(w=>v===w||v.startsWith(w+' ')||v===w+'.');
+    const isF=_CR_FAIL.some(w=>v===w||v.startsWith(w+' ')||v===w+'.');
+    if(isP){ok++;tot++;}else if(isF){tot++;}
+  });
   return tot===0?100:Math.round((ok/tot)*100);
 }
 
@@ -9500,138 +9521,59 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════════
-     LAST-MONTH COMPLIANCE + _compRow FIX PATCH v2
-     Fixes:
-       1. Card compliance → last calendar month only (not all history)
-       2. calcOverallCompliance → same last-month logic
-       3. Fire / Smoke 50% bug in PDF:
-          _compRow() was scanning ALL values with raw isOk/isBad,
-          including dates, names, tags → wrong 50% result.
-          Now uses classifyValue+isMetaKey (same logic as dashboard cards).
-     Run order: load+1200ms (after Unified Report Patch at load+800ms)
+     LAST-MONTH COMPLIANCE PATCH v3
+     - _compRow is fixed at source (skips meta keys, correct pass/fail)
+     - This patch adds last-month filter to calcCompliance (cards)
+       and fixes calcOverallCompliance to use the same logic.
+     Runs at load+1200ms (after Unified Report Patch at load+800ms).
 ═══════════════════════════════════════════════════════════════════ -->
 <script>
-(function() {
+(function(){
   'use strict';
 
-  // ── DATE HELPERS ──────────────────────────────────────────────────
-
-  function _rowDateStr(row) {
-    if (!row) return null;
-    if (row.date) return row.date.split(' ')[0];
-    const k = Object.keys(row).find(k => {
-      const lo = k.toLowerCase();
-      return lo.includes('timestamp') || lo === 'date' || lo === 'column 1';
-    });
-    return k ? (row[k] || '').split(' ')[0] : null;
+  function _rowDateStr(row){
+    if(!row) return null;
+    if(row.date) return row.date.split(' ')[0];
+    const k=Object.keys(row).find(k=>{const lo=k.toLowerCase();return lo.includes('timestamp')||lo==='date'||lo==='column 1';});
+    return k?(row[k]||'').split(' ')[0]:null;
   }
 
-  /**
-   * Returns only the rows from the most recent calendar month
-   * that has data. Falls back to all rows if no dates found.
-   */
-  function _lastMonthRows(rows) {
-    if (!rows || !rows.length) return rows;
-    let latestMs = 0;
-    rows.forEach(r => {
-      const ds = _rowDateStr(r);
-      if (ds) { const ms = new Date(ds).getTime(); if (!isNaN(ms) && ms > latestMs) latestMs = ms; }
+  function _lastMonthRows(rows){
+    if(!rows||!rows.length) return rows;
+    let latestMs=0;
+    rows.forEach(r=>{const ds=_rowDateStr(r);if(ds){const ms=new Date(ds).getTime();if(!isNaN(ms)&&ms>latestMs)latestMs=ms;}});
+    if(!latestMs) return rows;
+    const latest=new Date(latestMs);
+    const ty=latest.getFullYear(),tm=latest.getMonth();
+    const filtered=rows.filter(r=>{
+      const ds=_rowDateStr(r);if(!ds)return false;
+      const d=new Date(ds);if(isNaN(d))return false;
+      return d.getFullYear()===ty&&d.getMonth()===tm;
     });
-    if (!latestMs) return rows;
-    const latest = new Date(latestMs);
-    const ty = latest.getFullYear(), tm = latest.getMonth();
-    const filtered = rows.filter(r => {
-      const ds = _rowDateStr(r); if (!ds) return false;
-      const d = new Date(ds); if (isNaN(d)) return false;
-      return d.getFullYear() === ty && d.getMonth() === tm;
-    });
-    return filtered.length ? filtered : rows;
+    return filtered.length?filtered:rows;
   }
 
-  // ── PATCHED _compRow ──────────────────────────────────────────────
-  /**
-   * Replaces the broken _compRow(r) that uses raw isOk/isBad on ALL values.
-   * New version uses classifyValue+isMetaKey (same as dashboard card logic),
-   * skipping metadata keys like timestamp, name, premises, etc.
-   */
-  function _patchedCompRow(r) {
-    if (typeof classifyValue !== 'function' || typeof isMetaKey !== 'function') {
-      // Fallback to original if patch functions aren't available yet
-      return window._origCompRow ? window._origCompRow(r) : 100;
-    }
-    // Build field map for this row (to identify meta keys)
-    const keys = Object.keys(r);
-    const findK = (candidates) => keys.find(k => candidates.some(c => k.toLowerCase().includes(c)));
-    const dateKey     = findK(['timestamp','date']);
-    const doneByKey   = findK(['done by','inspector','submitted by','checked by','name','by']);
-    const premiseKey  = findK(['premises','premise','site name','facility','building','branch','location of premises']);
-    const locationKey = keys.filter(k => k !== premiseKey).find(k => ['location','area','room','floor','zone','wing','sector'].some(c => k.toLowerCase().includes(c)));
-    const tagKey      = findK(['tag #','tag#','tag no','tag number','serial','kit id','reference id','unit id','device id']);
-    const fields      = { dateKey, doneByKey, premiseKey, locationKey, tagKey };
-
-    let totalPass = 0, totalFail = 0;
-    keys.forEach(k => {
-      if (isMetaKey(k, fields)) return;
-      const cls = classifyValue(k, r[k] || '');
-      if (cls === 'pass' || cls === 'photo' || cls === 'answered') totalPass++;
-      else if (cls === 'fail') totalFail++;
-    });
-    const total = totalPass + totalFail;
-    return total === 0 ? 100 : Math.round((totalPass / total) * 100);
-  }
-
-  // ── MAIN PATCH ────────────────────────────────────────────────────
-
-  function applyLastMonthPatch() {
-
-    // 1. Fix _compRow (PDF per-row score — fire/smoke 50% bug)
-    window._origCompRow = window._compRow;
-    window._compRow = _patchedCompRow;
-
-    // 2. Wrap calcCompliance → last-month filter for sheet-based trackers
-    const _prevCalcCompliance = window.calcCompliance;
-    window.calcCompliance = function(rows, trackerName) {
-      if (!rows || !rows.length) return 0;
-      if (typeof isLocalTracker === 'function' && isLocalTracker(trackerName)) {
-        return _prevCalcCompliance(rows, trackerName);
-      }
-      if (rows[0] && rows[0]._type) return _prevCalcCompliance(rows, trackerName);
-      // Sheet-based: score only last month
-      const subset = _lastMonthRows(rows);
-      return _prevCalcCompliance(subset, trackerName);
+  function applyPatch(){
+    const _prev=window.calcCompliance;
+    window.calcCompliance=function(rows,trackerName){
+      if(!rows||!rows.length) return 0;
+      if(typeof isLocalTracker==='function'&&isLocalTracker(trackerName)) return _prev(rows,trackerName);
+      if(rows[0]&&rows[0]._type) return _prev(rows,trackerName);
+      return _prev(_lastMonthRows(rows),trackerName);
     };
-
-    // 3. Fix calcOverallCompliance to use patched calcCompliance
-    window.calcOverallCompliance = function() {
-      if (typeof trackers === 'undefined') return 0;
-      const wd = trackers.filter(t => sheetData[t.id] && sheetData[t.id].length > 0);
-      if (!wd.length) return 0;
-      return Math.round(
-        wd.reduce((s, t) => s + window.calcCompliance(sheetData[t.id], t.name), 0) / wd.length
-      );
+    window.calcOverallCompliance=function(){
+      if(typeof trackers==='undefined') return 0;
+      const wd=trackers.filter(t=>sheetData[t.id]&&sheetData[t.id].length>0);
+      if(!wd.length) return 0;
+      return Math.round(wd.reduce((s,t)=>s+window.calcCompliance(sheetData[t.id],t.name),0)/wd.length);
     };
-
-    // 4. Re-render dashboard cards
-    if (typeof renderTrackers === 'function') renderTrackers();
-
-    // 5. Update overall KPI if present
-    try {
-      const overallEl = document.getElementById('overallComp');
-      if (overallEl) {
-        const pct = window.calcOverallCompliance();
-        overallEl.textContent = pct + '%';
-        overallEl.className = 'sum-value ' + (pct >= 80 ? 'ok' : pct >= 50 ? 'warn' : 'bad');
-      }
-    } catch(e) {}
-
-    console.log('✓ Compliance Patch v2: last-month filter + _compRow fix applied');
+    if(typeof renderTrackers==='function') renderTrackers();
+    console.log('✓ Compliance Patch v3 applied');
   }
 
-  function runPatch() { setTimeout(applyLastMonthPatch, 1200); }
-
-  if (document.readyState === 'complete') { runPatch(); }
-  else { window.addEventListener('load', runPatch); }
-
+  function run(){setTimeout(applyPatch,1200);}
+  if(document.readyState==='complete') run();
+  else window.addEventListener('load',run);
 })();
 </script>
 </body></html>
