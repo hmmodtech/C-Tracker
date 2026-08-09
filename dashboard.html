@@ -9498,4 +9498,132 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
 
 })();
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     LAST-MONTH COMPLIANCE PATCH v1
+     Fixes:
+       1. Card compliance → last calendar month only (not all history)
+       2. calcOverallCompliance → same last-month logic
+       3. Fire / Smoke 50% bug → uses patchCalcCompliance logic, not raw isOk/isBad
+     Must run AFTER the Unified Report Patch (which fires at load+800ms).
+     We use load+1200ms to guarantee execution order.
+═══════════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+  'use strict';
+
+  // ── HELPERS ───────────────────────────────────────────────────────
+
+  /** Return the ISO date string (YYYY-MM-DD) from a row, or null */
+  function _rowDateStr(row) {
+    if (!row) return null;
+    // local tracker records
+    if (row.date) return row.date.split(' ')[0];
+    // sheet-based: find timestamp / date key
+    const k = Object.keys(row).find(k => {
+      const lo = k.toLowerCase();
+      return lo.includes('timestamp') || lo === 'date' || lo === 'column 1';
+    });
+    return k ? (row[k] || '').split(' ')[0] : null;
+  }
+
+  /**
+   * Filter rows to those belonging to the most recent calendar month
+   * that actually HAS data.
+   * e.g. if the latest record is 2026-08-09, keep all rows where
+   *      YYYY-MM === "2026-08".
+   * Falls back to all rows if no date can be parsed.
+   */
+  function _lastMonthRows(rows) {
+    if (!rows || !rows.length) return rows;
+
+    // Find the latest parseable date across all rows
+    let latestMs = 0;
+    rows.forEach(r => {
+      const ds = _rowDateStr(r);
+      if (ds) {
+        const ms = new Date(ds).getTime();
+        if (!isNaN(ms) && ms > latestMs) latestMs = ms;
+      }
+    });
+
+    if (!latestMs) return rows; // no dates at all → fall back
+
+    const latest = new Date(latestMs);
+    const targetYear  = latest.getFullYear();
+    const targetMonth = latest.getMonth(); // 0-based
+
+    const filtered = rows.filter(r => {
+      const ds = _rowDateStr(r);
+      if (!ds) return false;
+      const d = new Date(ds);
+      if (isNaN(d)) return false;
+      return d.getFullYear() === targetYear && d.getMonth() === targetMonth;
+    });
+
+    return filtered.length ? filtered : rows; // safety fallback
+  }
+
+  // ── PATCH ─────────────────────────────────────────────────────────
+
+  function applyLastMonthPatch() {
+
+    // 1. Wrap calcCompliance to use last-month rows only
+    const _prevCalcCompliance = window.calcCompliance;
+    window.calcCompliance = function(rows, trackerName) {
+      if (!rows || !rows.length) return 0;
+
+      // Local trackers: always last record — don't change their logic
+      if (typeof isLocalTracker === 'function' && isLocalTracker(trackerName)) {
+        return _prevCalcCompliance(rows, trackerName);
+      }
+      // Also handle _type-stamped rows
+      if (rows[0] && rows[0]._type) {
+        return _prevCalcCompliance(rows, trackerName);
+      }
+
+      // Sheet-based: filter to last month, then score
+      const subset = _lastMonthRows(rows);
+      return _prevCalcCompliance(subset, trackerName);
+    };
+
+    // 2. Fix calcOverallCompliance to use the new calcCompliance
+    window.calcOverallCompliance = function() {
+      if (typeof trackers === 'undefined') return 0;
+      const wd = trackers.filter(t => sheetData[t.id] && sheetData[t.id].length > 0);
+      if (!wd.length) return 0;
+      return Math.round(
+        wd.reduce((s, t) => s + window.calcCompliance(sheetData[t.id], t.name), 0) / wd.length
+      );
+    };
+
+    // 3. Re-render dashboard cards so scores update immediately
+    if (typeof renderTrackers === 'function') renderTrackers();
+
+    // 4. Update the summary KPI cards if they exist
+    try {
+      const overallEl = document.getElementById('overallComp');
+      if (overallEl) {
+        const pct = window.calcOverallCompliance();
+        overallEl.textContent = pct + '%';
+        overallEl.className = 'sum-value ' + (pct >= 80 ? 'ok' : pct >= 50 ? 'warn' : 'bad');
+      }
+    } catch(e) {}
+
+    console.log('✓ Last-Month Compliance Patch v1 applied — cards and overall score reflect last calendar month only');
+  }
+
+  // Run at load+1200ms to guarantee we're after the Unified Report Patch (load+800ms)
+  function runPatch() {
+    setTimeout(applyLastMonthPatch, 1200);
+  }
+
+  if (document.readyState === 'complete') {
+    runPatch();
+  } else {
+    window.addEventListener('load', runPatch);
+  }
+
+})();
+</script>
 </body></html>
