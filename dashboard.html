@@ -2714,6 +2714,28 @@ body.dark-mode .about-dev-card{background:var(--card-bg)}
     </div></div>
       </div>
 
+      <!-- Meta info cards: Date / Inspector / Premise -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="background:var(--surface2);border:0.5px solid var(--border);border-radius:10px;padding:12px 16px">
+          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">📅 Date of Inspection</div>
+          <div style="font-family:var(--font-mono);font-size:15px;font-weight:600;color:var(--blue)">${esc(inspDate)}</div>
+        </div>
+        <div style="background:var(--surface2);border:0.5px solid var(--border);border-radius:10px;padding:12px 16px">
+          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">👤 Done By</div>
+          <div style="font-size:14px;font-weight:500;color:var(--accent)">${esc(inspPerson)}</div>
+        </div>
+        ${inspPremise&&inspPremise!=='—'?`
+        <div style="background:var(--surface2);border:0.5px solid var(--border);border-radius:10px;padding:12px 16px">
+          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">🏢 Premise</div>
+          <div style="font-size:14px;font-weight:500;color:var(--text)">${esc(inspPremise)}</div>
+        </div>`:''}
+        ${inspLoc?`
+        <div style="background:var(--surface2);border:0.5px solid var(--border);border-radius:10px;padding:12px 16px">
+          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">📍 Location</div>
+          <div style="font-size:14px;font-weight:500;color:var(--text)">${esc(inspLoc)}</div>
+        </div>`:''}
+      </div>
+
       <!-- Section 1: Executive Summary -->
       <div class="sr-section">
         <div class="sr-section-head">
@@ -4527,15 +4549,18 @@ function buildStructuredReport(t, rows, idx){
 
   // meta keys (timestamp/email) separate from inspection fields
   const META_KW=['timestamp','email','email address'];
-  const inspKeys = keys.filter(k=>!META_KW.some(m=>k.toLowerCase().includes(m)));
+  const META_EXACT=['date','column 1','premise'];
+  const inspKeys = keys.filter(k=>!META_KW.some(m=>k.toLowerCase().includes(m))&&!META_EXACT.includes(k.toLowerCase()));
 
   // inspector/date
-  const dateKey = keys.find(k=>k.toLowerCase().includes('timestamp')||k.toLowerCase().includes('date'));
-  const nameKey = keys.find(k=>{ const lo=k.toLowerCase(); return lo==='done by'||lo.startsWith('done by')||lo==='inspector'||lo.includes('your name')||lo.includes('staff name')||lo.includes('submitted by'); });
-  const locKey  = keys.find(k=>{ const lo=k.toLowerCase(); return lo==='premise'||lo.startsWith('which premise')||lo.includes('location')||lo.includes('site'); });
-  const inspDate   = row[dateKey]||'—';
-  const inspPerson = row[nameKey]||'Unknown';
-  const inspLoc    = locKey ? row[locKey] : '';
+  const dateKey = keys.find(k=>{ const lo=k.toLowerCase(); return lo.includes('timestamp')||lo==='date'||lo==='column 1'; });
+  const nameKey = keys.find(k=>{ const lo=k.toLowerCase(); return lo==='done by'||lo.startsWith('done by')||lo==='inspector'||lo.includes('your name')||lo.includes('staff name')||lo.includes('submitted by')||lo.includes('prepared by')||lo.includes('conducted by'); });
+  const premiseKey = keys.find(k=>{ const lo=k.toLowerCase(); return lo==='premise'||lo.startsWith('which premise')||lo.startsWith('which location')||lo.includes('which site'); });
+  const locKey  = keys.find(k=>{ const lo=k.toLowerCase(); return lo.includes('location')&&!lo.includes('timestamp'); });
+  const inspDate   = formatDateDMY((row[dateKey]||'—').split(' ')[0]);
+  const inspPerson = nameKey ? (row[nameKey]||'—') : '—';
+  const inspPremise = premiseKey ? (row[premiseKey]||'—') : '—';
+  const inspLoc    = locKey ? (row[locKey]||'') : '';
 
   // compliance for this submission
   let passN=0, failN=0, obsN=0, pendN=0;
@@ -4675,6 +4700,7 @@ function buildStructuredReport(t, rows, idx){
           <div class="sr-banner-meta">
             <span class="sr-banner-meta-item"><span class="sr-banner-meta-icon">📅</span>${esc(inspDate)}</span>
             <span class="sr-banner-meta-item"><span class="sr-banner-meta-icon">👤</span>${esc(inspPerson)}</span>
+            ${inspPremise&&inspPremise!=='—'?`<span class="sr-banner-meta-item"><span class="sr-banner-meta-icon">🏢</span>${esc(inspPremise)}</span>`:''}
             ${inspLoc?`<span class="sr-banner-meta-item"><span class="sr-banner-meta-icon">📍</span>${esc(inspLoc)}</span>`:''}
             <span class="sr-banner-meta-item"><span class="sr-banner-meta-icon">📋</span>Submission ${idx+1} of ${rows.length}</span>
           </div>
@@ -4731,13 +4757,35 @@ function buildStructuredReport(t, rows, idx){
         <div class="sr-hist-drawer" id="srHistDrawer">${histRows}</div>
       </div>
 
+      <!-- Meta info cards: Date / Inspector / Premise -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="background:var(--surface2);border:0.5px solid var(--border);border-radius:10px;padding:12px 16px">
+          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">📅 Date of Inspection</div>
+          <div style="font-family:var(--font-mono);font-size:15px;font-weight:600;color:var(--blue)">${esc(inspDate)}</div>
+        </div>
+        <div style="background:var(--surface2);border:0.5px solid var(--border);border-radius:10px;padding:12px 16px">
+          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">👤 Done By</div>
+          <div style="font-size:14px;font-weight:500;color:var(--accent)">${esc(inspPerson)}</div>
+        </div>
+        ${inspPremise&&inspPremise!=='—'?`
+        <div style="background:var(--surface2);border:0.5px solid var(--border);border-radius:10px;padding:12px 16px">
+          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">🏢 Premise</div>
+          <div style="font-size:14px;font-weight:500;color:var(--text)">${esc(inspPremise)}</div>
+        </div>`:''}
+        ${inspLoc?`
+        <div style="background:var(--surface2);border:0.5px solid var(--border);border-radius:10px;padding:12px 16px">
+          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">📍 Location</div>
+          <div style="font-size:14px;font-weight:500;color:var(--text)">${esc(inspLoc)}</div>
+        </div>`:''}
+      </div>
+
       <!-- Section 1: Executive Summary -->
       <div class="sr-section">
         <div class="sr-section-head">
           <div class="sr-section-num sn-blue">1</div>
           <div class="sr-section-title-text">
             <div class="sr-section-title-main">Executive Summary</div>
-            <div class="sr-section-title-sub">Compliance snapshot for this inspection — ${esc(inspDate)}</div>
+            <div class="sr-section-title-sub">Compliance snapshot for this inspection — ${esc(inspDate)}${inspPremise&&inspPremise!=='—'?' · '+esc(inspPremise):''}</div>
           </div>
         </div>
         <div class="sr-section-body">
@@ -8264,6 +8312,9 @@ function buildVisualFormReport(t, rows, idx) {
   const rawDate  = dateKey  ? (row[dateKey]  || '') : '';
   const doneBy   = nameKey  ? (row[nameKey]  || '') : '';
   const location = locKey   ? (row[locKey]   || '') : '';
+  // Extra: try to find premise separately if locKey didn't catch it
+  const premiseKey = keys.find(k => { const lo=k.toLowerCase(); return lo==='premise' || lo.startsWith('which premise') || lo.startsWith('which location'); });
+  const premise = premiseKey && premiseKey !== locKey ? (row[premiseKey] || '') : '';
   const fmtDate  = _vfrFmtDate(rawDate);
 
   // Inspect fields = everything that isn't meta
@@ -8483,11 +8534,10 @@ function buildVisualFormReport(t, rows, idx) {
         <div class="vfr-meta-label">👤 Inspector</div>
         <div class="vfr-meta-value">${esc(doneBy || '—')}</div>
       </div>
-      ${location ? `
       <div class="vfr-meta-card vfr-mc-amber" style="grid-column:1/-1">
-        <div class="vfr-meta-label">📍 Location / Site</div>
-        <div class="vfr-meta-value">${esc(location)}</div>
-      </div>` : ''}
+        <div class="vfr-meta-label">📍 Premise / Location</div>
+        <div class="vfr-meta-value">${esc(location || premise || '—')}</div>
+      </div>
     </div>
 
     <!-- SCORE BAR -->
