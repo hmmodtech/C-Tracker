@@ -4131,27 +4131,26 @@ function _rowClass(v){
 }
 function _compRow(r){
   if(!r) return 100;
-  const _CR_META=['timestamp','email','score','edit url','edit response url','form response'];
-  const _CR_PASS=['available','yes','ok','good','pass','present','working','functional','charged','intact','clean','complete','full','secured','locked','normal','operational','serviceable','no damage','no defect','checked','confirmed','done','found','active','clear','closed','no issue','not damaged','not defective'];
-  const _CR_FAIL=['missing','no','not available','unavailable','absent','not present','not found','none','empty','expired','broken','damaged','fail','not working','faulty','dead','discharged','dented','open','unlocked','exposed','dirty','blocked','low pressure','defective','out of order'];
-  const _isMetaK=k=>{
-    const lo=k.toLowerCase();
-    if(_CR_META.some(w=>lo.includes(w)))return true;
-    if(lo==='date'||lo==='column 1')return true;
-    if(['done by','inspector','submitted by','checked by'].some(w=>lo.includes(w)))return true;
-    if(['premises','premise','site name','facility','building','branch','location of premises'].some(w=>lo.includes(w)))return true;
-    if(['location','area','room','floor','zone','wing','sector'].some(w=>lo.includes(w)))return true;
-    if(['tag #','tag#','tag no','tag number','serial','kit id','unit id','device id','reference id'].some(w=>lo.includes(w)))return true;
-    return false;
-  };
-  let ok=0,tot=0;
-  Object.keys(r).forEach(k=>{
-    if(_isMetaK(k))return;
-    const v=(r[k]||'').trim().toLowerCase();
+  var _META=['timestamp','date:','date','column 1','email','score','edit url','session id','form response','if other','specify','comments','tags #','tags'];
+  var _META_FULL=['done by','inspector','submitted by','checked by','premises','site name','facility','building','branch','location of premises','tag #','tag','location','area','expiration date','type','size'];
+  var _INVERTED=['damage','defect','expir','broken','leak','issue','problem','fault','unsecured','unlocked','dirty','blocked','tamper','corrosion','rust','low pressure','discharge','overdue','out of date','missing pin','missing seal'];
+  var _PASS=['available','yes','ok','good','pass','present','working','functional','charged','intact','clean','complete','full','secured','locked','normal','operational','serviceable','no damage','no defect','checked','confirmed','done','found','active','clear','closed','no issue','not damaged','not defective'];
+  var _FAIL=['missing','not available','unavailable','absent','not present','not found','none','empty','expired','broken','damaged','fail','not working','faulty','dead','discharged','dented','exposed','dirty','blocked','low pressure','defective','out of order'];
+  var _isMeta=function(k){var lo=k.toLowerCase();return _META.some(function(w){return lo===w||lo.startsWith(w);})||_META_FULL.some(function(w){return lo===w||lo.includes(w);});};
+  var _isInv=function(k){return _INVERTED.some(function(w){return k.toLowerCase().includes(w);});};
+  var ok=0,tot=0;
+  Object.keys(r).forEach(function(k){
+    if(_isMeta(k))return;
+    var v=(r[k]||'').trim().toLowerCase();
     if(!v||v==='—')return;
-    const isP=_CR_PASS.some(w=>v===w||v.startsWith(w+' ')||v===w+'.');
-    const isF=_CR_FAIL.some(w=>v===w||v.startsWith(w+' ')||v===w+'.');
-    if(isP){ok++;tot++;}else if(isF){tot++;}
+    if(_isInv(k)){
+      if(v==='no'||v==='none'||v.startsWith('no ')||v==='not damaged'||v==='intact'){ok++;tot++;}
+      else if(v==='yes'||v==='damaged'||v==='defective'||v.startsWith('yes ')){tot++;}
+    } else {
+      var isP=_PASS.some(function(w){return v===w||v.startsWith(w+' ')||v===w+'.';});
+      var isF=_FAIL.some(function(w){return v===w||v.startsWith(w+' ')||v===w+'.';});
+      if(isP){ok++;tot++;}else if(isF){tot++;}
+    }
   });
   return tot===0?100:Math.round((ok/tot)*100);
 }
@@ -9520,41 +9519,31 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
 })();
 </script>
 
-<!-- ═══════════════════════════════════════════════════════════════════
-     LAST-MONTH COMPLIANCE PATCH v3
-     - _compRow is fixed at source (skips meta keys, correct pass/fail)
-     - This patch adds last-month filter to calcCompliance (cards)
-       and fixes calcOverallCompliance to use the same logic.
-     Runs at load+1200ms (after Unified Report Patch at load+800ms).
-═══════════════════════════════════════════════════════════════════ -->
+<!-- LAST-MONTH COMPLIANCE PATCH v3 -->
 <script>
 (function(){
-  'use strict';
-
   function _rowDateStr(row){
     if(!row) return null;
     if(row.date) return row.date.split(' ')[0];
-    const k=Object.keys(row).find(k=>{const lo=k.toLowerCase();return lo.includes('timestamp')||lo==='date'||lo==='column 1';});
+    var k=Object.keys(row).find(function(k){var lo=k.toLowerCase();return lo.includes('timestamp')||lo==='date'||lo==='column 1';});
     return k?(row[k]||'').split(' ')[0]:null;
   }
-
   function _lastMonthRows(rows){
     if(!rows||!rows.length) return rows;
-    let latestMs=0;
-    rows.forEach(r=>{const ds=_rowDateStr(r);if(ds){const ms=new Date(ds).getTime();if(!isNaN(ms)&&ms>latestMs)latestMs=ms;}});
+    var latestMs=0;
+    rows.forEach(function(r){var ds=_rowDateStr(r);if(ds){var ms=new Date(ds).getTime();if(!isNaN(ms)&&ms>latestMs)latestMs=ms;}});
     if(!latestMs) return rows;
-    const latest=new Date(latestMs);
-    const ty=latest.getFullYear(),tm=latest.getMonth();
-    const filtered=rows.filter(r=>{
-      const ds=_rowDateStr(r);if(!ds)return false;
-      const d=new Date(ds);if(isNaN(d))return false;
+    var latest=new Date(latestMs);
+    var ty=latest.getFullYear(),tm=latest.getMonth();
+    var filtered=rows.filter(function(r){
+      var ds=_rowDateStr(r);if(!ds)return false;
+      var d=new Date(ds);if(isNaN(d))return false;
       return d.getFullYear()===ty&&d.getMonth()===tm;
     });
     return filtered.length?filtered:rows;
   }
-
   function applyPatch(){
-    const _prev=window.calcCompliance;
+    var _prev=window.calcCompliance;
     window.calcCompliance=function(rows,trackerName){
       if(!rows||!rows.length) return 0;
       if(typeof isLocalTracker==='function'&&isLocalTracker(trackerName)) return _prev(rows,trackerName);
@@ -9563,14 +9552,13 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
     };
     window.calcOverallCompliance=function(){
       if(typeof trackers==='undefined') return 0;
-      const wd=trackers.filter(t=>sheetData[t.id]&&sheetData[t.id].length>0);
+      var wd=trackers.filter(function(t){return sheetData[t.id]&&sheetData[t.id].length>0;});
       if(!wd.length) return 0;
-      return Math.round(wd.reduce((s,t)=>s+window.calcCompliance(sheetData[t.id],t.name),0)/wd.length);
+      return Math.round(wd.reduce(function(s,t){return s+window.calcCompliance(sheetData[t.id],t.name);},0)/wd.length);
     };
     if(typeof renderTrackers==='function') renderTrackers();
-    console.log('✓ Compliance Patch v3 applied');
+    console.log('Compliance Patch v3 applied');
   }
-
   function run(){setTimeout(applyPatch,1200);}
   if(document.readyState==='complete') run();
   else window.addEventListener('load',run);
