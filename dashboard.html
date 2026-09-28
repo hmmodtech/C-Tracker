@@ -9907,5 +9907,99 @@ table.fqa-m thead th.fqa-m-idx{z-index:3}
 })();
 </script>
 <!-- ═══════════════════ نهاية C-TRACKER FORM Q&A PATCH ═══════════════════ -->
+<!-- ══════════════════════════════════════════════════════════════════════
+     C-TRACKER — ORDER FIX لبلوك «All Form Questions & Answers»
+     ──────────────────────────────────────────────────────────────────────
+     ألصق هذا البلوك قبل </body> مباشرة — بَعْد بلوك الـ FORM Q&A patch.
+     (لو ما لصقت البلوك الأول بعد، لصق هذا لحاله لا يكفي)
+
+     الترتيب الجديد داخل تقرير كل بطاقة:
+       1) شريط الامتثال (الدائرة)          → كما هو
+       2) شريط الـ Submission              → كما هو
+       3) بطاقات Date / Done By / Premise / Location (+ Tag)  → كما هي
+       4) 📋 All Form Questions & Answers  → ينتقل إلى هنا
+       5) Available / Missing / باقي التقرير
+
+     يعمل على تقرير البطاقة (↗ Report) وعلى التقرير الكامل لكل تراكر
+     (Management Report → الضغط على البطاقة) لأنهما نفس مكان العرض.
+════════════════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  // القسم الذي يجب أن يسبق الأسئلة دائماً = قسم «العناصر المتوفرة»
+  function correctAnchor(body) {
+    return body.querySelector('.fa-section-head, .vfr-score-bar, .vfr-section-head, .report-section');
+  }
+
+  // ينقل بلوك الأسئلة إلى مكانه الصحيح (بعد البطاقات، قبل العناصر)
+  function fixReport(id) {
+    const body = document.getElementById(id);
+    if (!body) return;
+    const wrap = body.querySelector('[data-fqa-wrap]');
+    if (!wrap) return;
+    const anchor = correctAnchor(body);
+    if (!anchor || !anchor.parentNode) return;
+    if (wrap.nextElementSibling === anchor) return;      // مكانه صحيح ✓
+    anchor.parentNode.insertBefore(wrap, anchor);        // انقله للترتيب الصحيح
+  }
+  function fixAll() { fixReport('reportBody'); fixReport('drillBody'); }
+  window.fqaFixOrder = fixAll;
+
+  // ── ① إعادة بناء البلوك بالترتيب الصحيح (يعمل بعد المراقب القديم) ──
+  if (typeof window.fqaBuildBlock === 'function') {
+    window.fqaInject = function () {
+      const rpt = window._rpt;
+      if (!rpt || !rpt.tracker || !rpt.allRows || !rpt.allRows.length) return;
+      let idx = (typeof rpt.idx === 'number') ? rpt.idx : rpt.allRows.length - 1;
+      if (idx < 0 || idx >= rpt.allRows.length) idx = rpt.allRows.length - 1;
+      const html = window.fqaBuildBlock(rpt.tracker, rpt.allRows, idx);
+      if (!html) return;
+      ['reportBody', 'drillBody'].forEach(function (id) {
+        const body = document.getElementById(id);
+        if (!body) return;
+        body.querySelectorAll('[data-fqa-wrap]').forEach(function (n) { n.remove(); });
+        const holder = document.createElement('div');
+        holder.innerHTML = html;
+        const node = holder.firstElementChild;
+        if (!node) return;
+        const anchor = correctAnchor(body);
+        if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(node, anchor);
+        else body.appendChild(node);
+      });
+    };
+  }
+
+  // ── ② مراقب بتأخير أطول ⇒ يُنفَّذ بعد المراقب القديم فيصحّح الترتيب ──
+  let t1 = null;
+  function late() { clearTimeout(t1); t1 = setTimeout(fixAll, 90); }
+  ['reportBody', 'drillBody'].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el && !el.__fqaOrderObs) {
+      el.__fqaOrderObs = true;
+      new MutationObserver(late).observe(el, { childList: true });
+    }
+  });
+
+  // ── ③ تغليف دوال العرض (احتياط) بدون تكرار التغليف ──
+  ['openReport', 'openDrill', '_rebuildBody', 'srGoTo', 'srPrev', 'srNext', 'srPickHist'].forEach(function (n) {
+    const f = window[n];
+    if (typeof f !== 'function' || f.__fqaOrderWrapped) return;
+    const w = function () { const r = f.apply(this, arguments); setTimeout(fixAll, 60); return r; };
+    w.__fqaOrderWrapped = true;
+    window[n] = w;
+  });
+
+  // ── ④ فحص دوري خفيف (يتوقف بعد دقيقة) كشبكة أمان أخيرة ──
+  let ticks = 0;
+  const iv = setInterval(function () { fixAll(); if (++ticks > 300) clearInterval(iv); }, 200);
+
+  fixAll();
+  setTimeout(fixAll, 700);
+  setTimeout(fixAll, 1800);
+  console.log('✓ Q&A order fixed — All Form Questions & Answers now sits after the meta cards, before the items list');
+})();
+</script>
+<!-- ═══════════════════ نهاية C-TRACKER ORDER FIX ═══════════════════ -->
 
 </body></html>
