@@ -1536,61 +1536,7 @@ body.dark-mode .about-dev-card{background:var(--card-bg)}
     }
   }
 </style>
-<style id="so-card-style"></style><style id="so-density-style"></style>
-<style id="fqa-styles">
-/* ═══ FORM Q&A — full Google-Form question list (every column + answer) ═══ */
-.fqa-wrap{margin-top:16px}
-.fqa-head{display:flex;align-items:center;gap:9px;padding:12px 16px;border-radius:12px 12px 0 0;flex-wrap:wrap;
-  background:linear-gradient(135deg,rgba(74,158,53,0.12),rgba(74,158,53,0.04));border:1px solid var(--border);border-bottom:none}
-.fqa-title{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-0.01em}
-.fqa-count{font-family:var(--font-mono);font-size:10px;padding:3px 9px;border-radius:8px;white-space:nowrap;
-  background:var(--green-bg);color:var(--green);border:1px solid var(--green-dim)}
-.fqa-count-dim{background:var(--surface3);color:var(--muted);border-color:var(--border2)}
-.fqa-actions{margin-left:auto;display:flex;gap:7px;align-items:center}
-.fqa-btn{font-family:var(--font-mono);font-size:10px;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;
-  border:1px solid var(--border2);background:var(--surface3);color:var(--text-dim);transition:all .15s}
-.fqa-btn:hover{background:var(--accent-bg);color:var(--text);border-color:var(--accent-dim)}
-.fqa-btn-blue{color:var(--blue);border-color:var(--blue-dim);background:var(--blue-bg)}
-.fqa-list{border:1px solid var(--border);border-radius:0 0 12px 12px;overflow:hidden;background:var(--surface2)}
-.fqa-row{display:grid;grid-template-columns:36px minmax(140px,1fr) minmax(120px,42%) 104px;gap:12px;align-items:center;
-  padding:9px 14px;border-bottom:1px solid var(--border);transition:background .12s}
-.fqa-row:last-child{border-bottom:none}
-.fqa-row:hover{background:var(--accent-bg)}
-.fqa-row-empty{opacity:.62}
-.fqa-num{font-family:var(--font-mono);font-size:9px;color:var(--muted);text-align:right}
-.fqa-q{font-size:12px;font-weight:500;color:var(--text);line-height:1.45;word-break:break-word}
-.fqa-a{text-align:right;min-width:0}
-.fqa-val{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);line-height:1.5;
-  word-break:break-word;white-space:pre-wrap;display:inline-block;max-width:100%}
-.fqa-val-empty{color:var(--muted);font-style:italic}
-.fqa-link{color:var(--blue);font-size:11px;text-decoration:none}
-.fqa-thumb{width:62px;height:46px;object-fit:cover;border-radius:6px;border:1px solid var(--border2);cursor:zoom-in;display:block;margin-left:auto}
-.fqa-chip{font-family:var(--font-mono);font-size:9px;padding:3px 8px;border-radius:8px;text-align:center;white-space:nowrap}
-.fqa-chip-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-dim)}
-.fqa-chip-photo{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-dim)}
-.fqa-chip-none{background:var(--surface3);color:var(--muted);border:1px solid var(--border2)}
-.fqa-foot{font-family:var(--font-mono);font-size:9px;color:var(--muted);padding:8px 14px 0;line-height:1.6}
-/* ── ALL RESPONSES MATRIX ── */
-.fqa-mwrap{border:1px solid var(--border);border-radius:12px;background:var(--surface2);overflow:auto;max-height:64vh}
-table.fqa-m{border-collapse:separate;border-spacing:0;width:100%;font-size:11px}
-table.fqa-m th,table.fqa-m td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);
-  padding:7px 10px;vertical-align:top;text-align:left;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
-table.fqa-m th:last-child,table.fqa-m td:last-child{border-right:none}
-table.fqa-m thead th{position:sticky;top:0;z-index:2;background:var(--surface3);color:var(--text-dim);
-  font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
-table.fqa-m tbody td{color:var(--text-dim);font-family:var(--font-mono);font-size:10px}
-table.fqa-m tbody tr:hover td{background:var(--accent-bg)}
-table.fqa-m td.fqa-m-empty,table.fqa-m .fqa-m-empty{color:var(--muted);opacity:.7}
-table.fqa-m .fqa-m-idx{position:sticky;left:0;z-index:1;background:var(--surface3);color:var(--text);font-weight:600;text-align:right}
-table.fqa-m thead th.fqa-m-idx{z-index:3}
-.fqa-empty-box{padding:26px 18px;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--muted);
-  border:1px dashed var(--border2);border-radius:12px;background:var(--surface2)}
-@media (max-width:700px){
-  .fqa-row{grid-template-columns:26px minmax(90px,1fr) minmax(80px,38%);gap:8px}
-  .fqa-chip{display:none}
-}
-</style>
-</head>
+<style id="so-card-style"></style><style id="so-density-style"></style></head>
 <body>
 
 <div class="save-toast green" id="saveToast">☁ Saved to cloud ✓</div>
@@ -4001,37 +3947,38 @@ function parseRows(rows) {
   if (!rows || rows.length < 2) return [];
   const rawHeaders = rows[0];
 
-  // ── Column map ──────────────────────────────────────────────────
-  // A Google Form question that appears in several sections produces
-  // REPEATED columns in the response sheet. Group them by header name so
-  // no filled answer is thrown away (the old code kept only the 1st one,
-  // which is why filled fields showed up as "—" in the reports).
-  const groups = new Map();            // header name → [column indexes]
-  rawHeaders.forEach((h, i) => {
-    const name = String(h == null ? '' : h).trim() || ('Column ' + (i + 1));
-    if (!groups.has(name)) groups.set(name, []);
-    groups.get(name).push(i);
-  });
+  // تتبع أعمدة Location و Tag المكررة
+  const locationCols = [];
+  const tagCols = [];
+  const otherCols = [];
 
-  const cell = (r, i) => String(r[i] == null ? '' : r[i]).trim();
-  const firstFilled = (r, cols) => cols.map(i => cell(r, i)).find(v => v !== '') || '';
+  rawHeaders.forEach((h, i) => {
+    const name = String(h).trim();
+    if (name === 'Location') locationCols.push(i);
+    else if (name === 'Tag') tagCols.push(i);
+    else otherCols.push({ name, i });
+  });
 
   return rows.slice(1).map(r => {
     const obj = {};
 
-    groups.forEach((cols, name) => {
-      // Location / Tag → first non-empty value (backwards compatible)
-      if (name === 'Location' || name === 'Tag') {
-        obj[name] = firstFilled(r, cols);
-        return;
+    // الأعمدة العادية
+    otherCols.forEach(({ name, i }) => {
+      if (!obj.hasOwnProperty(name)) {
+        obj[name] = String(r[i] || '').trim();
       }
-      const filled = cols.map(i => cell(r, i)).filter(v => v !== '');
-      const uniq   = filled.filter((v, k) => filled.indexOf(v) === k);
-      obj[name] = uniq.length <= 1 ? (uniq[0] || '') : uniq.join(' · ');
     });
 
+    // خذ أول Location مش فاضي
+    const loc = locationCols.map(i => String(r[i] || '').trim()).find(v => v !== '') || '';
+    obj['Location'] = loc;
+
+    // خذ أول Tag مش فاضي
+    const tag = tagCols.map(i => String(r[i] || '').trim()).find(v => v !== '') || '';
+    obj['Tag'] = tag;
+
     return obj;
-  }).filter(r => Object.keys(r).some(k => String(r[k] || '').trim() !== ''));
+  });
 }
 // ══════════════════════════════════════════════════════════════════
 // STATUS MODAL
@@ -4085,7 +4032,7 @@ function openStatus(id){
 // ══════════════════════════════════════════════════════════════════
 // REPORT MODAL — 4-SECTION STRUCTURED REPORT
 // ══════════════════════════════════════════════════════════════════
-var _rpt = { tracker:null, allRows:null, idx:0, histOpen:false };  // ⚠ fixed: was 'var_rpt' — broke openReport()
+var_rpt = { tracker:null, allRows:null, idx:0, histOpen:false };
 
 function openReport(id){
   destroyCharts();
@@ -4184,10 +4131,10 @@ function _rowClass(v){
 }
 function _compRow(r){
   if(!r) return 100;
-  var _OPT_KW=['comment','not compulsory','not mandatory','note','remark','observation','additional','specify','other','photo','image','attachment','upload','signature','electricity check','additional comments','free text'];
+  var _OPT=['comment','not compulsory','not mandatory','note','remark','additional','electricity check','additional comments'];
   var _PASS=['available','yes','ok','good','pass','present','working','functional','charged','intact','clean','complete','full','secured','locked','normal','operational','serviceable','no damage','no defect','checked','confirmed','done','found','active','clear','closed','no issue','not damaged','not defective'];
   var _FAIL=['missing','not available','unavailable','absent','not present','not found','none','empty','expired','broken','damaged','fail','not working','faulty','dead','discharged','dented','exposed','dirty','blocked','low pressure','defective','out of order'];
-  var _isOpt=function(k){var lo=k.toLowerCase();return _OPT_KW.some(function(w){return lo.includes(w);})||/^comments?\s*(\(|\d|$)/i.test(k.trim())||lo.startsWith('additional comment');};
+  var _isOpt=function(k){var lo=k.toLowerCase();return _OPT.some(function(w){return lo.includes(w);})||/^comments?\s*(\(|\d|$)/i.test(k.trim());};
   var ok=0,tot=0;
   Object.keys(r).forEach(function(k){
     if(_isOpt(k))return;
@@ -4544,9 +4491,6 @@ console.log('ROW DATA:', JSON.stringify(row));
         ${tagImgUrl?`<div class="fa-tag-sub" style="color:var(--green)">✓ Tag photo recorded</div>`:''}
       </div>
     </div>` : ''}
-
-    <!-- ── ALL FORM QUESTIONS & ANSWERS (every column, form order) ── -->
-    ${(typeof fqaBuildBlock === 'function') ? fqaBuildBlock(t, rows, idx) : ''}
 
     <!-- ── AVAILABLE ITEMS ── -->
     <div class="fa-section-head fa-section-head-avail">
@@ -5922,71 +5866,10 @@ h2{font-size:14px;font-weight:500;color:#374151;margin-bottom:14px;padding-botto
   else     showToast('✓ Full report opened — use Ctrl+P to save as PDF','green');
 }
 
-// Give the report controls unique ids when the report is rendered
-// somewhere other than #reportBody (e.g. the drill-down modal), so the
-// submission navigator of each open report keeps working independently.
-function _suffixReportIds(html, suffix){
-  if(!suffix) return html;
-  return String(html).replace(/id="(srSubSel|srHistDrawer|srCompFill|vfrScoreFill)"/g, 'id="$1'+suffix+'"');
-}
-
-// Re-draw the drill-down charts (canvas ids: dr-timeline / dr-missing / dr-donut)
-function drillDrawCharts(){
-  if(!window._rpt||!window._rpt.allRows||!window._rpt.tracker) return;
-  try{ drawCharts(window._rpt.tracker, window._rpt.allRows, 'dr'); }catch(e){}
-}
-
 function openDrill(id){
-  closeModal('finalOverlay');destroyCharts();
-  const t=trackers.find(x=>x.id===id);
-  if(!t) return;
-  // For local trackers, use openReport which routes correctly
-  if(isLocalTracker(t.name)){
-    openReport(id);
-    return;
-  }
-  const rows=sheetData[id];
-  document.getElementById('drillIcon').textContent=t.icon;
-  document.getElementById('drillTitle').textContent=t.name+' — Full Form Report';
-  if(!rows||!rows.length){document.getElementById('drillBody').innerHTML=noDataHtml(t);openModal('drillOverlay');return;}
-
-  const idx = rows.length - 1;
-  // The full report — the same builder the ↗ Report button uses, which now
-  // lists EVERY Google Form question with its answer — is rendered into
-  // #dr-qa-panel so the submission navigator keeps working inside this modal.
-  window._rpt = { tracker:t, allRows:rows, idx:idx, histOpen:false, host:'dr-qa-panel', idSuffix:'Drill' };
-
-  const matrixHtml = (typeof fqaBuildMatrix === 'function') ? fqaBuildMatrix(t, rows) : buildRaw(t, rows);
-
-  document.getElementById('drillBody').innerHTML=`
-    <div class="report-tabs">
-      <button class="rtab active" onclick="switchTab(this,'dr-qa')">🧾 Form Answers</button>
-      <button class="rtab" onclick="switchTab(this,'dr-vis');drillDrawCharts()">📊 Charts</button>
-      <button class="rtab" onclick="switchTab(this,'dr-raw')">🗂 All Responses</button>
-    </div>
-    <div id="dr-qa" class="rtab-panel active"><div id="dr-qa-panel"></div></div>
-    <div id="dr-vis" class="rtab-panel">${buildVis(t,rows,'dr')}</div>
-    <div id="dr-raw" class="rtab-panel">${matrixHtml}</div>`;
-
-  // Render the report itself (unified builder = same as ↗ Report)
-  const panel = document.getElementById('dr-qa-panel');
-  let html;
-  if(/first\s*-?aid/i.test(t.name) && typeof buildFirstAidReport === 'function'){
-    html = buildFirstAidReport(t, rows, idx);
-  } else if(typeof window.buildUnifiedReport === 'function'){
-    html = window.buildUnifiedReport(t, rows, idx);
-  } else {
-    html = buildStructuredReport(t, rows, idx);
-  }
-  panel.innerHTML = _suffixReportIds(html, 'Drill');
-
-  openModal('drillOverlay');
-  setTimeout(()=>{
-    const fill = panel.querySelector('#srCompFillDrill, #vfrScoreFillDrill, [data-role="compFill"]');
-    if(fill) fill.style.width = (fill.dataset.pct||0) + '%';
-    drillDrawCharts();
-    animateKPIs(document.getElementById('drillBody'));
-  },60);
+  closeModal('finalOverlay');
+  // Route directly to the full visual report (same as clicking Report on the card)
+  openReport(id);
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -8662,9 +8545,6 @@ function buildVisualFormReport(t, rows, idx) {
       <span class="vfr-score-pct" style="color:${compColor}">${compPct}%</span>
     </div>
 
-    <!-- ── ALL FORM QUESTIONS & ANSWERS (every column, form order) ── -->
-    ${(typeof fqaBuildBlock === 'function') ? fqaBuildBlock(t, rows, idx) : ''}
-
     <!-- ── ANSWERED ITEMS (GREEN FIRST) ──────────────────────── -->
     <div class="vfr-section-head vfr-sh-green">
       <span style="font-size:17px">✅</span>
@@ -8926,220 +8806,6 @@ window.openReport = function(id) {
 };
 
 console.log('✓ VFR patch loaded — visual form report active for all Type A trackers');
-</script>
-<script>
-// ══════════════════════════════════════════════════════════════════
-// C-TRACKER — FORM Q&A MODULE
-// Renders EVERY field of the linked Google Form (all response-sheet
-// columns, in form order) together with the answer recorded in the
-// selected submission — Timestamp / Email / meta columns included.
-//
-//   fqaBuildBlock(t, rows, idx)   → full Q & A list for one submission
-//   fqaBuildMatrix(t, rows)       → all submissions × all questions
-//   fqaToggleEmpty(btn)           → show / hide unanswered rows
-//   fqaExportCSV(trackerId, idx)  → CSV of one submission
-//   fqaExportAllCSV(trackerId)    → CSV of every submission
-// ══════════════════════════════════════════════════════════════════
-(function () {
-  'use strict';
-
-  function _has(v) {
-    if (v === undefined || v === null) return false;
-    const s = String(v).trim();
-    return s !== '' && s !== '—' && s !== '-';
-  }
-  function _txt(v) {
-    return String(v === undefined || v === null ? '' : v).replace(/\s+/g, ' ').trim();
-  }
-  function _isPhoto(v) {
-    return typeof _isImg === 'function' && _isImg(String(v));
-  }
-  function _thumbOf(v) {
-    return typeof _prev === 'function' ? _prev(String(v)) : String(v);
-  }
-  function _esc(s) {
-    return typeof esc === 'function' ? esc(s) : String(s === undefined || s === null ? '' : s);
-  }
-  function _cut(s, n) {
-    s = String(s || '');
-    return s.length > n ? s.slice(0, n - 1) + '…' : s;
-  }
-  function _toast(msg, color) {
-    if (typeof showToast === 'function') { try { showToast(msg, color || 'green'); } catch (e) {} }
-  }
-  function _trackerById(id) {
-    return (typeof trackers !== 'undefined' ? trackers : []).find(function (x) { return x.id === id; });
-  }
-  function _rowsById(id) {
-    return (typeof sheetData !== 'undefined' ? sheetData[id] : null);
-  }
-
-  // ── ONE SUBMISSION — every question + its answer ────────────────
-  function fqaBuildBlock(t, rows, idx) {
-    if (!rows || !rows.length) return '';
-    const row = rows[idx];
-    if (!row) return '';
-    const keys = Object.keys(row);
-    if (!keys.length) return '';
-
-    const items = keys.map(function (k, i) { return { k: k, v: _txt(row[k]), i: i }; });
-    const answeredN = items.filter(function (x) { return _has(x.v); }).length;
-    const emptyN = items.length - answeredN;
-
-    const listHtml = items.map(function (x) {
-      const has = _has(x.v);
-      const photo = has && _isPhoto(x.v);
-      let valHtml;
-      if (!has) {
-        valHtml = '<span class="fqa-val fqa-val-empty">— not answered</span>';
-      } else if (photo) {
-        const u = _thumbOf(x.v);
-        valHtml = '<img class="fqa-thumb" src="' + _esc(u) + '" loading="lazy" alt="photo" '
-          + 'onclick="openLightbox(\'' + _esc(u) + '\',\'' + _esc(x.k) + '\',\'' + _esc(x.v) + '\')" '
-          + 'onerror="this.outerHTML=\'<a href=&quot;' + _esc(x.v) + '&quot; target=&quot;_blank&quot; class=&quot;fqa-link&quot;>Open photo →</a>\'">';
-      } else {
-        valHtml = '<span class="fqa-val">' + _esc(x.v) + '</span>';
-      }
-      const chip = !has
-        ? '<span class="fqa-chip fqa-chip-none">✗ Not answered</span>'
-        : photo
-          ? '<span class="fqa-chip fqa-chip-photo">📷 Photo</span>'
-          : '<span class="fqa-chip fqa-chip-ok">✓ Answered</span>';
-
-      return '<div class="fqa-row' + (has ? '' : ' fqa-row-empty') + '" data-fqa-empty="' + (has ? '0' : '1') + '">'
-        + '<span class="fqa-num">' + (x.i + 1) + '</span>'
-        + '<span class="fqa-q">' + _esc(x.k) + '</span>'
-        + '<span class="fqa-a">' + valHtml + '</span>'
-        + chip
-        + '</div>';
-    }).join('');
-
-    return '<div class="fqa-wrap" data-fqa-wrap>'
-      + '<div class="fqa-head">'
-      +   '<span style="font-size:17px">📋</span>'
-      +   '<span class="fqa-title">All Form Questions &amp; Answers</span>'
-      +   '<span class="fqa-count">' + answeredN + ' / ' + items.length + ' answered</span>'
-      +   (emptyN ? '<span class="fqa-count fqa-count-dim">' + emptyN + ' empty</span>' : '')
-      +   '<span class="fqa-actions">'
-      +     (emptyN ? '<button type="button" class="fqa-btn" onclick="fqaToggleEmpty(this)">👁 Hide unanswered</button>' : '')
-      +     '<button type="button" class="fqa-btn fqa-btn-blue" onclick="fqaExportCSV(\'' + _esc(t && t.id) + '\',' + idx + ')">⬇ CSV</button>'
-      +   '</span>'
-      + '</div>'
-      + '<div class="fqa-list">' + listHtml + '</div>'
-      + '<div class="fqa-foot">Every column of the linked Google Form response sheet, in form order — Timestamp, Email and all question fields included.</div>'
-      + '</div>';
-  }
-
-  // ── ALL SUBMISSIONS × ALL QUESTIONS ─────────────────────────────
-  function fqaBuildMatrix(t, rows) {
-    if (!rows || !rows.length) {
-      return '<div class="fqa-empty-box">No responses found for this tracker yet.</div>';
-    }
-    const keys = Object.keys(rows[0] || {});
-    if (!keys.length) return '<div class="fqa-empty-box">The response sheet has no columns.</div>';
-
-    let filled = 0;
-    rows.forEach(function (r) { keys.forEach(function (k) { if (_has(r[k])) filled++; }); });
-    const totalCells = rows.length * keys.length;
-    const fillPct = totalCells ? Math.round((filled / totalCells) * 100) : 0;
-
-    const head = '<thead><tr><th class="fqa-m-idx">#</th>'
-      + keys.map(function (k) { return '<th title="' + _esc(k) + '">' + _esc(k) + '</th>'; }).join('')
-      + '</tr></thead>';
-
-    const body = rows.slice().reverse().map(function (row, ri) {
-      const realIdx = rows.length - 1 - ri;               // newest first
-      const cells = keys.map(function (k) {
-        const v = _txt(row[k]);
-        if (!_has(v)) return '<td class="fqa-m-empty">—</td>';
-        if (_isPhoto(v)) return '<td><a class="fqa-link" href="' + _esc(v) + '" target="_blank">📷 photo</a></td>';
-        return '<td title="' + _esc(_cut(v, 400)) + '">' + _esc(_cut(v, 70)) + '</td>';
-      }).join('');
-      return '<tr><td class="fqa-m-idx">' + (realIdx + 1) + '</td>' + cells + '</tr>';
-    }).join('');
-
-    return '<div class="fqa-wrap" data-fqa-wrap>'
-      + '<div class="fqa-head">'
-      +   '<span style="font-size:17px">🗂</span>'
-      +   '<span class="fqa-title">All Responses — every question × every submission</span>'
-      +   '<span class="fqa-count">' + rows.length + ' submissions</span>'
-      +   '<span class="fqa-count fqa-count-dim">' + keys.length + ' questions</span>'
-      +   '<span class="fqa-count fqa-count-dim">' + fillPct + '% of cells filled</span>'
-      +   '<span class="fqa-actions">'
-      +     '<button type="button" class="fqa-btn fqa-btn-blue" onclick="fqaExportAllCSV(\'' + _esc(t && t.id) + '\')">⬇ CSV (all)</button>'
-      +   '</span>'
-      + '</div>'
-      + '<div class="fqa-mwrap"><table class="fqa-m">' + head + '<tbody>' + body + '</tbody></table></div>'
-      + '<div class="fqa-foot">Scroll sideways to see every question · newest submission first · hover a cell for the full answer.</div>'
-      + '</div>';
-  }
-
-  // ── SHOW / HIDE UNANSWERED ROWS ─────────────────────────────────
-  function fqaToggleEmpty(btn) {
-    const wrap = btn && btn.closest ? btn.closest('[data-fqa-wrap]') : null;
-    if (!wrap) return;
-    const hide = !wrap.classList.contains('fqa-hide-empty');
-    wrap.classList.toggle('fqa-hide-empty', hide);
-    btn.textContent = hide ? '👁 Show all' : '👁 Hide unanswered';
-    wrap.querySelectorAll('[data-fqa-empty="1"]').forEach(function (el) {
-      el.style.display = hide ? 'none' : '';
-    });
-  }
-
-  // ── CSV EXPORTS ─────────────────────────────────────────────────
-  function _csvCell(v) {
-    return '"' + _txt(v).replace(/"/g, '""') + '"';
-  }
-  function _safeName(s) {
-    return String(s || 'tracker').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '');
-  }
-  function _download(name, csv) {
-    try {
-      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = name;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 600);
-      _toast('⬇ ' + name, 'green');
-    } catch (e) {
-      _toast('Export failed — ' + e.message, 'amber');
-    }
-  }
-
-  function fqaExportCSV(trackerId, idx) {
-    const t = _trackerById(trackerId);
-    const rows = _rowsById(trackerId);
-    if (!rows || !rows[idx]) { _toast('No submission to export', 'amber'); return; }
-    const row = rows[idx];
-    const lines = ['"#","Question","Answer"'];
-    Object.keys(row).forEach(function (k, i) {
-      lines.push((i + 1) + ',' + _csvCell(k) + ',' + _csvCell(row[k]));
-    });
-    _download('C-TRACKER-' + _safeName(t ? t.name : '') + '-submission-' + (idx + 1) + '.csv', lines.join('\r\n'));
-  }
-
-  function fqaExportAllCSV(trackerId) {
-    const t = _trackerById(trackerId);
-    const rows = _rowsById(trackerId);
-    if (!rows || !rows.length) { _toast('No responses to export', 'amber'); return; }
-    const keys = Object.keys(rows[0] || {});
-    const lines = [['"#"'].concat(keys.map(_csvCell)).join(',')];
-    rows.forEach(function (row, i) {
-      lines.push([_csvCell(i + 1)].concat(keys.map(function (k) { return _csvCell(row[k]); })).join(','));
-    });
-    _download('C-TRACKER-' + _safeName(t ? t.name : '') + '-all-responses.csv', lines.join('\r\n'));
-  }
-
-  // ── EXPORT ──────────────────────────────────────────────────────
-  window.fqaBuildBlock = fqaBuildBlock;
-  window.fqaBuildMatrix = fqaBuildMatrix;
-  window.fqaToggleEmpty = fqaToggleEmpty;
-  window.fqaExportCSV = fqaExportCSV;
-  window.fqaExportAllCSV = fqaExportAllCSV;
-})();
-
 </script>
 <script>
 // ══════════════════════════════════════════════════════════════════
@@ -9626,9 +9292,6 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
         </div>
       </div>` : ''}
 
-      <!-- ── ALL FORM QUESTIONS & ANSWERS (every column, form order) ── -->
-      ${(typeof fqaBuildBlock === 'function') ? fqaBuildBlock(t, rows, idx) : ''}
-
       <!-- ── AVAILABLE ITEMS (GREEN) ── -->
       <div class="fa-section-head fa-section-head-avail">
         <span class="fa-section-icon">✅</span>
@@ -9669,10 +9332,6 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
 
     </div>`;
   }
-
-  // Expose the builder so the drill-down modal / other modules can
-  // render exactly the same report as the dashboard ↗ Report button.
-  window.buildUnifiedReport = buildUnifiedReport;
 
   // ── COMPLIANCE FOR DASHBOARD CARDS ───────────────────────────────
   // Also patch the main calcCompliance() so the tracker card footers
@@ -9755,31 +9414,25 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
       const rpt = window._rpt;
       if (!rpt || !rpt.tracker || !rpt.allRows) return;
       const { tracker: t, allRows: rows, idx } = rpt;
-      // host = element that holds the report (reportBody, or the drill-down panel)
-      const hostId = rpt.host || 'reportBody';
-      const suffix = rpt.idSuffix || '';
-      const bodyEl = document.getElementById(hostId) || document.getElementById('reportBody');
+      const bodyEl = document.getElementById('reportBody');
       if (!bodyEl) return;
       const tLow = t.name.toLowerCase();
-      let html;
       if (typeof isLocalTracker === 'function' && isLocalTracker(t.name)) {
         if (typeof buildLocalTrackerReport === 'function')
-          html = buildLocalTrackerReport(t, rows, idx);
+          bodyEl.innerHTML = buildLocalTrackerReport(t, rows, idx);
       } else if (tLow.includes('first aid') || tLow.includes('firstaid') || tLow.includes('first-aid')) {
         if (typeof buildFirstAidReport === 'function')
-          html = buildFirstAidReport(t, rows, idx);
+          bodyEl.innerHTML = buildFirstAidReport(t, rows, idx);
       } else {
-        html = buildUnifiedReport(t, rows, idx);
+        bodyEl.innerHTML = buildUnifiedReport(t, rows, idx);
       }
-      if (html === undefined) return;
-      bodyEl.innerHTML = (typeof _suffixReportIds === 'function') ? _suffixReportIds(html, suffix) : html;
       setTimeout(() => {
-        const fill = document.getElementById('srCompFill' + suffix) || bodyEl.querySelector('[data-role="compFill"]') || document.getElementById('srCompFill');
+        const fill = document.getElementById('srCompFill');
         if (fill) fill.style.width = (fill.dataset.pct || 0) + '%';
-        const sel = document.getElementById('srSubSel' + suffix) || document.getElementById('srSubSel');
+        const sel = document.getElementById('srSubSel');
         if (sel) sel.value = idx;
         if (rpt.histOpen) {
-          const d = document.getElementById('srHistDrawer' + suffix) || document.getElementById('srHistDrawer');
+          const d = document.getElementById('srHistDrawer');
           if (d) d.classList.add('open');
         }
       }, 80);
@@ -9804,8 +9457,7 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
     window.srToggleHist = function() {
       if (!window._rpt) return;
       window._rpt.histOpen = !window._rpt.histOpen;
-      const sfx = window._rpt.idSuffix || '';
-      const d = document.getElementById('srHistDrawer' + sfx) || document.getElementById('srHistDrawer');
+      const d = document.getElementById('srHistDrawer');
       if (d) d.classList.toggle('open', window._rpt.histOpen);
     };
     window.srPickHist = function(idx) {
@@ -9836,7 +9488,7 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
 })();
 </script>
 
-<!-- COMPLIANCE PATCH v4: last-month filter + optional fields fix -->
+<!-- COMPLIANCE PATCH v4 -->
 <script>
 (function(){
   function _rowDateStr(row){
@@ -9874,7 +9526,7 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
       return Math.round(wd.reduce(function(s,t){return s+window.calcCompliance(sheetData[t.id],t.name);},0)/wd.length);
     };
     if(typeof renderTrackers==='function') renderTrackers();
-    console.log('Compliance Patch v4 applied');
+    console.log('Patch v4 applied');
   }
   function run(){setTimeout(applyPatch,1200);}
   if(document.readyState==='complete') run();
