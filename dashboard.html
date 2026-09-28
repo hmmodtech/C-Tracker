@@ -9533,4 +9533,379 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
   else window.addEventListener('load',run);
 })();
 </script>
+  <!-- ══════════════════════════════════════════════════════════════════════
+     C-TRACKER PATCH — FULL FORM Q&A REPORT  (v1)
+     ──────────────────────────────────────────────────────────────────────
+     ألصق هذا البلوك كامل قبل </body> مباشرة في نهاية dashboard.html
+     (سطر واحد قبل </body> — آخر سطر في الملف)
+
+     ما يضيفه:
+       • قسم «📋 All Form Questions & Answers» داخل تقرير كل تراكر:
+         كل أسئلة الفورم (كل أعمدة شيت الردود، بنفس ترتيب الفورم)
+         مع إجابة الطلب المحدد + حالة كل سؤال (✓ Answered / ✗ Not answered / 📷 Photo)
+       • زر «🗂 All responses» → جدول: كل الطلبات × كل الأسئلة + تصدير CSV
+       • إصلاح: الأعمدة المكررة بنفس الاسم (سؤال متكرر بأكثر من قسم) كانت تُسقط
+         أول عمود فقط فتظهر بعض الحقول «—» → الآن تُدمج
+       • إصلاح: المتغير _rpt (خطأ مطبعي var_rpt) كان يمنع فتح التقارير
+
+     لا يغيّر أي إعداد أو بيانات — كله عرض فقط.
+════════════════════════════════════════════════════════════════════════ -->
+<style id="fqa-styles">
+/* ═══ FORM Q&A — full Google-Form question list (every column + answer) ═══ */
+.fqa-wrap{margin-top:16px}
+.fqa-head{display:flex;align-items:center;gap:9px;padding:12px 16px;border-radius:12px 12px 0 0;flex-wrap:wrap;
+  background:linear-gradient(135deg,rgba(74,158,53,0.12),rgba(74,158,53,0.04));border:1px solid var(--border);border-bottom:none}
+.fqa-title{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-0.01em}
+.fqa-count{font-family:var(--font-mono);font-size:10px;padding:3px 9px;border-radius:8px;white-space:nowrap;
+  background:var(--green-bg);color:var(--green);border:1px solid var(--green-dim)}
+.fqa-count-dim{background:var(--surface3);color:var(--muted);border-color:var(--border2)}
+.fqa-actions{margin-left:auto;display:flex;gap:7px;align-items:center}
+.fqa-btn{font-family:var(--font-mono);font-size:10px;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;
+  border:1px solid var(--border2);background:var(--surface3);color:var(--text-dim);transition:all .15s}
+.fqa-btn:hover{background:var(--accent-bg);color:var(--text);border-color:var(--accent-dim)}
+.fqa-btn-blue{color:var(--blue);border-color:var(--blue-dim);background:var(--blue-bg)}
+.fqa-list{border:1px solid var(--border);border-radius:0 0 12px 12px;overflow:hidden;background:var(--surface2)}
+.fqa-row{display:grid;grid-template-columns:36px minmax(140px,1fr) minmax(120px,42%) 104px;gap:12px;align-items:center;
+  padding:9px 14px;border-bottom:1px solid var(--border);transition:background .12s}
+.fqa-row:last-child{border-bottom:none}
+.fqa-row:hover{background:var(--accent-bg)}
+.fqa-row-empty{opacity:.62}
+.fqa-num{font-family:var(--font-mono);font-size:9px;color:var(--muted);text-align:right}
+.fqa-q{font-size:12px;font-weight:500;color:var(--text);line-height:1.45;word-break:break-word}
+.fqa-a{text-align:right;min-width:0}
+.fqa-val{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);line-height:1.5;
+  word-break:break-word;white-space:pre-wrap;display:inline-block;max-width:100%}
+.fqa-val-empty{color:var(--muted);font-style:italic}
+.fqa-link{color:var(--blue);font-size:11px;text-decoration:none}
+.fqa-thumb{width:62px;height:46px;object-fit:cover;border-radius:6px;border:1px solid var(--border2);cursor:zoom-in;display:block;margin-left:auto}
+.fqa-chip{font-family:var(--font-mono);font-size:9px;padding:3px 8px;border-radius:8px;text-align:center;white-space:nowrap}
+.fqa-chip-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-dim)}
+.fqa-chip-photo{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-dim)}
+.fqa-chip-none{background:var(--surface3);color:var(--muted);border:1px solid var(--border2)}
+.fqa-foot{font-family:var(--font-mono);font-size:9px;color:var(--muted);padding:8px 14px 0;line-height:1.6}
+/* ── ALL RESPONSES MATRIX ── */
+.fqa-mwrap{border:1px solid var(--border);border-radius:12px;background:var(--surface2);overflow:auto;max-height:64vh}
+table.fqa-m{border-collapse:separate;border-spacing:0;width:100%;font-size:11px}
+table.fqa-m th,table.fqa-m td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);
+  padding:7px 10px;vertical-align:top;text-align:left;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+table.fqa-m th:last-child,table.fqa-m td:last-child{border-right:none}
+table.fqa-m thead th{position:sticky;top:0;z-index:2;background:var(--surface3);color:var(--text-dim);
+  font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+table.fqa-m tbody td{color:var(--text-dim);font-family:var(--font-mono);font-size:10px}
+table.fqa-m tbody tr:hover td{background:var(--accent-bg)}
+table.fqa-m td.fqa-m-empty,table.fqa-m .fqa-m-empty{color:var(--muted);opacity:.7}
+table.fqa-m .fqa-m-idx{position:sticky;left:0;z-index:1;background:var(--surface3);color:var(--text);font-weight:600;text-align:right}
+table.fqa-m thead th.fqa-m-idx{z-index:3}
+.fqa-empty-box{padding:26px 18px;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--muted);
+  border:1px dashed var(--border2);border-radius:12px;background:var(--surface2)}
+@media (max-width:700px){
+  .fqa-row{grid-template-columns:26px minmax(90px,1fr) minmax(80px,38%);gap:8px}
+  .fqa-chip{display:none}
+}
+@media print{ [data-fqa-wrap]{display:none !important} }
+</style>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// C-TRACKER — FORM Q&A PATCH (self-contained, runtime)
+// ══════════════════════════════════════════════════════════════════
+(function () {
+  'use strict';
+
+  // ── 0) SAFETY: المتغير _rpt كان غير معرّف (var_rpt) فيمنع فتح التقارير ──
+  if (typeof window._rpt === 'undefined') {
+    window._rpt = (typeof window.var_rpt !== 'undefined' && window.var_rpt)
+      ? window.var_rpt
+      : { tracker: null, allRows: null, idx: 0, histOpen: false };
+  }
+
+  // ── 1) PARSE: دمج الأعمدة المكررة (سؤال متكرر بأكثر من قسم) ──────
+  function fqaParseRows(rows) {
+    if (!rows || rows.length < 2) return [];
+    const rawHeaders = rows[0];
+
+    const groups = new Map();
+    rawHeaders.forEach((h, i) => {
+      const name = String(h == null ? '' : h).trim() || ('Column ' + (i + 1));
+      if (!groups.has(name)) groups.set(name, []);
+      groups.get(name).push(i);
+    });
+
+    const cell = (r, i) => String(r[i] == null ? '' : r[i]).trim();
+    const firstFilled = (r, cols) => cols.map(i => cell(r, i)).find(v => v !== '') || '';
+
+    return rows.slice(1).map(r => {
+      const obj = {};
+      groups.forEach((cols, name) => {
+        if (name === 'Location' || name === 'Tag') { obj[name] = firstFilled(r, cols); return; }
+        const filled = cols.map(i => cell(r, i)).filter(v => v !== '');
+        const uniq   = filled.filter((v, k) => filled.indexOf(v) === k);
+        obj[name] = uniq.length <= 1 ? (uniq[0] || '') : uniq.join(' · ');
+      });
+      return obj;
+    }).filter(r => Object.keys(r).some(k => String(r[k] || '').trim() !== ''));
+  }
+  if (typeof window.parseRows === 'function') {
+    const _origParseRows = window.parseRows;
+    window.parseRows = function (rows) {
+      try { return fqaParseRows(rows); } catch (e) { return _origParseRows(rows); }
+    };
+  }
+
+  // ── 2) HELPERS ────────────────────────────────────────────────────
+  function _has(v) { if (v === undefined || v === null) return false; const s = String(v).trim(); return s !== '' && s !== '—' && s !== '-'; }
+  function _txt(v) { return String(v === undefined || v === null ? '' : v).replace(/\s+/g, ' ').trim(); }
+  function _isPhoto(v) { return typeof _isImg === 'function' && _isImg(String(v)); }
+  function _thumbOf(v) { return typeof _prev === 'function' ? _prev(String(v)) : String(v); }
+  function _esc(s) { return typeof esc === 'function' ? esc(s) : String(s === undefined || s === null ? '' : s); }
+  function _cut(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+  function _toast(m, c) { if (typeof showToast === 'function') { try { showToast(m, c || 'green'); } catch (e) {} } }
+  function _trackerById(id) { return (typeof trackers !== 'undefined' ? trackers : []).find(function (x) { return x.id === id; }); }
+  function _rowsById(id) { return (typeof sheetData !== 'undefined' ? sheetData[id] : null); }
+
+  // ── 3) ONE SUBMISSION — كل الأسئلة + إجاباتها ────────────────────
+  function fqaBuildBlock(t, rows, idx) {
+    if (!rows || !rows.length) return '';
+    const row = rows[idx]; if (!row) return '';
+    const keys = Object.keys(row); if (!keys.length) return '';
+
+    const items = keys.map(function (k, i) { return { k: k, v: _txt(row[k]), i: i }; });
+    const answeredN = items.filter(function (x) { return _has(x.v); }).length;
+    const emptyN = items.length - answeredN;
+
+    const listHtml = items.map(function (x) {
+      const has = _has(x.v), photo = has && _isPhoto(x.v);
+      let valHtml;
+      if (!has) {
+        valHtml = '<span class="fqa-val fqa-val-empty">— not answered</span>';
+      } else if (photo) {
+        const u = _thumbOf(x.v);
+        valHtml = '<img class="fqa-thumb" src="' + _esc(u) + '" loading="lazy" alt="photo" '
+          + 'onclick="openLightbox(\'' + _esc(u) + '\',\'' + _esc(x.k) + '\',\'' + _esc(x.v) + '\')" '
+          + 'onerror="this.outerHTML=\'<a href=&quot;' + _esc(x.v) + '&quot; target=&quot;_blank&quot; class=&quot;fqa-link&quot;>Open photo →</a>\'">';
+      } else {
+        valHtml = '<span class="fqa-val">' + _esc(x.v) + '</span>';
+      }
+      const chip = !has ? '<span class="fqa-chip fqa-chip-none">✗ Not answered</span>'
+        : photo ? '<span class="fqa-chip fqa-chip-photo">📷 Photo</span>'
+        : '<span class="fqa-chip fqa-chip-ok">✓ Answered</span>';
+
+      return '<div class="fqa-row' + (has ? '' : ' fqa-row-empty') + '" data-fqa-empty="' + (has ? '0' : '1') + '">'
+        + '<span class="fqa-num">' + (x.i + 1) + '</span>'
+        + '<span class="fqa-q">' + _esc(x.k) + '</span>'
+        + '<span class="fqa-a">' + valHtml + '</span>' + chip + '</div>';
+    }).join('');
+
+    return '<div class="fqa-wrap" data-fqa-wrap>'
+      + '<div class="fqa-head">'
+      +   '<span style="font-size:17px">📋</span>'
+      +   '<span class="fqa-title">All Form Questions &amp; Answers</span>'
+      +   '<span class="fqa-count">' + answeredN + ' / ' + items.length + ' answered</span>'
+      +   (emptyN ? '<span class="fqa-count fqa-count-dim">' + emptyN + ' empty</span>' : '')
+      +   '<span class="fqa-actions">'
+      +     '<button type="button" class="fqa-btn" onclick="fqaOpenAllResponses(\'' + _esc(t && t.id) + '\')">🗂 All responses</button>'
+      +     (emptyN ? '<button type="button" class="fqa-btn" onclick="fqaToggleEmpty(this)">👁 Hide unanswered</button>' : '')
+      +     '<button type="button" class="fqa-btn fqa-btn-blue" onclick="fqaExportCSV(\'' + _esc(t && t.id) + '\',' + idx + ')">⬇ CSV</button>'
+      +   '</span></div>'
+      + '<div class="fqa-list">' + listHtml + '</div>'
+      + '<div class="fqa-foot">Every column of the linked Google Form response sheet, in form order — Timestamp, Email and all question fields included.</div>'
+      + '</div>';
+  }
+
+  // ── 4) MATRIX — كل الطلبات × كل الأسئلة ──────────────────────────
+  function fqaBuildMatrix(t, rows) {
+    if (!rows || !rows.length) return '<div class="fqa-empty-box">No responses found for this tracker yet.</div>';
+    const keys = Object.keys(rows[0] || {});
+    if (!keys.length) return '<div class="fqa-empty-box">The response sheet has no columns.</div>';
+
+    let filled = 0;
+    rows.forEach(function (r) { keys.forEach(function (k) { if (_has(r[k])) filled++; }); });
+    const total = rows.length * keys.length;
+    const fillPct = total ? Math.round((filled / total) * 100) : 0;
+
+    const head = '<thead><tr><th class="fqa-m-idx">#</th>'
+      + keys.map(function (k) { return '<th title="' + _esc(k) + '">' + _esc(k) + '</th>'; }).join('') + '</tr></thead>';
+
+    const body = rows.slice().reverse().map(function (row, ri) {
+      const realIdx = rows.length - 1 - ri;
+      const cells = keys.map(function (k) {
+        const v = _txt(row[k]);
+        if (!_has(v)) return '<td class="fqa-m-empty">—</td>';
+        if (_isPhoto(v)) return '<td><a class="fqa-link" href="' + _esc(v) + '" target="_blank">📷 photo</a></td>';
+        return '<td title="' + _esc(_cut(v, 400)) + '">' + _esc(_cut(v, 70)) + '</td>';
+      }).join('');
+      return '<tr><td class="fqa-m-idx">' + (realIdx + 1) + '</td>' + cells + '</tr>';
+    }).join('');
+
+    return '<div class="fqa-wrap" data-fqa-wrap>'
+      + '<div class="fqa-head">'
+      +   '<span style="font-size:17px">🗂</span>'
+      +   '<span class="fqa-title">All Responses — every question × every submission</span>'
+      +   '<span class="fqa-count">' + rows.length + ' submissions</span>'
+      +   '<span class="fqa-count fqa-count-dim">' + keys.length + ' questions</span>'
+      +   '<span class="fqa-count fqa-count-dim">' + fillPct + '% of cells filled</span>'
+      +   '<span class="fqa-actions">'
+      +     '<button type="button" class="fqa-btn fqa-btn-blue" onclick="fqaExportAllCSV(\'' + _esc(t && t.id) + '\')">⬇ CSV (all)</button>'
+      +   '</span></div>'
+      + '<div class="fqa-mwrap"><table class="fqa-m">' + head + '<tbody>' + body + '</tbody></table></div>'
+      + '<div class="fqa-foot">Scroll sideways to see every question · newest submission first · hover a cell for the full answer.</div>'
+      + '</div>';
+  }
+
+  // ── 5) TOGGLE unanswered ─────────────────────────────────────────
+  function fqaToggleEmpty(btn) {
+    const wrap = btn && btn.closest ? btn.closest('[data-fqa-wrap]') : null;
+    if (!wrap) return;
+    const hide = !wrap.classList.contains('fqa-hide-empty');
+    wrap.classList.toggle('fqa-hide-empty', hide);
+    btn.textContent = hide ? '👁 Show all' : '👁 Hide unanswered';
+    wrap.querySelectorAll('[data-fqa-empty="1"]').forEach(function (el) { el.style.display = hide ? 'none' : ''; });
+  }
+
+  // ── 6) CSV EXPORTS ───────────────────────────────────────────────
+  function _csvCell(v) { return '"' + _txt(v).replace(/"/g, '""') + '"'; }
+  function _safeName(s) { return String(s || 'tracker').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, ''); }
+  function _download(name, csv) {
+    try {
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 600);
+      _toast('⬇ ' + name, 'green');
+    } catch (e) { _toast('Export failed — ' + e.message, 'amber'); }
+  }
+  function fqaExportCSV(trackerId, idx) {
+    const t = _trackerById(trackerId), rows = _rowsById(trackerId);
+    if (!rows || !rows[idx]) { _toast('No submission to export', 'amber'); return; }
+    const row = rows[idx];
+    const lines = ['"#","Question","Answer"'];
+    Object.keys(row).forEach(function (k, i) { lines.push((i + 1) + ',' + _csvCell(k) + ',' + _csvCell(row[k])); });
+    _download('C-TRACKER-' + _safeName(t ? t.name : '') + '-submission-' + (idx + 1) + '.csv', lines.join('\r\n'));
+  }
+  function fqaExportAllCSV(trackerId) {
+    const t = _trackerById(trackerId), rows = _rowsById(trackerId);
+    if (!rows || !rows.length) { _toast('No responses to export', 'amber'); return; }
+    const keys = Object.keys(rows[0] || {});
+    const lines = [['"#"'].concat(keys.map(_csvCell)).join(',')];
+    rows.forEach(function (row, i) {
+      lines.push([_csvCell(i + 1)].concat(keys.map(function (k) { return _csvCell(row[k]); })).join(','));
+    });
+    _download('C-TRACKER-' + _safeName(t ? t.name : '') + '-all-responses.csv', lines.join('\r\n'));
+  }
+
+  // ── 7) ALL RESPONSES MODAL ───────────────────────────────────────
+  function fqaOpenAllResponses(trackerId) {
+    const t = _trackerById(trackerId), rows = _rowsById(trackerId);
+    if (!rows || !rows.length) { _toast('No responses to show', 'amber'); return; }
+    let ov = document.getElementById('fqaMatrixOverlay');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'fqaMatrixOverlay';
+      ov.className = 'overlay';
+      ov.innerHTML = '<div class="modal wide">'
+        + '<div class="modal-head"><div class="modal-head-left"><span>🗂</span>'
+        + '<span class="modal-title" id="fqaMTitle">All Responses</span></div>'
+        + '<button class="modal-close" onclick="fqaCloseAllResponses()">✕</button></div>'
+        + '<div class="modal-body" id="fqaMBody"></div>'
+        + '<div class="modal-foot"><button class="btn" onclick="fqaCloseAllResponses()">Close</button></div></div>';
+      document.body.appendChild(ov);
+      ov.addEventListener('click', function (e) { if (e.target === ov) fqaCloseAllResponses(); });
+    }
+    const title = document.getElementById('fqaMTitle');
+    if (title) title.textContent = (t ? t.name : 'Tracker') + ' — All Responses';
+    document.getElementById('fqaMBody').innerHTML = fqaBuildMatrix(t, rows);
+    ov.classList.add('open');
+  }
+  function fqaCloseAllResponses() {
+    const ov = document.getElementById('fqaMatrixOverlay');
+    if (ov) ov.classList.remove('open');
+  }
+
+  // ── 8) INJECTION — تحقن القسم داخل التقرير المعروض ───────────────
+  function _renderTargets() {
+    const out = [];
+    ['reportBody', 'drillBody'].forEach(function (id) {
+      const el = document.getElementById(id);
+      if (el && el.offsetParent !== null || el && el.closest && el.closest('.overlay') && el.closest('.overlay').classList.contains('open')) out.push(el);
+    });
+    // fallback: أي واحد موجود
+    if (!out.length) ['reportBody', 'drillBody'].forEach(function (id) { const el = document.getElementById(id); if (el) out.push(el); });
+    return out;
+  }
+
+  function fqaInject() {
+    const rpt = window._rpt;
+    if (!rpt || !rpt.tracker || !rpt.allRows || !rpt.allRows.length) return;
+    let idx = (typeof rpt.idx === 'number') ? rpt.idx : rpt.allRows.length - 1;
+    if (idx < 0 || idx >= rpt.allRows.length) idx = rpt.allRows.length - 1;
+
+    const html = fqaBuildBlock(rpt.tracker, rpt.allRows, idx);
+    if (!html) return;
+
+    _renderTargets().forEach(function (body) {
+      // ① نظّف أي نسخة قديمة (حتى تتحدّث بعد التنقل بين الطلبات)
+      body.querySelectorAll('[data-fqa-wrap]').forEach(function (n) { n.remove(); });
+      const holder = document.createElement('div');
+      holder.innerHTML = html;
+      const node = holder.firstElementChild; if (!node) return;
+      // ② حطّه قبل قسم العناصر المتوفرة إذا موجود، وإلا بنهاية التقرير
+      const anchor = body.querySelector('.fa-section-head, .vfr-section-head, .sr-section, .rpt-tabs-v2, .report-section');
+      if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(node, anchor);
+      else body.appendChild(node);
+    });
+  }
+
+  // ── 9) HOOKS — راقب تغيّر محتوى التقرير + غلّف دوال العرض ────────
+  let _t = null;
+  function _schedule() { clearTimeout(_t); _t = setTimeout(fqaInject, 40); }
+
+  function _wrap(name) {
+    const orig = window[name];
+    if (typeof orig !== 'function' || orig.__fqaWrapped) return;
+    const wrapped = function () { const r = orig.apply(this, arguments); setTimeout(fqaInject, 30); return r; };
+    wrapped.__fqaWrapped = true;
+    wrapped.__orig = orig;
+    window[name] = wrapped;
+  }
+
+  function _bind() {
+    // ① MutationObserver — يضمن الظهور مع أي دالة عرض (حتى patches مستقبلية)
+    ['reportBody', 'drillBody'].forEach(function (id) {
+      const el = document.getElementById(id);
+      if (el && !el.__fqaObserved) {
+        el.__fqaObserved = true;
+        new MutationObserver(_schedule).observe(el, { childList: true });
+      }
+    });
+    // ② تغليف دوال العرض (احتياط إضافي)
+    ['openReport', 'openDrill', '_rebuildBody', 'srGoTo', 'srPrev', 'srNext', 'srPickHist'].forEach(_wrap);
+    // ③ لو تقرير مفتوح أصلاً
+    fqaInject();
+  }
+
+  function _boot() {
+    _bind();
+    // الـ patches الأخرى تُطبَّق بعد 800–1200ms — أعد الربط بعدها
+    setTimeout(function () { _bind(); fqaInject(); }, 1600);
+    setTimeout(function () { _bind(); fqaInject(); }, 3000);
+  }
+  if (document.readyState === 'complete') _boot();
+  else window.addEventListener('load', _boot);
+
+  // ── EXPORT ───────────────────────────────────────────────────────
+  window.fqaBuildBlock       = fqaBuildBlock;
+  window.fqaBuildMatrix      = fqaBuildMatrix;
+  window.fqaToggleEmpty      = fqaToggleEmpty;
+  window.fqaExportCSV        = fqaExportCSV;
+  window.fqaExportAllCSV     = fqaExportAllCSV;
+  window.fqaOpenAllResponses = fqaOpenAllResponses;
+  window.fqaCloseAllResponses = fqaCloseAllResponses;
+  window.fqaInject           = fqaInject;
+  console.log('✓ FORM Q&A patch loaded — full question list in every tracker report');
+})();
+</script>
+<!-- ═══════════════════ نهاية C-TRACKER FORM Q&A PATCH ═══════════════════ -->
+
 </body></html>
