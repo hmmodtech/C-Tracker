@@ -10001,5 +10001,547 @@ table.fqa-m thead th.fqa-m-idx{z-index:3}
 })();
 </script>
 <!-- ═══════════════════ نهاية C-TRACKER ORDER FIX ═══════════════════ -->
+<!-- ══════════════════════════════════════════════════════════════════════
+     C-TRACKER — PDF EXPORT PATCH v2  (تقرير مفصّل لكل تراكر — آخر شهر فقط)
+     ──────────────────────────────────────────────────────────────────────
+     ألصق هذا البلوك قبل </body> مباشرة في نهاية dashboard.html
+     (مستقل تمامًا — يعمل مع أو بدون بلوكات FORM Q&A السابقة)
+
+     ما يغيّره في زر «⬇ Export All Reports — PDF»:
+
+       ① الغلاف العلوي (Management Report)        → نفس التصميم، أرقام آخر شهر
+       ② 📊 Tracker Status Overview               → نفس التصميم، أرقام آخر شهر
+       ③ 📋 Detailed Tracker Reports  ← الجديد    → تقرير مفصّل لكل تراكر لآخر شهر:
+             • التاريخ + Done By + Premise + Location (+ Tag)
+             • 📋 All Form Questions & Answers (كل الأسئلة وإجاباتها)
+             • ✅ Available Items
+             • ❌ Missing / Non-Compliant Items
+       ④ 🔍 Key Findings & Recommendations         → انتقل لآخر التقرير
+
+     لتغيير الفترة: عدّل السطر  PERIOD_MODE  بالأسفل
+        'lastMonth' = آخر شهر فيه بيانات  (الافتراضي)
+        'all'       = كل الفترات
+════════════════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  // ── ⚙️ إعداد الفترة ────────────────────────────────────────────────
+  var PERIOD_MODE = 'lastMonth';        // 'lastMonth' | 'all'
+
+  // ── ① أدوات مساعدة ────────────────────────────────────────────────
+  function escH(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function rowsOf(id) {
+    var r = (typeof sheetData !== 'undefined' && sheetData) ? sheetData[id] : null;
+    return (r && r.length) ? r : [];
+  }
+  function dateOf(row) {
+    if (!row) return null;
+    if (row.date) { var d0 = new Date(String(row.date).split(' ')[0]); if (!isNaN(d0)) return d0; }
+    var keys = Object.keys(row);
+    for (var i = 0; i < keys.length; i++) {
+      var lo = keys[i].toLowerCase();
+      if (lo.indexOf('timestamp') !== -1 || lo === 'date' || lo === 'column 1') {
+        var v = String(row[keys[i]] == null ? '' : row[keys[i]]).trim();
+        if (v) { var d = new Date(v); if (!isNaN(d)) return d; }
+      }
+    }
+    return null;
+  }
+  function latestDate(rows) {
+    var latest = null;
+    (rows || []).forEach(function (r) { var d = dateOf(r); if (d && (!latest || d > latest)) latest = d; });
+    return latest;
+  }
+  // فلترة الفترة المطلوبة (نفس منطق Dashboard: شهر آخر بيانات موجودة)
+  function filterPeriod(rows) {
+    var list = (rows || []).slice();
+    if (PERIOD_MODE === 'all' || !list.length) return list;
+    var latest = latestDate(list);
+    if (!latest) return list;
+    var y = latest.getFullYear(), m = latest.getMonth();
+    var f = list.filter(function (r) {
+      var d = dateOf(r);
+      return d && d.getFullYear() === y && d.getMonth() === m;
+    });
+    return f.length ? f : list;
+  }
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  function periodLabel(rows) {
+    if (PERIOD_MODE === 'all') return 'All periods';
+    var latest = latestDate(rows);
+    return latest ? (MONTHS[latest.getMonth()] + ' ' + latest.getFullYear()) : 'All periods';
+  }
+  function fdate(raw) {
+    if (!raw) return '—';
+    try {
+      var d = new Date(raw);
+      if (!isNaN(d)) {
+        var dd = String(d.getDate()).padStart(2, '0'), mm = String(d.getMonth() + 1).padStart(2, '0');
+        var hh = String(d.getHours()).padStart(2, '0'), mi = String(d.getMinutes()).padStart(2, '0');
+        return dd + '-' + mm + '-' + d.getFullYear() + ' · ' + hh + ':' + mi;
+      }
+    } catch (e) {}
+    return String(raw).split(' ')[0];
+  }
+  function dOnly(raw) {           // dd-mm-yyyy بدون وقت
+    var f = fdate(raw);
+    return f.indexOf(' · ') !== -1 ? f.split(' · ')[0] : f;
+  }
+  function isPhoto(v) { return typeof _isImg === 'function' && _isImg(String(v)); }
+  function isEmpty(v) { v = String(v == null ? '' : v).trim(); return v === '' || v === '—' || v === '-'; }
+  function cColor(v) { return v >= 80 ? '#16a34a' : v >= 50 ? '#d97706' : '#dc2626'; }
+
+  // ── ② تصنيف الإجابات (Available / Missing) ─────────────────────────
+  var PASS_W = ['available','yes','ok','good','pass','present','working','functional','charged','intact','clean','complete','full','secured','locked','normal','operational','serviceable','checked','confirmed','done','found','active','clear','closed'];
+  var FAIL_W = ['missing','no','not available','unavailable','absent','not present','not found','none','empty','expired','broken','damaged','fail','not working','faulty','dead','discharged','dented','open','unlocked','exposed','dirty','blocked','low pressure','defective','out of order'];
+  var INVERTED = ['physical damage','any damage','is there any defect','is it damaged','leak','corrosion','rust','any problem','any fault','has it expired','is it expired','overdue','tampered','vandal','broken seal','missing pin'];
+  function hit(v, list) {
+    var lo = v.toLowerCase();
+    return list.some(function (w) { return lo === w || lo.indexOf(w + ' ') === 0 || lo === w + '.' || lo.indexOf(w + ',') === 0; });
+  }
+  function isInverted(k) { var lo = k.toLowerCase(); return INVERTED.some(function (w) { return lo.indexOf(w) !== -1; }); }
+  function isMetaCol(k) {
+    var lo = k.toLowerCase();
+    if (lo.indexOf('timestamp') !== -1 || lo.indexOf('email') !== -1) return true;
+    if (lo.indexOf('edit url') !== -1 || lo.indexOf('form response') !== -1) return true;
+    if (typeof _vfrIsMetaKey === 'function') { try { return !!_vfrIsMetaKey(k); } catch (e) {} }
+    return false;
+  }
+  function classify(key, val) {
+    if (isEmpty(val)) return 'empty';
+    if (isPhoto(val)) return 'photo';
+    if (isInverted(key)) {
+      var lo = String(val).trim().toLowerCase();
+      if (lo.indexOf('no') === 0 || lo === 'none' || lo === 'intact') return 'pass';
+      if (lo.indexOf('yes') === 0 || /damaged|defective|broken|expired|cracked|leak/.test(lo)) return 'fail';
+      return 'answered';
+    }
+    if (hit(val, PASS_W)) return 'pass';
+    if (hit(val, FAIL_W)) return 'fail';
+    return 'answered';
+  }
+
+  // ── ③ استخراج الحقول الوصفية ──────────────────────────────────────
+  function metaOf(row) {
+    var keys = Object.keys(row || {});
+    function find(re, skip) {
+      for (var i = 0; i < keys.length; i++) {
+        if (skip && keys[i] === skip) continue;
+        if (re.test(keys[i])) return keys[i];
+      }
+      return '';
+    }
+    var dateKey    = keys.find(function (k) { return typeof _vfrIsDateKey === 'function' ? _vfrIsDateKey(k) : /timestamp|date|column 1/i.test(k); }) || '';
+    var nameKey    = keys.find(function (k) { return typeof _vfrIsNameKey === 'function' ? _vfrIsNameKey(k) : /done by|inspector|submitted by|full name|your name/i.test(k); }) || '';
+    var premiseKey = find(/premise|premises|site name|facility|branch|building/i, '');
+    var locKey     = find(/location|area|room|floor|zone|wing|sector|spot/i, premiseKey);
+    var tagKey     = find(/^\s*tag\b|tag\s*#|tag no|serial|kit id|device id|unit id/i, '');
+    return {
+      dateKey: dateKey, nameKey: nameKey, premiseKey: premiseKey, locKey: locKey, tagKey: tagKey,
+      date: dateKey ? String(row[dateKey] || '') : '',
+      doneBy: nameKey ? String(row[nameKey] || '') : '',
+      premise: premiseKey ? String(row[premiseKey] || '') : '',
+      location: locKey ? String(row[locKey] || '') : '',
+      tag: tagKey ? String(row[tagKey] || '') : ''
+    };
+  }
+
+  // ── ④ جدول «كل الأسئلة والإجابات» (نسخة طباعة — بدون أزرار) ────────
+  function qaTable(row, titleText) {
+    var keys = Object.keys(row || {});
+    if (!keys.length) return '';
+    var answered = 0;
+    var body = keys.map(function (k, i) {
+      var v = String(row[k] == null ? '' : row[k]).trim();
+      var has = !isEmpty(v);
+      if (has) answered++;
+      var cls = classify(k, v);
+      var valHtml, chip, chipColor;
+      if (!has) {
+        valHtml = '<span style="color:#9ca3af;font-style:italic">— not answered</span>';
+        chip = 'not answered'; chipColor = '#9ca3af';
+      } else if (cls === 'photo') {
+        valHtml = '<a href="' + escH(v) + '" style="color:#2563eb;font-size:10px">📷 photo link</a>';
+        chip = 'photo'; chipColor = '#2563eb';
+      } else {
+        var col = cls === 'pass' ? '#16a34a' : cls === 'fail' ? '#dc2626' : '#374151';
+        valHtml = '<span style="color:' + col + ';font-weight:500">' + escH(v) + '</span>';
+        chip = cls === 'pass' ? '✓' : cls === 'fail' ? '✗' : '•';
+        chipColor = col;
+      }
+      return '<tr>' +
+        '<td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;font-size:9px;color:#9ca3af;text-align:right;width:26px">' + (i + 1) + '</td>' +
+        '<td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;font-size:11px;color:#374151;width:46%">' + escH(k) + '</td>' +
+        '<td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;font-size:11px">' + valHtml + '</td>' +
+        '<td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;font-size:11px;font-weight:700;color:' + chipColor + ';text-align:center;width:60px">' + chip + '</td>' +
+      '</tr>';
+    }).join('');
+
+    return '<div style="margin-top:12px">' +
+      '<div style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-bottom:none;border-radius:10px 10px 0 0">' +
+        '<span style="font-size:14px">📋</span>' +
+        '<span style="font-size:12px;font-weight:700;color:#166534">' + escH(titleText || 'All Form Questions & Answers') + '</span>' +
+        '<span style="margin-left:auto;font-size:9px;font-family:\'JetBrains Mono\',monospace;color:#166534;background:#dcfce7;border:1px solid #bbf7d0;padding:2px 8px;border-radius:8px">' + answered + ' / ' + keys.length + ' answered</span>' +
+      '</div>' +
+      '<table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:0 0 10px 10px;overflow:hidden">' +
+        '<thead><tr>' +
+          '<th style="padding:6px 10px;background:#fafafa;border-bottom:1px solid #e5e7eb;font-size:9px;color:#9ca3af;text-align:right"></th>' +
+          '<th style="padding:6px 10px;background:#fafafa;border-bottom:1px solid #e5e7eb;font-size:9px;color:#9ca3af;text-align:left;text-transform:uppercase;letter-spacing:.05em">Question</th>' +
+          '<th style="padding:6px 10px;background:#fafafa;border-bottom:1px solid #e5e7eb;font-size:9px;color:#9ca3af;text-align:left;text-transform:uppercase;letter-spacing:.05em">Answer</th>' +
+          '<th style="padding:6px 10px;background:#fafafa;border-bottom:1px solid #e5e7eb;font-size:9px;color:#9ca3af;text-align:center;text-transform:uppercase;letter-spacing:.05em">Status</th>' +
+        '</tr></thead><tbody>' + body + '</tbody>' +
+      '</table>' +
+    '</div>';
+  }
+
+  // ── ⑤ قوائم Available / Missing ───────────────────────────────────
+  function itemsLists(row) {
+    var keys = Object.keys(row || {});
+    var avail = [], miss = [];
+    keys.forEach(function (k) {
+      if (isMetaCol(k)) return;
+      if (typeof _vfrIsMetaKey === 'function') { try { if (_vfrIsMetaKey(k)) return; } catch (e) {} }
+      var v = String(row[k] == null ? '' : row[k]).trim();
+      var cls = classify(k, v);
+      if (cls === 'empty' || cls === 'meta') return;
+      if (cls === 'fail') miss.push({ k: k, v: v });
+      else avail.push({ k: k, v: v, cls: cls });
+    });
+    return { avail: avail, miss: miss };
+  }
+  function listBlock(title, icon, items, kind) {
+    var may = kind === 'avail';
+    var head = may ? 'background:#f0fdf4;border:1px solid #bbf7d0;border-bottom:none' : 'background:#fef2f2;border:1px solid #fecaca;border-bottom:none';
+    var col  = may ? '#166534' : '#991b1b';
+    var bg   = may ? '#f0fdf4' : '#fef2f2';
+    var cnt  = may ? 'background:#dcfce7;border:1px solid #bbf7d0;color:#166534' : 'background:#fee2e2;border:1px solid #fecaca;color:#991b1b';
+    var rows = items.length
+      ? items.map(function (x) {
+          var vTxt = isEmpty(x.v) ? '—' : String(x.v);
+          if (x.cls === 'photo') vTxt = '📷 photo recorded';
+          if (kind === 'miss' && isEmpty(x.v)) vTxt = 'Not answered — action required';
+          return '<tr>' +
+            '<td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;font-size:11px;color:#374151;width:52%">' + escH(x.k) + '</td>' +
+            '<td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;font-size:11px;font-weight:500;color:' + (may ? '#16a34a' : '#dc2626') + '">' + escH(vTxt) + '</td>' +
+          '</tr>';
+        }).join('')
+      : '<tr><td colspan="2" style="padding:14px;text-align:center;font-size:11px;color:' + col + '">' + (may ? 'No available items recorded' : '🎉 No missing / non-compliant items') + '</td></tr>';
+    return '<div style="margin-top:12px">' +
+      '<div style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:10px 10px 0 0;' + head + '">' +
+        '<span style="font-size:14px">' + icon + '</span>' +
+        '<span style="font-size:12px;font-weight:700;color:' + col + '">' + escH(title) + '</span>' +
+        '<span style="margin-left:auto;font-size:9px;font-family:\'JetBrains Mono\',monospace;padding:2px 8px;border-radius:8px;' + cnt + '">' + items.length + ' item' + (items.length !== 1 ? 's' : '') + '</span>' +
+      '</div>' +
+      '<table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:0 0 10px 10px;overflow:hidden;background:' + bg + '">' + rows + '</table>' +
+    '</div>';
+  }
+
+  // ── ⑥ احتساب نسبة التزام آخر شهر لتراكر ───────────────────────────
+  function periodCompliance(t, rows) {
+    var period = filterPeriod(rows);
+    if (!period.length) return null;
+    if (typeof calcCompliance === 'function') {
+      try {
+        var v = calcCompliance(period, t.name);
+        if (typeof v === 'number' && !isNaN(v)) return v;
+      } catch (e) {}
+    }
+    // fallback: احتساب داخلي
+    var pass = 0, tot = 0;
+    period.forEach(function (r) {
+      var L = itemsLists(r);
+      pass += L.avail.length; tot += L.avail.length + L.miss.length;
+    });
+    return tot === 0 ? 100 : Math.round((pass / tot) * 100);
+  }
+
+  // ── ⑦ قسم التراكر المفصّل (آخر شهر فقط) ──────────────────────────
+  function trackerSection(t) {
+    var allRows = rowsOf(t.id);
+    var rows = filterPeriod(allRows);
+    var icon = t.icon || '📋';
+    var comp = periodCompliance(t, allRows);
+    var pLabel = periodLabel(allRows);
+
+    var headBar = function (sub) {
+      return '<div style="page-break-before:always;padding-top:8px">' +
+        '<div style="display:flex;align-items:center;gap:14px;padding:16px 20px;background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:12px 12px 0 0">' +
+          '<div style="font-size:30px">' + icon + '</div>' +
+          '<div style="flex:1">' +
+            '<div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;letter-spacing:0.15em;color:rgba(255,255,255,0.45);margin-bottom:3px">C-TRACKER · Detailed Report · ' + escH(pLabel) + '</div>' +
+            '<div style="font-size:19px;font-weight:600;color:#fff">' + escH(t.name) + '</div>' +
+            '<div style="font-size:10px;color:rgba(255,255,255,0.55);margin-top:3px;font-family:\'JetBrains Mono\',monospace">' + sub + '</div>' +
+          '</div>' +
+          '<div style="text-align:right">' +
+            '<div style="font-size:28px;font-weight:700;color:' + (comp === null ? '#9ca3af' : cColor(comp)) + '">' + (comp === null ? '—' : comp + '%') + '</div>' +
+            '<div style="font-size:9px;color:rgba(255,255,255,0.45);font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;margin-top:2px">Compliance · ' + escH(pLabel) + '</div>' +
+          '</div>' +
+        '</div>';
+    };
+
+    if (!rows.length) {
+      return headBar('No inspections in this period') +
+        '<div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;padding:26px;text-align:center;color:#9ca3af;font-size:12px">No records for ' + escH(pLabel) + '.</div></div>';
+    }
+
+    var last = rows[rows.length - 1];
+    var m = metaOf(last);
+    var L = itemsLists(last);
+
+    // بطاقات التاريخ / Done By / Premise / Location (+Tag)
+    function mc(label, value, color) {
+      return '<div style="border:1px solid #e5e7eb;border-left:3px solid ' + color + ';border-radius:8px;padding:10px 12px;background:#fafafa">' +
+        '<div style="font-size:8px;font-family:\'JetBrains Mono\',monospace;color:#9ca3af;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">' + label + '</div>' +
+        '<div style="font-size:12px;font-weight:600;color:#111827;word-break:break-word">' + escH(isEmpty(value) ? '—' : value) + '</div>' +
+      '</div>';
+    }
+    var metaGrid = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;border:1px solid #e5e7eb;border-top:none;background:#fff">' +
+      mc('📅 Last Check', fdate(m.date), '#dc2626') +
+      mc('👤 Done By', m.doneBy, '#2563eb') +
+      mc('🏢 Premise', m.premise, '#d97706') +
+      mc('📍 Location', m.location || m.premise, '#16a34a') +
+      (isEmpty(m.tag) ? '' : '<div style="grid-column:1/-1">' + mc('🏷 Tag / Kit ID', m.tag, '#7c3aed') + '</div>') +
+    '</div>';
+
+    // شريط معلومات الفترة
+    var infoStrip = '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f8fafc;border:1px solid #e5e7eb;border-top:none;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:#6b7280">' +
+      '<span>📆 Period: <b style="color:#111827">' + escH(pLabel) + '</b></span>' +
+      '<span>· ' + rows.length + ' inspection' + (rows.length !== 1 ? 's' : '') + '</span>' +
+      '<span>· showing the latest: <b style="color:#111827">' + escH(fdate(m.date)) + '</b></span>' +
+      // قائمة فحوصات الفترة (إن كانت أكثر من واحد)
+      (rows.length > 1
+        ? '<span style="margin-left:auto">' + rows.slice().reverse().slice(0, 6).map(function (r) {
+            var rm = metaOf(r);
+            var rp = (function () { var p = 0, tt = 0; var q = itemsLists(r); p = q.avail.length; tt = q.avail.length + q.miss.length; return tt ? Math.round(p / tt * 100) : 100; })();
+            return '<span style="margin-left:6px">' + escH(dOnly(rm.date)) + ' <b style="color:' + cColor(rp) + '">' + rp + '%</b></span>';
+          }).join('·') + '</span>'
+        : '') +
+    '</div>';
+
+    return headBar(rows.length + ' inspection' + (rows.length !== 1 ? 's' : '') + ' · last: ' + fdate(m.date)) +
+      metaGrid + infoStrip +
+      '<div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;padding:0 12px 14px;background:#fff">' +
+        qaTable(last, 'All Form Questions & Answers') +
+        listBlock('Available Items', '✅', L.avail, 'avail') +
+        listBlock('Missing / Non-Compliant Items', '❌', L.miss, 'miss') +
+      '</div></div>';
+  }
+
+  // ── ⑧ القسم التفصيلي للتراكرات المحلية (Bulk SMS / Maps / …) ───────
+  function localSection(t) {
+    var allRows = rowsOf(t.id);
+    var rows = filterPeriod(allRows);
+    var pLabel = periodLabel(allRows);
+    var type = (typeof getLocalTrackerType === 'function') ? getLocalTrackerType(t.name) : null;
+    var defs = (type && typeof getLocalTrackerFields === 'function') ? getLocalTrackerFields(type) : [];
+
+    var headBar = '<div style="page-break-before:always;padding-top:8px">' +
+      '<div style="display:flex;align-items:center;gap:14px;padding:16px 20px;background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:12px 12px 0 0">' +
+        '<div style="font-size:30px">' + (t.icon || '📋') + '</div>' +
+        '<div style="flex:1">' +
+          '<div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;letter-spacing:0.15em;color:rgba(255,255,255,0.45);margin-bottom:3px">C-TRACKER · Detailed Report · ' + escH(pLabel) + '</div>' +
+          '<div style="font-size:19px;font-weight:600;color:#fff">' + escH(t.name) + '</div>' +
+          '<div style="font-size:10px;color:rgba(255,255,255,0.55);margin-top:3px;font-family:\'JetBrains Mono\',monospace">' + (rows.length ? rows.length + ' record' + (rows.length !== 1 ? 's' : '') + ' in ' + escH(pLabel) : 'No records in ' + escH(pLabel)) + '</div>' +
+        '</div>' +
+      '</div>';
+
+    if (!rows.length) {
+      return headBar + '<div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;padding:26px;text-align:center;color:#9ca3af;font-size:12px">No records for ' + escH(pLabel) + '.</div></div>';
+    }
+
+    var last = rows[rows.length - 1];
+    // بناء صف «كل الأسئلة والإجابات» من تعريفات الحقول
+    var qaRowObj = {};
+    if (defs.length) {
+      defs.forEach(function (f) {
+        var v = last[f.key];
+        qaRowObj[f.label] = (v == null || v === '') ? '' : (f.type === 'yesno' ? (String(v).toLowerCase() === 'yes' ? 'Yes' : String(v).toLowerCase() === 'no' ? 'No' : String(v)) : String(v));
+      });
+    } else {
+      Object.keys(last).forEach(function (k) { if (k.charAt(0) !== '_' && k !== 'date' && k !== 'doneBy') qaRowObj[k] = last[k]; });
+    }
+    var avail = [], miss = [];
+    Object.keys(qaRowObj).forEach(function (k) {
+      var cls = classify(k, qaRowObj[k]);
+      if (cls === 'empty') return;
+      if (cls === 'fail') miss.push({ k: k, v: qaRowObj[k] });
+      else avail.push({ k: k, v: qaRowObj[k], cls: cls });
+    });
+    var comp = (avail.length + miss.length) ? Math.round(avail.length / (avail.length + miss.length) * 100) : 100;
+
+    function mc(label, value, color) {
+      return '<div style="border:1px solid #e5e7eb;border-left:3px solid ' + color + ';border-radius:8px;padding:10px 12px;background:#fafafa">' +
+        '<div style="font-size:8px;font-family:\'JetBrains Mono\',monospace;color:#9ca3af;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">' + label + '</div>' +
+        '<div style="font-size:12px;font-weight:600;color:#111827;word-break:break-word">' + escH(isEmpty(value) ? '—' : value) + '</div>' +
+      '</div>';
+    }
+
+    return headBar +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:12px;border:1px solid #e5e7eb;border-top:none;background:#fff">' +
+        mc('📅 Last Check', fdate(last.date), '#dc2626') +
+        mc('👤 Done By', last.doneBy, '#2563eb') +
+        mc('📊 Compliance', comp + '%', cColor(comp)) +
+      '</div>' +
+      '<div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;padding:0 12px 14px;background:#fff">' +
+        qaTable(qaRowObj, 'All Form Questions & Answers') +
+        listBlock('Available / Yes Items', '✅', avail, 'avail') +
+        listBlock('Missing / Issues', '❌', miss, 'miss') +
+      '</div></div>';
+  }
+
+  // ── ⑨ الدالة الكاملة — تحل محل الأصلية ────────────────────────────
+  function exportAllReportsPDF() {
+    // بيانات التراكرات المحلية
+    try {
+      trackers.forEach(function (t) {
+        if (typeof isLocalTracker === 'function' && isLocalTracker(t.name)) {
+          var r = (typeof getLocalRows === 'function') ? getLocalRows(t.id) : null;
+          sheetData[t.id] = (r && r.length) ? r : null;
+        }
+      });
+    } catch (e) {}
+
+    var generatedAt = new Date().toLocaleString();
+    var periodTxt = 'Last month';
+
+    // ملخّص لكل تراكر (آخر شهر فقط)
+    var entries = trackers.map(function (t) {
+      var all  = rowsOf(t.id);
+      var rows = filterPeriod(all);
+      var comp = rows.length ? periodCompliance(t, all) : null;
+      return { t: t, all: all, rows: rows, comp: comp };
+    });
+
+    // ── القسم ① الغلاف ──
+    var withData = entries.filter(function (e) { return e.rows.length; });
+    var oc = withData.length ? Math.round(withData.reduce(function (s, e) { return s + (e.comp || 0); }, 0) / withData.length) : 0;
+    var ocColor = cColor(oc);
+    var ocLabel = oc >= 80 ? 'Good Standing' : oc >= 50 ? 'Needs Attention' : 'Action Required';
+    var ocEmoji = oc >= 80 ? '✅' : oc >= 50 ? '⚠️' : '🚨';
+    var totalR = withData.reduce(function (s, e) { return s + e.rows.length; }, 0);
+    var periodTitle = periodLabel((withData[0] || {}).all || []);
+
+    var header = '<div style="border:2px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:28px">' +
+      '<div style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:26px 30px;display:flex;align-items:center;justify-content:space-between">' +
+        '<div>' +
+          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.22em;text-transform:uppercase;margin-bottom:6px">Central Tracker Dashboard</div>' +
+          '<div style="font-size:25px;font-weight:600;color:#fff;letter-spacing:-0.02em">Management Report</div>' +
+          '<div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:6px;font-family:\'JetBrains Mono\',monospace">Period: ' + escH(periodTitle) + ' · generated ' + escH(generatedAt) + '</div>' +
+        '</div>' +
+        '<div style="text-align:right">' +
+          '<div style="font-size:36px;font-weight:700;color:' + ocColor + '">' + oc + '%</div>' +
+          '<div style="font-size:12px;font-weight:600;color:' + ocColor + ';margin-top:2px">' + ocEmoji + ' ' + ocLabel + '</div>' +
+          '<div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;font-family:\'JetBrains Mono\',monospace">Overall · ' + escH(periodTitle) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #e5e7eb">' +
+        '<div style="padding:16px 20px;border-right:1px solid #e5e7eb;text-align:center">' +
+          '<div style="font-size:26px;font-weight:600;color:#2563eb">' + trackers.length + '</div>' +
+          '<div style="font-size:10px;color:#9ca3af;font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">Trackers</div></div>' +
+        '<div style="padding:16px 20px;border-right:1px solid #e5e7eb;text-align:center">' +
+          '<div style="font-size:26px;font-weight:600;color:#16a34a">' + totalR + '</div>' +
+          '<div style="font-size:10px;color:#9ca3af;font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">Inspections · ' + escH(periodTitle) + '</div></div>' +
+        '<div style="padding:16px 20px;text-align:center">' +
+          '<div style="font-size:26px;font-weight:600;color:' + ocColor + '">' + withData.length + '</div>' +
+          '<div style="font-size:10px;color:#9ca3af;font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">Active Trackers</div></div>' +
+      '</div>' +
+    '</div>';
+
+    // ── القسم ② جدول الحالة ──
+    var summaryRows = entries.map(function (e) {
+      var comp = e.comp;
+      var c = comp === null ? '#9ca3af' : cColor(comp);
+      var status = comp === null ? 'No Data in period' : comp >= 80 ? '✅ On Target' : comp >= 50 ? '⚠ Needs Attention' : '🚨 Critical';
+      var lastD = e.rows.length ? dOnly(metaOf(e.rows[e.rows.length - 1]).date) : '—';
+      return '<tr>' +
+        '<td style="padding:9px 14px;border-bottom:1px solid #e5e7eb;font-size:12px">' + (e.t.icon || '') + ' ' + escH(e.t.name) + '</td>' +
+        '<td style="padding:9px 14px;border-bottom:1px solid #e5e7eb;font-size:13px;font-family:\'JetBrains Mono\',monospace;font-weight:600;color:' + c + '">' + (comp !== null ? comp + '%' : '—') + '</td>' +
+        '<td style="padding:9px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151">' + e.rows.length + '</td>' +
+        '<td style="padding:9px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280">' + escH(lastD) + '</td>' +
+        '<td style="padding:9px 14px;border-bottom:1px solid #e5e7eb;font-size:12px">' + status + '</td>' +
+      '</tr>';
+    }).join('');
+
+    var statusTable = '<div style="margin-bottom:28px">' +
+      '<h2 style="font-size:14px;font-weight:600;color:#374151;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #e5e7eb">📊 Tracker Status Overview — ' + escH(periodTitle) + '</h2>' +
+      '<table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">' +
+        '<thead><tr>' +
+          ['Tracker','Compliance','Inspections','Last Check','Status'].map(function (h) {
+            return '<th style="padding:10px 14px;border-bottom:2px solid #e5e7eb;font-size:10px;text-align:left;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;background:#f9fafb">' + h + '</th>';
+          }).join('') +
+        '</tr></thead><tbody>' + summaryRows + '</tbody>' +
+      '</table>' +
+    '</div>';
+
+    // ── القسم ③ التقرير المفصّل لكل تراكر ──
+    var detailed = '<div style="margin-bottom:28px">' +
+      '<h2 style="font-size:14px;font-weight:600;color:#374151;margin-bottom:4px;padding-bottom:8px;border-bottom:2px solid #e5e7eb">📋 Detailed Tracker Reports — ' + escH(periodTitle) + '</h2>' +
+      '<div style="font-size:10px;color:#9ca3af;font-family:\'JetBrains Mono\',monospace;margin-bottom:10px">Each tracker below shows its last-month inspections: last check date · Done By · Premise · Location · all form questions with their answers · available items · missing items.</div>' +
+      entries.map(function (e) {
+        var isLocal = false;
+        try { isLocal = (typeof isLocalTracker === 'function') && isLocalTracker(e.t.name); } catch (err) {}
+        return isLocal ? localSection(e.t) : trackerSection(e.t);
+      }).join('') +
+    '</div>';
+
+    // ── القسم ④ الملاحظات والتوصيات ──
+    var findings = (function () {
+      var list = [];
+      var critical = entries.filter(function (e) { return e.comp !== null && e.comp < 50; });
+      var warn     = entries.filter(function (e) { return e.comp !== null && e.comp >= 50 && e.comp < 80; });
+      var good     = entries.filter(function (e) { return e.comp !== null && e.comp >= 80; });
+      var idle     = entries.filter(function (e) { return e.comp === null; });
+      if (critical.length) list.push(['🚨 Critical', '#dc2626', '#fef2f2', '#fecaca', 'Trackers below 50% compliance this period: <b>' + critical.map(function (e) { return escH(e.t.name); }).join(', ') + '</b>. Escalate and set a corrective action plan.']);
+      if (warn.length)     list.push(['⚠️ Needs attention', '#d97706', '#fffbeb', '#fde68a', 'Trackers between 50% and 79%: <b>' + warn.map(function (e) { return escH(e.t.name); }).join(', ') + '</b>. Follow up on the missing items listed in their detailed sections.']);
+      if (good.length)     list.push(['✅ On target', '#16a34a', '#f0fdf4', '#bbf7d0', good.length + ' tracker(s) at or above 80% compliance this period: <b>' + good.map(function (e) { return escH(e.t.name); }).join(', ') + '</b>.']);
+      if (idle.length)     list.push(['📭 No inspections', '#6b7280', '#f9fafb', '#e5e7eb', 'No inspections recorded in ' + escH(periodTitle) + ' for: <b>' + idle.map(function (e) { return escH(e.t.name); }).join(', ') + '</b>. Confirm the field schedule.']);
+      return list.length
+        ? list.map(function (x) {
+            return '<div style="padding:12px 16px;background:' + x[2] + ';border:1px solid ' + x[3] + ';border-radius:10px;margin-bottom:9px">' +
+              '<div style="font-size:11px;font-weight:700;color:' + x[1] + ';margin-bottom:4px">' + x[0] + '</div>' +
+              '<div style="font-size:11px;color:#374151;line-height:1.7">' + x[4] + '</div></div>';
+          }).join('')
+        : '<div style="padding:14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;font-size:11px;color:#6b7280">No data available for this period.</div>';
+    })();
+
+    var html = '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>C-TRACKER — Management Report (' + escH(periodTitle) + ')</title>\n' +
+      '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">\n' +
+      '<style>\n' +
+      '*{box-sizing:border-box;margin:0;padding:0}\n' +
+      'body{font-family:\'Inter\',sans-serif;color:#111827;background:#fff;padding:30px}\n' +
+      'h2{font-size:14px;font-weight:600;color:#374151;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #e5e7eb}\n' +
+      'table{page-break-inside:auto}\n' +
+      'tr{page-break-inside:avoid;page-break-after:auto}\n' +
+      '@media print{body{padding:14px}.no-print{display:none!important}@page{margin:14mm 12mm}div{page-break-inside:auto}}\n' +
+      '</style>\n</head>\n<body>\n' +
+      '<div class="no-print" style="margin-bottom:22px;padding:12px 18px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px">\n' +
+        '<span style="font-size:13px;color:#1d4ed8">📄 Period: <b>' + escH(periodTitle) + '</b> — press <strong>Ctrl+P</strong> (Cmd+P on Mac) → <strong>Save as PDF</strong></span>\n' +
+        '<button onclick="window.print()" style="flex-shrink:0;padding:8px 18px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">🖨 Print / Save as PDF</button>\n' +
+      '</div>\n' +
+      header + statusTable + detailed +
+      '<div style="margin-bottom:8px"><h2>🔍 Key Findings &amp; Recommendations — ' + escH(periodTitle) + '</h2>' + findings + '</div>\n' +
+      '<div style="margin-top:34px;padding-top:14px;border-top:2px solid #e5e7eb;display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;font-family:\'JetBrains Mono\',monospace">\n' +
+        '<span>C-TRACKER · Central Tracker Dashboard · Management Report · ' + escH(periodTitle) + '</span>\n' +
+        '<span>Generated: ' + escH(generatedAt) + '</span>\n' +
+      '</div>\n</body></html>';
+
+    var blob = new Blob([html], { type: 'text/html' });
+    var url = URL.createObjectURL(blob);
+    var win = window.open(url, '_blank');
+    if (!win) { if (typeof showToast === 'function') showToast('Please allow popups to export PDF', 'amber'); }
+    else if (typeof showToast === 'function') showToast('✓ Report (' + periodTitle + ') opened — press Ctrl+P to save as PDF', 'green');
+  }
+
+  window.exportAllReportsPDF = exportAllReportsPDF;
+  window.pdfReportPeriod = function (mode) { PERIOD_MODE = (mode === 'all') ? 'all' : 'lastMonth'; };
+  console.log('✓ PDF Export patch v2 loaded — detailed per-tracker reports, period = ' + PERIOD_MODE);
+})();
+</script>
+<!-- ═══════════════════ نهاية C-TRACKER PDF EXPORT PATCH v2 ═══════════════════ -->
 
 </body></html>
