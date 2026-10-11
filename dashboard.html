@@ -8910,8 +8910,9 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
   // flip Yes↔No so the compliance calculation is correct.
 
   const INVERTED_QUESTION_WORDS = [
-    'is there any damage','is there any physical damage','any physical damage','physical damage',
-
+    'is there any damage','is there any physical damage','any physical damage','physical damage','any new places','new places suggested',
+'any new places suggested',
+'new places',
   function isInvertedQuestion(key) {
     const klo = key.toLowerCase();
     return INVERTED_QUESTION_WORDS.some(w => klo.includes(w));
@@ -10091,7 +10092,7 @@ table.fqa-m thead th.fqa-m-idx{z-index:3}
   // ── ② تصنيف الإجابات (Available / Missing) ─────────────────────────
   var PASS_W = ['available','yes','ok','good','pass','present','working','functional','charged','intact','clean','complete','full','secured','locked','normal','operational','serviceable','checked','confirmed','done','found','active','clear','closed'];
   var FAIL_W = ['missing','no','not available','unavailable','absent','not present','not found','none','empty','expired','broken','damaged','fail','not working','faulty','dead','discharged','dented','open','unlocked','exposed','dirty','blocked','low pressure','defective','out of order'];
-var INVERTED = ['is there any damage','is there any physical damage','physical damage','any damage','is there any defect','is it damaged','leak','corrosion','rust','any problem','any fault','has it expired','is it expired','overdue','tampered','vandal','broken seal','missing pin'];  function hit(v, list) {
+var INVERTED = ['is there any damage','is there any physical damage','is there any damage','any new places','new places suggested','physical damage','any damage','is there any defect','is it damaged','leak','corrosion','rust','any problem','any fault','has it expired','is it expired','overdue','tampered','vandal','broken seal','missing pin'];  function hit(v, list) {
     var lo = v.toLowerCase();
     return list.some(function (w) { return lo === w || lo.indexOf(w + ' ') === 0 || lo === w + '.' || lo.indexOf(w + ',') === 0; });
   }
