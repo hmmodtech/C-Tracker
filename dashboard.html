@@ -8840,7 +8840,10 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
     'explain','explanation','clarification','any other',
     'free text','open text','optional','n/a if','not applicable if',
     'photo','image','attachment','upload','signature',
-    'additional comments','electricity check'
+    'additional comments','electricity check',
+    'tag #','tag#','tags #','session id',
+    'describe the damage','describe damage',
+    'places suggested','place suggested'
   ];
 
   function isOptionalField(key) {
@@ -8910,9 +8913,11 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
   // flip Yes↔No so the compliance calculation is correct.
 
   const INVERTED_QUESTION_WORDS = [
-    'is there any damage','is there any physical damage','any physical damage','physical damage','any new places','new places suggested',
-'any new places suggested',
-'new places',
+    'is there any damage','is there any physical damage','any physical damage','physical damage',
+    'any new places','new places suggested','any new places suggested','new places',
+    'is there any defect','describe the damage','describe damage',
+    'places suggested','place suggested','session id'
+  ];
   function isInvertedQuestion(key) {
     const klo = key.toLowerCase();
     return INVERTED_QUESTION_WORDS.some(w => klo.includes(w));
