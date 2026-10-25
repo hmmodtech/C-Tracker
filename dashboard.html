@@ -4570,6 +4570,7 @@ console.log('ROW DATA:', JSON.stringify(row));
     </div>
 
     <!-- ── MISSING ITEMS ── -->
+    ${missing.length===0 ? '' : `
     <div class="fa-section-head fa-section-head-miss" style="margin-top:14px">
       <span class="fa-section-icon">❌</span>
       <span class="fa-section-title fa-section-title-miss">Missing / Non-Compliant Items</span>
@@ -4585,6 +4586,7 @@ console.log('ROW DATA:', JSON.stringify(row));
             <div class="fa-item-val fa-item-val-miss">${esc(item.v)}</div>
           </div>`).join('')}
     </div>
+    `}
 
     <!-- ── COMPLIANCE STRIP ── -->
     <div class="fa-comp-strip">
@@ -8651,12 +8653,14 @@ function buildVisualFormReport(t, rows, idx) {
     <div class="vfr-list vfr-list-green">${answeredHtml}</div>
 
     <!-- ── MISSING ITEMS (RED AFTER) ─────────────────────────── -->
+    ${missing.length === 0 ? '' : `
     <div class="vfr-section-head vfr-sh-red" style="margin-top:12px">
       <span style="font-size:17px">❌</span>
       <span class="vfr-section-title vfr-st-red">Missing / Not Answered</span>
       <span class="vfr-section-count vfr-count-red">${missing.length} item${missing.length !== 1 ? 's' : ''}</span>
     </div>
     <div class="vfr-list vfr-list-red">${missingHtml}</div>
+    `}
 
     <!-- VERDICT -->
     <div style="margin-top:14px;padding:14px 16px;background:var(--surface2);
@@ -8811,7 +8815,7 @@ async function vfrExportPDF(trackerId, idx) {
 </div>
 
 <!-- MISSING ITEMS -->
-<div style="margin-bottom:24px">
+<div style="margin-bottom:24px;${missing.length === 0 ? 'display:none' : ''}">
   <h2 style="color:#dc2626;border-color:#fecaca">❌ Missing / Not Answered (${missing.length})</h2>
   ${missing.length === 0
     ? `<div style="padding:18px;text-align:center;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;color:#16a34a;font-size:13px">🎉 All questions answered — full compliance!</div>`
@@ -9391,12 +9395,14 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
       <div class="fa-list fa-list-avail">${availableHtml}</div>
 
       <!-- ── MISSING ITEMS (RED) ── -->
+      ${missing.length === 0 ? '' : `
       <div class="fa-section-head fa-section-head-miss" style="margin-top:14px">
         <span class="fa-section-icon">❌</span>
         <span class="fa-section-title fa-section-title-miss">Missing / Non-Compliant Items</span>
         <span class="fa-section-count fa-count-miss">${missing.length} item${missing.length !== 1 ? 's' : ''}</span>
       </div>
       <div class="fa-list fa-list-miss">${missingHtml}</div>
+      `}
 
       <!-- ── OPTIONAL / COMMENTS (grey, not counted) ── -->
       ${optionalHtml}
@@ -10305,6 +10311,7 @@ var INVERTED = window.CT_REVERSED_WORDS;  function hit(v, list) {
     return { avail: avail, miss: miss };
   }
   function listBlock(title, icon, items, kind) {
+    if (kind === 'miss' && !items.length) return '';   // no red block when nothing is missing
     var may = kind === 'avail';
     var head = may ? 'background:#f0fdf4;border:1px solid #bbf7d0;border-bottom:none' : 'background:#fef2f2;border:1px solid #fecaca;border-bottom:none';
     var col  = may ? '#166534' : '#991b1b';
@@ -10392,7 +10399,7 @@ var INVERTED = window.CT_REVERSED_WORDS;  function hit(v, list) {
       : '<div style="font-size:11px;color:#166534">🎉 All extinguishers are compliant — no exceptions.</div>';
     if (bad.length) CT_ALERTS.push('Fire Extinguishers: ' + bad.length + ' unit(s) non-compliant — ' + bad.map(function (u) { return u.tag; }).join(', ') + '.');
     return cards + ctBox('🧯 Summary by size', '#374151', '#fff', '#e5e7eb', ctTable(['Size', 'Units', 'Compliant', 'Non-compliant'], sizeRows)) +
-      ctBox('⚠ Exceptions (non-compliant units only)', '#991b1b', '#fef2f2', '#fecaca', exc);
+      (bad.length ? ctBox('⚠ Exceptions (non-compliant units only)', '#991b1b', '#fef2f2', '#fecaca', exc) : ctBox('✅ Exceptions', '#166534', '#f0fdf4', '#bbf7d0', exc));
   }
   // First Aid: items expiring within 3 months → replenishment list
   function firstAidBlock(rows) {
