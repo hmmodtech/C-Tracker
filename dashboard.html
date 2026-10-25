@@ -5,6 +5,66 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;family=Inter:wght@400;500&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./acf-design-system.css">
   <link rel="stylesheet" href="./c-tracker-theme.css">
+<script>
+/* ═══ C-TRACKER SHARED HELPERS — reversed questions, kg labels, disposal list ═══ */
+window.CT_REVERSED_WORDS = [
+  'is there any damage','is there any physical damage','any physical damage','physical damage','any damage',
+  'is there any defect','is it damaged','any problem','any fault','has it expired','is it expired','overdue',
+  'tampered','vandal','broken seal','missing pin','leak','corrosion','rust',
+  'electrical issue','electricity issue','electrical problem','any electrical',
+  'will any items expire','any items expire','expire within','expiring within'
+];
+/* informational questions: neither pass nor fail */
+window.CT_NEUTRAL_WORDS = ['any new places','new places suggested','places suggested'];
+window.ctMatch = function (key, list) {
+  var lo = String(key || '').toLowerCase();
+  return list.some(function (w) {
+    return /^[a-z]+$/.test(w) ? new RegExp('\\b' + w + '\\b').test(lo) : lo.indexOf(w) !== -1;
+  });
+};
+window.ctIsReversed = function (k) { return window.ctMatch(k, window.CT_REVERSED_WORDS); };
+window.ctIsNeutral  = function (k) { return window.ctMatch(k, window.CT_NEUTRAL_WORDS); };
+/* reversed yes/no result: "No" = PASS, "Yes" = FAIL, anything else = null */
+window.ctReversedResult = function (v) {
+  var lo = String(v || '').trim().toLowerCase();
+  if (lo === 'no' || lo === 'none' || lo === 'intact' || lo.indexOf('no ') === 0) return 'pass';
+  if (lo === 'yes' || lo.indexOf('yes') === 0) return 'fail';
+  return null;
+};
+/* fire extinguisher size → kg label (legacy Small/Medium/Big kept as-is) */
+window.ctKg = function (v) {
+  var m = String(v || '').match(/(\d+(?:\.\d+)?)\s*kg/i);
+  return m ? (m[1] + 'kg') : (String(v || '').trim() || 'Not recorded');
+};
+/* Pharmacy disposal list helpers */
+window.CT_DISPOSAL_REASONS = ['Expired - not donated', 'Damaged', 'Lost', 'Other'];
+window.ctDLParse = function (v) { try { var a = JSON.parse(v || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
+window.ctDLGet = function (key) { var el = document.getElementById('lr-field-' + key); return el ? window.ctDLParse(el.value) : []; };
+window.ctDLSave = function (key, a) { var el = document.getElementById('lr-field-' + key); if (el) el.value = JSON.stringify(a); };
+window.ctDLSet = function (key, i, p, v) { var a = window.ctDLGet(key); if (a[i]) { a[i][p] = v; window.ctDLSave(key, a); } };
+window.ctDLAdd = function (key) {
+  var a = window.ctDLGet(key);
+  a.push({ item: '', qty: '', date: new Date().toISOString().split('T')[0], reason: window.CT_DISPOSAL_REASONS[0], comment: '' });
+  window.ctDLSave(key, a); window.ctDLRender(key);
+};
+window.ctDLDel = function (key, i) { var a = window.ctDLGet(key); a.splice(i, 1); window.ctDLSave(key, a); window.ctDLRender(key); };
+window.ctDLRender = function (key) {
+  var box = document.getElementById('lr-dl-' + key); if (!box) return;
+  var a = window.ctDLGet(key);
+  var e = function (s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); };
+  box.innerHTML = a.length ? a.map(function (r, i) {
+    var opts = window.CT_DISPOSAL_REASONS.map(function (x) { return '<option' + (x === r.reason ? ' selected' : '') + '>' + x + '</option>'; }).join('');
+    var h = function (p) { return 'ctDLSet(\'' + key + '\',' + i + ',\'' + p + '\',this.value)'; };
+    return '<div style="border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:6px">' +
+      '<div style="display:flex;gap:6px;margin-bottom:6px"><input class="form-input" style="flex:2" placeholder="Item" value="' + e(r.item) + '" oninput="' + h('item') + '">' +
+      '<input type="number" min="0" class="form-input" style="flex:1" placeholder="Qty" value="' + e(r.qty) + '" oninput="' + h('qty') + '"></div>' +
+      '<div style="display:flex;gap:6px;margin-bottom:6px"><input type="date" class="form-input" style="flex:1" value="' + e(r.date) + '" onchange="' + h('date') + '">' +
+      '<select class="form-input" style="flex:1" onchange="' + h('reason') + '">' + opts + '</select></div>' +
+      '<div style="display:flex;gap:6px"><input class="form-input" style="flex:1" placeholder="Comment / reason details" value="' + e(r.comment) + '" oninput="' + h('comment') + '">' +
+      '<button type="button" class="btn" onclick="ctDLDel(\'' + key + '\',' + i + ')">✕</button></div></div>';
+  }).join('') : '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">No disposed items added.</div>';
+};
+</script>
 <style>
   /* ═══ DARK MODE THEME ══════════════════════════════════════════ */
 body.dark-mode {
@@ -5950,7 +6010,7 @@ function getLocalTrackerType(name){
   return null;
 }
 
-function getLocalTrackerFields(type){
+function _ctBaseLocalFields(type){
   const yesno = [{value:'Yes',label:'Yes'},{value:'No',label:'No'}];
   switch(type){
     case 'sms': return [
@@ -6036,6 +6096,22 @@ function getLocalTrackerFields(type){
   }
 }
 
+function getLocalTrackerFields(type){
+  const base = _ctBaseLocalFields(type) || [];
+  if(!base.length) return base;
+  const out = base.slice();
+  if(type==='sms' && !out.some(f=>f.key==='smsLowLevel')){
+    const i = out.findIndex(f=>f.key==='smsAvailable');
+    out.splice(i+1,0,{key:'smsLowLevel',label:'Low-Level Alert Threshold (SMS)',type:'number'});
+  }
+  if(type==='pharmacy' && !out.some(f=>f.key==='disposalList')){
+    const j = out.findIndex(f=>f.key==='disposalComment');
+    out.splice(j<0?out.length:j+1,0,{key:'disposalList',label:'Disposed Items (item, quantity, date, reason, comment)',type:'disposallist'});
+  }
+  if(!out.some(f=>f.key==='comments')) out.push({key:'comments',label:'Comments',type:'textarea',placeholder:'Add any comments or notes…'});
+  return out;
+}
+
 // ── OPEN ADD RECORD MODAL ─────────────────────────────────────
 let _localRecordTrackerId = null;
 let _localEditRecordIdx = null;
@@ -6096,7 +6172,14 @@ function openAddLocalRecord(trackerId, editIdx){
     } else if(f.type === 'textarea'){
       html += `<div class="form-group" id="${wrapId}" style="${condStyle}" ${condAttr}>
         <label class="form-label">${f.label}${f.required?' *':''}</label>
-        <textarea id="lr-field-${f.key}" class="form-input" rows="4" placeholder="List each expired item on a separate line…" style="resize:vertical;line-height:1.6">${esc(val)}</textarea>
+        <textarea id="lr-field-${f.key}" class="form-input" rows="4" placeholder="${esc(f.placeholder||'List each expired item on a separate line…')}" style="resize:vertical;line-height:1.6">${esc(val)}</textarea>
+      </div>`;
+    } else if(f.type === 'disposallist'){
+      html += `<div class="form-group" id="${wrapId}" style="${condStyle}" ${condAttr}>
+        <label class="form-label">${f.label}</label>
+        <input type="hidden" id="lr-field-${f.key}" value="${esc(val)}">
+        <div id="lr-dl-${f.key}"></div>
+        <button type="button" class="btn" onclick="ctDLAdd('${f.key}')" style="margin-top:4px">＋ Add disposed item</button>
       </div>`;
     } else if(f.type === 'disposal'){
       const confirmed = val === 'Confirmed';
@@ -6117,6 +6200,7 @@ function openAddLocalRecord(trackerId, editIdx){
   });
 
   document.getElementById('localRecordFormBody').innerHTML = html;
+  fields.forEach(f=>{ if(f.type==='disposallist') ctDLRender(f.key); });
   document.getElementById('localRecordErr').style.display = 'none';
 
   // Apply initial conditional visibility based on current values
@@ -6191,6 +6275,10 @@ function saveLocalRecord(){
     record[f.key] = el ? el.value.trim() : '';
   });
 
+  if(type==='sms'){
+    const _av = parseFloat(record.smsAvailable), _th = parseFloat(record.smsLowLevel);
+    if(!isNaN(_av) && !isNaN(_th) && _av <= _th) showToast('🔴 LOW SMS LEVEL: '+_av+' available (threshold '+_th+') — reorder needed','amber');
+  }
   if(_localEditRecordIdx !== null){
     localRecords[trackerId][_localEditRecordIdx] = record;
     // Persist locally
@@ -6326,6 +6414,11 @@ function buildLocalTrackerReport(t, rows, idx){
         : `<span class="sr-status ss-pending">—</span>`;
     } else if(f.type==='textarea'){
       statusHtml = `<div style="font-size:11px;color:var(--text-dim);line-height:1.7;white-space:pre-wrap;font-family:var(--font-mono)">${esc(v||'—')}</div>`;
+    } else if(f.type==='disposallist'){
+      const _dl = ctDLParse(v);
+      statusHtml = _dl.length
+        ? `<table style="width:100%;font-size:11px;border-collapse:collapse;margin-top:4px">${_dl.map(r=>`<tr><td style="padding:3px 6px">${esc(r.item)}</td><td style="padding:3px 6px">×${esc(r.qty)}</td><td style="padding:3px 6px">${esc(r.date)}</td><td style="padding:3px 6px">${esc(r.reason)}</td><td style="padding:3px 6px;color:var(--text-dim)">${esc(r.comment)}</td></tr>`).join('')}</table>`
+        : '<span style="font-size:11px;color:var(--muted)">No disposed items</span>';
     } else if(f.type==='disposal'){
       const confirmed = v === 'Confirmed';
       statusHtml = confirmed
@@ -6333,6 +6426,10 @@ function buildLocalTrackerReport(t, rows, idx){
         : `<span style="font-family:var(--font-mono);font-size:10px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-dim);padding:3px 10px;border-radius:8px">⚠ PENDING</span>`;
     } else {
       statusHtml = `<span style="font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--text)">${esc(v||'—')}</span>`;
+      if(f.key==='smsAvailable'){
+        const _a=parseFloat(v), _t=parseFloat(row.smsLowLevel);
+        if(!isNaN(_a)&&!isNaN(_t)&&_a<=_t) statusHtml += ` <span class="sr-status ss-fail">🔴 LOW — reorder needed</span>`;
+      }
     }
     const rowBg = f.type==='yesno'
       ? (v.toLowerCase()==='yes' ? 'sr-row-ok' : v.toLowerCase()==='no' ? 'sr-row-bad' : '')
@@ -6340,7 +6437,7 @@ function buildLocalTrackerReport(t, rows, idx){
       ? (v==='Confirmed' ? 'sr-row-ok' : '')
       : '';
     // textarea and disposal span full width
-    const isWide = f.type==='textarea'||f.type==='disposal';
+    const isWide = f.type==='textarea'||f.type==='disposal'||f.type==='disposallist';
     return `<tr class="${rowBg}" style="animation:srPanelIn 0.2s ease ${i*0.03}s both">
       <td class="sr-num">${i+1}</td>
       <td class="sr-control" ${isWide?'colspan="2"':''}>${esc(f.label)}<br>${isWide?statusHtml:''}</td>
@@ -8841,9 +8938,8 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
     'free text','open text','optional','n/a if','not applicable if',
     'photo','image','attachment','upload','signature',
     'additional comments','electricity check',
-    'tag #','tag#','tags #','session id',
-    'describe the damage','describe damage',
-    'places suggested','place suggested'
+    'tag #','tag#','tags #','session id','describe the damage','describe damage',
+    'places suggested','place suggested','list the items'
   ];
 
   function isOptionalField(key) {
@@ -8912,21 +9008,17 @@ console.log('✓ VFR patch loaded — visual form report active for all Type A t
   // Detection: if the question label contains any of these words,
   // flip Yes↔No so the compliance calculation is correct.
 
-  const INVERTED_QUESTION_WORDS = [
-    'is there any damage','is there any physical damage','any physical damage','physical damage',
-    'any new places','new places suggested','any new places suggested','new places',
-    'is there any defect','describe the damage','describe damage',
-    'places suggested','place suggested','session id'
-  ];
-  function isInvertedQuestion(key) {
-    const klo = key.toLowerCase();
-    return INVERTED_QUESTION_WORDS.some(w => klo.includes(w));
-  }
+  // Reversed-question list now lives in ONE place: window.CT_REVERSED_WORDS (head script)
+  function isInvertedQuestion(key) { return window.ctIsReversed(key); }
 
   function classifyValue(key, value) {
     if (!value || value.trim() === '' || value === '—') return 'empty';
     if (typeof _isImg === 'function' && _isImg(value)) return 'photo';
 
+    // Informational questions: neither pass nor fail
+    if (window.ctIsNeutral(key)) return 'optional';
+    // Reversed yes/no questions win over the optional-keyword list (No = PASS)
+    if (window.ctIsReversed(key)) { const _rv = window.ctReversedResult(value); if (_rv) return _rv; }
     // Optional fields: skip from pass/fail — return 'optional'
     if (isOptionalField(key)) return 'optional';
 
@@ -10097,11 +10189,11 @@ table.fqa-m thead th.fqa-m-idx{z-index:3}
   // ── ② تصنيف الإجابات (Available / Missing) ─────────────────────────
   var PASS_W = ['available','yes','ok','good','pass','present','working','functional','charged','intact','clean','complete','full','secured','locked','normal','operational','serviceable','checked','confirmed','done','found','active','clear','closed'];
   var FAIL_W = ['missing','no','not available','unavailable','absent','not present','not found','none','empty','expired','broken','damaged','fail','not working','faulty','dead','discharged','dented','open','unlocked','exposed','dirty','blocked','low pressure','defective','out of order'];
-var INVERTED = ['is there any damage','is there any physical damage','is there any damage','any new places','new places suggested','physical damage','any damage','is there any defect','is it damaged','leak','corrosion','rust','any problem','any fault','has it expired','is it expired','overdue','tampered','vandal','broken seal','missing pin'];  function hit(v, list) {
+var INVERTED = window.CT_REVERSED_WORDS;  function hit(v, list) {
     var lo = v.toLowerCase();
     return list.some(function (w) { return lo === w || lo.indexOf(w + ' ') === 0 || lo === w + '.' || lo.indexOf(w + ',') === 0; });
   }
-  function isInverted(k) { var lo = k.toLowerCase(); return INVERTED.some(function (w) { return lo.indexOf(w) !== -1; }); }
+  function isInverted(k) { return window.ctIsReversed(k); }
   function isMetaCol(k) {
     var lo = k.toLowerCase();
     if (lo.indexOf('timestamp') !== -1 || lo.indexOf('email') !== -1) return true;
@@ -10112,6 +10204,7 @@ var INVERTED = ['is there any damage','is there any physical damage','is there a
   function classify(key, val) {
     if (isEmpty(val)) return 'empty';
     if (isPhoto(val)) return 'photo';
+    if (window.ctIsNeutral(key)) return 'optional';
     if (isInverted(key)) {
       var lo = String(val).trim().toLowerCase();
       if (lo.indexOf('no') === 0 || lo === 'none' || lo === 'intact') return 'pass';
@@ -10205,7 +10298,7 @@ var INVERTED = ['is there any damage','is there any physical damage','is there a
       if (typeof _vfrIsMetaKey === 'function') { try { if (_vfrIsMetaKey(k)) return; } catch (e) {} }
       var v = String(row[k] == null ? '' : row[k]).trim();
       var cls = classify(k, v);
-      if (cls === 'empty' || cls === 'meta') return;
+      if (cls === 'empty' || cls === 'meta' || cls === 'optional') return;
       if (cls === 'fail') miss.push({ k: k, v: v });
       else avail.push({ k: k, v: v, cls: cls });
     });
@@ -10258,6 +10351,73 @@ var INVERTED = ['is there any damage','is there any physical damage','is there a
   }
 
   // ── ⑦ قسم التراكر المفصّل (آخر شهر فقط) ──────────────────────────
+  var CT_ALERTS = [];
+  function ctBox(title, color, bg, border, inner) {
+    return '<div style="margin-top:12px;border:1px solid ' + border + ';background:' + bg + ';border-radius:10px;padding:10px 12px">' +
+      '<div style="font-size:12px;font-weight:700;color:' + color + ';margin-bottom:8px">' + title + '</div>' + inner + '</div>';
+  }
+  function ctTable(head, rowsHtml) {
+    return '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr>' + head.map(function (h) {
+      return '<th style="text-align:left;padding:5px 8px;border-bottom:1px solid #e5e7eb;font-size:9px;color:#6b7280;text-transform:uppercase">' + h + '</th>';
+    }).join('') + '</tr></thead><tbody>' + rowsHtml + '</tbody></table>';
+  }
+  function ctTd(v) { return '<td style="padding:5px 8px;border-bottom:1px solid #f3f4f6;color:#374151">' + escH(isEmpty(v) ? '—' : v) + '</td>'; }
+  // Fire extinguishers: SUMMARY + EXCEPTIONS (no longer a single tag)
+  function extSummary(rows) {
+    var byTag = {}, order = [];
+    rows.forEach(function (r, i) {
+      var m = metaOf(r), id = isEmpty(m.tag) ? ('row-' + i) : m.tag;
+      if (!byTag[id]) order.push(id);
+      byTag[id] = r;
+    });
+    var units = order.map(function (id) {
+      var r = byTag[id], m = metaOf(r);
+      var sk = Object.keys(r).filter(function (k) { return /size|kg|weight|capacity/i.test(k) && !/tag/i.test(k); })[0];
+      return { tag: id.indexOf('row-') === 0 ? '—' : id, loc: m.location || m.premise, size: ctKg(sk ? r[sk] : ''), miss: itemsLists(r).miss };
+    });
+    var bad = units.filter(function (u) { return u.miss.length; });
+    var sizes = {};
+    units.forEach(function (u) { var s = sizes[u.size] = sizes[u.size] || { n: 0, bad: 0 }; s.n++; if (u.miss.length) s.bad++; });
+    var cards = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px">' +
+      [['Total units', units.length, '#2563eb'], ['Compliant', units.length - bad.length, '#16a34a'], ['Non-compliant', bad.length, bad.length ? '#dc2626' : '#16a34a']].map(function (c) {
+        return '<div style="border:1px solid #e5e7eb;border-left:3px solid ' + c[2] + ';border-radius:8px;padding:10px 12px;background:#fafafa"><div style="font-size:8px;color:#9ca3af;text-transform:uppercase">' + c[0] + '</div><div style="font-size:18px;font-weight:700;color:' + c[2] + '">' + c[1] + '</div></div>';
+      }).join('') + '</div>';
+    var sizeRows = Object.keys(sizes).map(function (s) {
+      return '<tr>' + ctTd(s) + ctTd(sizes[s].n) + ctTd(sizes[s].n - sizes[s].bad) + ctTd(sizes[s].bad) + '</tr>';
+    }).join('');
+    var exc = bad.length
+      ? ctTable(['Tag', 'Location', 'Size', 'Missing / issues'], bad.map(function (u) {
+          return '<tr>' + ctTd(u.tag) + ctTd(u.loc) + ctTd(u.size) + ctTd(u.miss.map(function (x) { return x.k + ': ' + x.v; }).join(' · ')) + '</tr>';
+        }).join(''))
+      : '<div style="font-size:11px;color:#166534">🎉 All extinguishers are compliant — no exceptions.</div>';
+    if (bad.length) CT_ALERTS.push('Fire Extinguishers: ' + bad.length + ' unit(s) non-compliant — ' + bad.map(function (u) { return u.tag; }).join(', ') + '.');
+    return cards + ctBox('🧯 Summary by size', '#374151', '#fff', '#e5e7eb', ctTable(['Size', 'Units', 'Compliant', 'Non-compliant'], sizeRows)) +
+      ctBox('⚠ Exceptions (non-compliant units only)', '#991b1b', '#fef2f2', '#fecaca', exc);
+  }
+  // First Aid: items expiring within 3 months → replenishment list
+  function firstAidBlock(rows) {
+    var asked = false, found = [];
+    rows.forEach(function (r) {
+      var keys = Object.keys(r), m = metaOf(r), flag = false;
+      keys.forEach(function (k) {
+        var v = String(r[k] == null ? '' : r[k]).trim().toLowerCase();
+        if (/valid.*more than 3 months/i.test(k)) { asked = true; if (v.indexOf('no') === 0) flag = true; }
+        else if (/(expire|expiring).*3 months|any items expire/i.test(k)) { asked = true; if (v.indexOf('yes') === 0) flag = true; }
+      });
+      var lk = keys.filter(function (k) { return /list.*items|items.*expir/i.test(k); })[0];
+      var ck = keys.filter(function (k) { return /^\s*comments?\b/i.test(k); })[0];
+      var items = lk ? String(r[lk] || '').trim() : '';
+      if (flag || items) found.push({ date: dOnly(m.date), tag: m.tag, loc: m.location || m.premise, items: items, comment: ck ? r[ck] : '' });
+    });
+    if (!asked && !found.length) return '';
+    if (!found.length) return ctBox('⏳ Items expiring within 3 months', '#166534', '#f0fdf4', '#bbf7d0', '<div style="font-size:11px;color:#166534">✅ No items expiring within 3 months.</div>');
+    CT_ALERTS.push('First Aid: items expiring within 3 months need replenishment (' + found.length + ' kit record(s)).');
+    return ctBox('⏳ Items expiring within 3 months — replenishment needed', '#92400e', '#fffbeb', '#fde68a',
+      ctTable(['Date', 'Tag / Kit', 'Location', 'Items to replenish', 'Comment'], found.map(function (f) {
+        return '<tr>' + ctTd(f.date) + ctTd(f.tag) + ctTd(f.loc) + ctTd(f.items) + ctTd(f.comment) + '</tr>';
+      }).join('')));
+  }
+
   function trackerSection(t) {
     var allRows = rowsOf(t.id);
     var rows = filterPeriod(allRows);
@@ -10323,13 +10483,40 @@ var INVERTED = ['is there any damage','is there any physical damage','is there a
     return headBar(rows.length + ' inspection' + (rows.length !== 1 ? 's' : '') + ' · last: ' + fdate(m.date)) +
       metaGrid + infoStrip +
       '<div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;padding:0 12px 14px;background:#fff">' +
-        qaTable(last, 'All Form Questions & Answers') +
-        listBlock('Available Items', '✅', L.avail, 'avail') +
-        listBlock('Missing / Non-Compliant Items', '❌', L.miss, 'miss') +
+        (/extinguisher/i.test(t.name)
+          ? extSummary(rows)
+          : (/first\s*aid/i.test(t.name) ? firstAidBlock(rows) : '') +
+            qaTable(last, 'All Form Questions & Answers') +
+            listBlock('Available Items', '✅', L.avail, 'avail') +
+            listBlock('Missing / Non-Compliant Items', '❌', L.miss, 'miss')) +
       '</div></div>';
   }
 
   // ── ⑧ القسم التفصيلي للتراكرات المحلية (Bulk SMS / Maps / …) ───────
+  function localExtras(type, last) {
+    var out = '';
+    if (type === 'sms') {
+      var av = parseFloat(last.smsAvailable), th = parseFloat(last.smsLowLevel);
+      if (!isNaN(av) && !isNaN(th)) {
+        if (av <= th) {
+          out += ctBox('🔴 LOW SMS LEVEL — reorder needed', '#991b1b', '#fef2f2', '#fecaca', '<div style="font-size:11px">Available: <b>' + av + '</b> · Threshold: <b>' + th + '</b></div>');
+          CT_ALERTS.push('Bulk SMS: available ' + av + ' is at/below the low-level threshold ' + th + ' — reorder needed.');
+        } else out += ctBox('📱 SMS level', '#166534', '#f0fdf4', '#bbf7d0', '<div style="font-size:11px">Available: <b>' + av + '</b> · Threshold: <b>' + th + '</b> — OK</div>');
+      }
+    }
+    if (type === 'pharmacy') {
+      var dl = ctDLParse(last.disposalList);
+      if (dl.length) {
+        var byR = {}, tot = 0;
+        dl.forEach(function (r) { var q = parseFloat(r.qty) || 0; tot += q; byR[r.reason || 'Other'] = (byR[r.reason || 'Other'] || 0) + q; });
+        out += ctBox('🗑 Disposed items — ' + dl.length + ' line(s), total qty ' + tot, '#374151', '#f9fafb', '#e5e7eb',
+          ctTable(['Item', 'Qty', 'Date', 'Reason', 'Comment'], dl.map(function (r) { return '<tr>' + ctTd(r.item) + ctTd(r.qty) + ctTd(r.date) + ctTd(r.reason) + ctTd(r.comment) + '</tr>'; }).join('')) +
+          '<div style="font-size:10px;color:#6b7280;margin-top:6px">By reason: ' + Object.keys(byR).map(function (k) { return escH(k) + ' = ' + byR[k]; }).join(' · ') + '</div>');
+      }
+    }
+    return out;
+  }
+
   function localSection(t) {
     var allRows = rowsOf(t.id);
     var rows = filterPeriod(allRows);
@@ -10357,15 +10544,19 @@ var INVERTED = ['is there any damage','is there any physical damage','is there a
     if (defs.length) {
       defs.forEach(function (f) {
         var v = last[f.key];
+        if (f.type === 'disposallist') { var _d = ctDLParse(v); qaRowObj[f.label] = _d.length ? (_d.length + ' item(s) disposed — see table below') : ''; return; }
         qaRowObj[f.label] = (v == null || v === '') ? '' : (f.type === 'yesno' ? (String(v).toLowerCase() === 'yes' ? 'Yes' : String(v).toLowerCase() === 'no' ? 'No' : String(v)) : String(v));
       });
     } else {
       Object.keys(last).forEach(function (k) { if (k.charAt(0) !== '_' && k !== 'date' && k !== 'doneBy') qaRowObj[k] = last[k]; });
     }
     var avail = [], miss = [];
+    var skipLbl = {};
+    defs.forEach(function (f) { if (['smsLowLevel', 'disposalList', 'comments'].indexOf(f.key) !== -1) skipLbl[f.label] = 1; });
     Object.keys(qaRowObj).forEach(function (k) {
+      if (skipLbl[k]) return;
       var cls = classify(k, qaRowObj[k]);
-      if (cls === 'empty') return;
+      if (cls === 'empty' || cls === 'optional') return;
       if (cls === 'fail') miss.push({ k: k, v: qaRowObj[k] });
       else avail.push({ k: k, v: qaRowObj[k], cls: cls });
     });
@@ -10386,6 +10577,7 @@ var INVERTED = ['is there any damage','is there any physical damage','is there a
       '</div>' +
       '<div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;padding:0 12px 14px;background:#fff">' +
         qaTable(qaRowObj, 'All Form Questions & Answers') +
+        localExtras(type, last) +
         listBlock('Available / Yes Items', '✅', avail, 'avail') +
         listBlock('Missing / Issues', '❌', miss, 'miss') +
       '</div></div>';
@@ -10393,6 +10585,7 @@ var INVERTED = ['is there any damage','is there any physical damage','is there a
 
   // ── ⑨ الدالة الكاملة — تحل محل الأصلية ────────────────────────────
   function exportAllReportsPDF() {
+    CT_ALERTS.length = 0;
     // بيانات التراكرات المحلية
     try {
       trackers.forEach(function (t) {
@@ -10497,6 +10690,7 @@ var INVERTED = ['is there any damage','is there any physical damage','is there a
       if (warn.length)     list.push(['⚠️ Needs attention', '#d97706', '#fffbeb', '#fde68a', 'Trackers between 50% and 79%: <b>' + warn.map(function (e) { return escH(e.t.name); }).join(', ') + '</b>. Follow up on the missing items listed in their detailed sections.']);
       if (good.length)     list.push(['✅ On target', '#16a34a', '#f0fdf4', '#bbf7d0', good.length + ' tracker(s) at or above 80% compliance this period: <b>' + good.map(function (e) { return escH(e.t.name); }).join(', ') + '</b>.']);
       if (idle.length)     list.push(['📭 No inspections', '#6b7280', '#f9fafb', '#e5e7eb', 'No inspections recorded in ' + escH(periodTitle) + ' for: <b>' + idle.map(function (e) { return escH(e.t.name); }).join(', ') + '</b>. Confirm the field schedule.']);
+      if (CT_ALERTS.length) list.push(['🔔 Action items', '#7c3aed', '#faf5ff', '#e9d5ff', CT_ALERTS.map(escH).join('<br>')]);
       return list.length
         ? list.map(function (x) {
             return '<div style="padding:12px 16px;background:' + x[2] + ';border:1px solid ' + x[3] + ';border-radius:10px;margin-bottom:9px">' +
