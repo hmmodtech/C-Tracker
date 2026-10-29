@@ -7,6 +7,19 @@
   <link rel="stylesheet" href="./c-tracker-theme.css">
 <script>
 /* ═══ C-TRACKER SHARED HELPERS — reversed questions, kg labels, disposal list ═══ */
+/* Bulk SMS: Low-Level Alert Threshold is FIXED in code (not editable) */
+window.CT_SMS_LOW_LEVEL = 500;
+window.ctSmsAlertHtml = function (type, rec) {
+  if (type !== 'sms' || !rec) return '';
+  var a = parseFloat(rec.smsAvailable), T = window.CT_SMS_LOW_LEVEL;
+  if (isNaN(a)) return '';
+  var note = '<div style="font-size:10px;margin-top:6px;opacity:.85">ℹ Note: the Low-Level Alert Threshold is fixed at ' + T + ' SMS.</div>';
+  if (a < T) return '<div style="background:var(--red-bg);border:1px solid var(--red-dim);border-left:4px solid var(--red);border-radius:10px;padding:12px 16px;margin-bottom:14px;color:var(--red)">' +
+    '<div style="font-weight:700;font-size:13px">🔴 LOW SMS LEVEL — reorder needed</div>' +
+    '<div style="font-size:11px;margin-top:4px">Available: <b>' + a + '</b> — below the threshold of <b>' + T + '</b></div>' + note + '</div>';
+  return '<div style="background:var(--green-bg);border:1px solid var(--green-dim);border-left:4px solid var(--green);border-radius:10px;padding:10px 16px;margin-bottom:14px;color:var(--green)">' +
+    '<div style="font-weight:700;font-size:12px">📱 SMS level OK — ' + a + ' available</div>' + note + '</div>';
+};
 window.CT_REVERSED_WORDS = [
   'is there any damage','is there any physical damage','any physical damage','physical damage','any damage',
   'is there any defect','is it damaged','any problem','any fault','has it expired','is it expired','overdue',
@@ -5628,6 +5641,11 @@ function buildMgmtFindings(){
   // per-tracker analysis
   trackers.forEach(t=>{
     const rows=sheetData[t.id]; if(!rows||!rows.length) return;
+    if(getLocalTrackerType(t.name)==='sms'){
+      const _l=rows[rows.length-1], _a=parseFloat(_l&&_l.smsAvailable);
+      if(!isNaN(_a)&&_a<window.CT_SMS_LOW_LEVEL) findings.push({type:'ff-bad',icon:'🔴',title:'Low SMS Level — Reorder Needed',
+        text:`<strong>${t.icon} ${esc(t.name)}</strong>: only <strong style="color:var(--red)">${_a}</strong> SMS available, below the alert level of ${window.CT_SMS_LOW_LEVEL}. <em>Note: the Low-Level Alert Threshold is fixed at ${window.CT_SMS_LOW_LEVEL}.</em>`});
+    }
     const comp=calcCompliance(rows,t.name);
     const mc={};rows.forEach(r=>Object.entries(r).forEach(([k,v])=>{if(v&&isBad(v))mc[k]=(mc[k]||0)+1;}));
     const topIssue=Object.entries(mc).sort((a,b)=>b[1]-a[1])[0];
@@ -6102,10 +6120,6 @@ function getLocalTrackerFields(type){
   const base = _ctBaseLocalFields(type) || [];
   if(!base.length) return base;
   const out = base.slice();
-  if(type==='sms' && !out.some(f=>f.key==='smsLowLevel')){
-    const i = out.findIndex(f=>f.key==='smsAvailable');
-    out.splice(i+1,0,{key:'smsLowLevel',label:'Low-Level Alert Threshold (SMS)',type:'number'});
-  }
   if(type==='pharmacy' && !out.some(f=>f.key==='disposalList')){
     const j = out.findIndex(f=>f.key==='disposalComment');
     out.splice(j<0?out.length:j+1,0,{key:'disposalList',label:'Disposed Items (item, quantity, date, reason, comment)',type:'disposallist'});
@@ -6278,8 +6292,8 @@ function saveLocalRecord(){
   });
 
   if(type==='sms'){
-    const _av = parseFloat(record.smsAvailable), _th = parseFloat(record.smsLowLevel);
-    if(!isNaN(_av) && !isNaN(_th) && _av <= _th) showToast('🔴 LOW SMS LEVEL: '+_av+' available (threshold '+_th+') — reorder needed','amber');
+    const _av = parseFloat(record.smsAvailable);
+    if(!isNaN(_av) && _av < window.CT_SMS_LOW_LEVEL) showToast('🔴 LOW SMS LEVEL: '+_av+' available (below '+window.CT_SMS_LOW_LEVEL+') — reorder needed','amber');
   }
   if(_localEditRecordIdx !== null){
     localRecords[trackerId][_localEditRecordIdx] = record;
@@ -6429,8 +6443,8 @@ function buildLocalTrackerReport(t, rows, idx){
     } else {
       statusHtml = `<span style="font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--text)">${esc(v||'—')}</span>`;
       if(f.key==='smsAvailable'){
-        const _a=parseFloat(v), _t=parseFloat(row.smsLowLevel);
-        if(!isNaN(_a)&&!isNaN(_t)&&_a<=_t) statusHtml += ` <span class="sr-status ss-fail">🔴 LOW — reorder needed</span>`;
+        const _a=parseFloat(v);
+        if(!isNaN(_a)&&_a<window.CT_SMS_LOW_LEVEL) statusHtml += ` <span class="sr-status ss-fail">🔴 LOW (&lt;${window.CT_SMS_LOW_LEVEL}) — reorder needed</span>`;
       }
     }
     const rowBg = f.type==='yesno'
@@ -6570,6 +6584,7 @@ function buildLocalTrackerReport(t, rows, idx){
     </div>` : ''}
   </div>
 
+  ${ctSmsAlertHtml(type, row)}
   <!-- CHECKS TABLE -->
   <div class="sr-section" style="margin-bottom:14px">
     <div class="sr-section-head">
@@ -10503,12 +10518,13 @@ var INVERTED = window.CT_REVERSED_WORDS;  function hit(v, list) {
   function localExtras(type, last) {
     var out = '';
     if (type === 'sms') {
-      var av = parseFloat(last.smsAvailable), th = parseFloat(last.smsLowLevel);
-      if (!isNaN(av) && !isNaN(th)) {
-        if (av <= th) {
-          out += ctBox('🔴 LOW SMS LEVEL — reorder needed', '#991b1b', '#fef2f2', '#fecaca', '<div style="font-size:11px">Available: <b>' + av + '</b> · Threshold: <b>' + th + '</b></div>');
-          CT_ALERTS.push('Bulk SMS: available ' + av + ' is at/below the low-level threshold ' + th + ' — reorder needed.');
-        } else out += ctBox('📱 SMS level', '#166534', '#f0fdf4', '#bbf7d0', '<div style="font-size:11px">Available: <b>' + av + '</b> · Threshold: <b>' + th + '</b> — OK</div>');
+      var av = parseFloat(last.smsAvailable), th = window.CT_SMS_LOW_LEVEL;
+      var note = '<div style="font-size:10px;color:#6b7280;margin-top:6px">ℹ Note: the Low-Level Alert Threshold is fixed at ' + th + ' SMS.</div>';
+      if (!isNaN(av)) {
+        if (av < th) {
+          out += ctBox('🔴 LOW SMS LEVEL — reorder needed', '#991b1b', '#fef2f2', '#fecaca', '<div style="font-size:11px">Available: <b>' + av + '</b> · below the threshold of <b>' + th + '</b></div>' + note);
+          CT_ALERTS.push('Bulk SMS: available ' + av + ' is below the low-level threshold (' + th + ') — reorder needed.');
+        } else out += ctBox('📱 SMS level', '#166534', '#f0fdf4', '#bbf7d0', '<div style="font-size:11px">Available: <b>' + av + '</b> · threshold <b>' + th + '</b> — OK</div>' + note);
       }
     }
     if (type === 'pharmacy') {
@@ -10697,7 +10713,10 @@ var INVERTED = window.CT_REVERSED_WORDS;  function hit(v, list) {
       if (warn.length)     list.push(['⚠️ Needs attention', '#d97706', '#fffbeb', '#fde68a', 'Trackers between 50% and 79%: <b>' + warn.map(function (e) { return escH(e.t.name); }).join(', ') + '</b>. Follow up on the missing items listed in their detailed sections.']);
       if (good.length)     list.push(['✅ On target', '#16a34a', '#f0fdf4', '#bbf7d0', good.length + ' tracker(s) at or above 80% compliance this period: <b>' + good.map(function (e) { return escH(e.t.name); }).join(', ') + '</b>.']);
       if (idle.length)     list.push(['📭 No inspections', '#6b7280', '#f9fafb', '#e5e7eb', 'No inspections recorded in ' + escH(periodTitle) + ' for: <b>' + idle.map(function (e) { return escH(e.t.name); }).join(', ') + '</b>. Confirm the field schedule.']);
-      if (CT_ALERTS.length) list.push(['🔔 Action items', '#7c3aed', '#faf5ff', '#e9d5ff', CT_ALERTS.map(escH).join('<br>')]);
+      var _smsA = CT_ALERTS.filter(function (a) { return a.indexOf('Bulk SMS') === 0; });
+      var _othA = CT_ALERTS.filter(function (a) { return a.indexOf('Bulk SMS') !== 0; });
+      if (_smsA.length) list.push(['🔴 Low SMS level — reorder needed', '#dc2626', '#fef2f2', '#fecaca', _smsA.map(escH).join('<br>') + '<br><i>Note: the Low-Level Alert Threshold is fixed at ' + window.CT_SMS_LOW_LEVEL + ' SMS.</i>']);
+      if (_othA.length) list.push(['🔔 Action items', '#7c3aed', '#faf5ff', '#e9d5ff', _othA.map(escH).join('<br>')]);
       return list.length
         ? list.map(function (x) {
             return '<div style="padding:12px 16px;background:' + x[2] + ';border:1px solid ' + x[3] + ';border-radius:10px;margin-bottom:9px">' +
